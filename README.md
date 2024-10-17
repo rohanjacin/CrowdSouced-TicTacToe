@@ -1,7 +1,7 @@
 # CrowdSouced-TicTacToe
 The main idea is that of a crowdsourced contract upgrade, the usecase of which is a simple tic-tac-toe game. The usecase can be extended to other complex defi strategies and socialmedia recommendation algorithm
 
-![TicTacToe.jpg](https://prod-files-secure.s3.us-west-2.amazonaws.com/7dd92308-54fe-4181-890e-fc4f1ee69de0/df71665b-8316-46fc-929a-67a4542760b4/TicTacToe.jpg)
+![TicTacToe](./TicTacToe.jpg?raw=true "TicTacToe")
 
 **Participants**
 
@@ -24,11 +24,9 @@ The main idea is that of a crowdsourced contract upgrade, the usecase of which i
 
 don’t know what’s underneath.
 
-![Level2 (1).jpg](https://prod-files-secure.s3.us-west-2.amazonaws.com/7dd92308-54fe-4181-890e-fc4f1ee69de0/4a407357-2de6-4577-8130-4e12f6f06cdf/Level2_(1).jpg)
-
+![Level2](./Level2-0.jpg?raw=true "Level2")
    
-
-![Level2-1.jpg](https://prod-files-secure.s3.us-west-2.amazonaws.com/7dd92308-54fe-4181-890e-fc4f1ee69de0/e363cd36-bf60-42bc-9342-26ce1094255f/Level2-1.jpg)
+![Level2](./Level2-1.jpg?raw=true "Level2")
 
 1. Each Player makes one move at a time, **Player 1 get the first move**
 2. A move is defined by either player placing an “**X**” or “**O**” ****in an empty cell
@@ -49,7 +47,7 @@ don’t know what’s underneath.
 
 []()
 
-![Level2-3 (1).jpg](https://prod-files-secure.s3.us-west-2.amazonaws.com/7dd92308-54fe-4181-890e-fc4f1ee69de0/0d9e8c7f-8613-432a-a40a-a43a3b3811b2/Level2-3_(1).jpg)
+![Level2](./Level2-2.jpg?raw=true "Level2")
 
 1. There should be equal “X” and “O” placed strategically by the Bidder.
 2. There cannot be adjoining “X”s or “O”s
