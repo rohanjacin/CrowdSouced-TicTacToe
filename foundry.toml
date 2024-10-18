@@ -1,0 +1,3 @@
+[profile.default]
+# Enables or disables the optimizer
+optimizer = true
