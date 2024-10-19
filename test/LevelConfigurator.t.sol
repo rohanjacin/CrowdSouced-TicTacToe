@@ -12,14 +12,14 @@ contract TestLevelConfigurator is Test {
         levelConfig = new LevelConfigurator();
     }
 
-    function test_readLevel() external view {
-        console.log("Test read level");
+    function test_initLevel() external view {
+        console.log("Test init level");
 
 
         uint32[1] memory sample = 
                 [0xe7783a66];
 
-        assertEq(levelConfig.readLevel(sample), 
+        assertEq(levelConfig.initLevel(sample), 
             0x00000000000000000000000000000000000000000000000000000000e7783a66, "value mistmatch");
     }
 }
