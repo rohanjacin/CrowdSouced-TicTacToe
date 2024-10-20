@@ -14,20 +14,15 @@ contract LevelConfigurator {
 	uint8 constant internal MAX_LEVEL_STATE = type(uint8).max;
 	uint256 constant internal MAX_LEVEL_CODESIZE = 500000; // 500k
 
-	// Level Config (Slot 2, 3 and 4)
-	uint8 levelStateLen;
-	uint256 levelCodeLen;
-	bytes32 levelCodePtr;
-
-	// Level Config (Slot 4)
+	// Level Config (Slot 3)
 	uint8 level;
 	uint8 cells;
 	uint8 marker;
 
 	// Reads the level proposal
-	function initLevel(bytes[] calldata _levelCode,
-					   bytes[] calldata _levelState) 
-		external returns (bool status){
+	function initLevel(bytes calldata _levelCode,
+					   bytes calldata _levelState) 
+		external {
 
 		// Check for sender's address
 		if (msg.sender != address(0))
@@ -36,46 +31,20 @@ contract LevelConfigurator {
 		// Check for code length
 		if (_levelCode.length <= MAX_LEVEL_CODESIZE)
 			revert BiddersLevelCodeSizeInvalid();
-		levelCodeLen = _levelCode.length;
 
 		// Check for state length
 		if (_levelState.length <= MAX_LEVEL_STATE)
 			revert BiddersLevelStateSizeInvalid();
-		levelStateLen = uint8(_levelState.length);
 
 		// Check level and state relation
 		if(!_checkLevelValidity(_levelState.length))
 			revert BiddersLevelStateSizeInvalid();
 
-		// Store level code and state to memory
-		uint256 _levelCodeLen = levelCodeLen;
-		bytes32 _levelCodePtr;
+		// Check state against common level rules
+		// TODO: check for return value (return var causes stack too deep)
+		_checkStateValidity(uint8(_levelState.length), 1);
 
-		assembly {
-			_levelCodePtr := 0x80
-			//_levelCodePtr := msize() //cannot use msize() if yul optimizer is enabled
-			calldatacopy(_levelCodePtr, 0x04, _levelCodeLen)
-		}
 	}
-
-	// Performs further validity checks on Level
-	function checkLevel() external returns (bool status) {
-		// Check state validity and rules
-		if (!_checkStateValidity(levelCodeLen,
-			levelStateLen, uint8(1)))
-			revert BiddersStatesInvalid();
-
-		// Store the level code and the 
-		// level state in memory
-/*		assembly {
-			// Fetch memory pointer
-			let ptr := mload(0x40)
-			calldatacopy(ptr, 0x04, 
-				add(_levelCode.length, _levelState.length))
-		}
-*/
-		// 		
-	}	
 
 	// Check level and state relation
 	function _checkLevelValidity(uint256 _stateLen) internal returns(bool pass) {
@@ -101,17 +70,15 @@ contract LevelConfigurator {
 	}
 
 	// Check state validity
-	function _checkStateValidity(uint256 _codeLen, uint8 _stateLen,
-		uint8 _stateCount) internal view returns(bool pass) {
+	function _checkStateValidity(uint8 _stateLen,
+		uint8 _stateCount) internal view {
 
-		pass = true;
 		// Check if State has valid entries
 		uint validState = uint(CellValue.Empty) + _stateCount;
 		// TODO: assert validState fits in uint8 
 
 		uint256 stateCountMapRow;
 		uint256 stateCountMapCol;
-		uint8 _cells = cells;
 		uint8 _marker = marker;
 
 		// Validation logic 
@@ -124,62 +91,52 @@ contract LevelConfigurator {
 			// So if (state xor mask) is less than max valid state
 			// then the state is valid or else invalid  		
 		assembly {
-			let word, stateWord 
-			let mask := 0x0101010101010101010101010101010101010101010101010101010101010101
-
-			let offset := _codeLen
-			let size := _stateLen
-			
+			let state, stateWord 
+			let i, j, k, s
 			// Num of 32 byte words
-			let num := div(size, 0x20)
 			let col := 0xFF
 			let row := 0xFF 
 
 			// Bit XOR state word and compare if within valid state 
-			for { let i := 0 let k := 0x20 let s := 0x04 }
-				lt(i, num) 
+			for { i := 0 k := 0x20 s := 0x04 }
+				lt(i, div(_stateLen, 0x20)) 
 				{ i := add(i, 1) s := add(s, 0x20) } {
 
-				word := calldataload(s)
-				stateWord := xor(word, mask)
+				stateWord := xor(calldataload(s),
+					0x0101010101010101010101010101010101010101010101010101010101010101)
 
-				if eq(i, sub(num, 1)) {
-					k := mod(size, 0x20)
+				if eq(i, sub(div(_stateLen, 0x20), 1)) {
+					k := mod(_stateLen, 0x20)
 				}
 
 				// Each state check
-				for { let j := 0 } lt(j, k) { j := add(j, 1) } {
+				for { j := 0 } lt(j, k) { j := add(j, 1) } {
 
-					let state := byte(stateWord, j)
+					state := byte(stateWord, j)
 					if gt(state, validState) {
-						pass := 0
 						return (0, 0)
 					}
 
 					// Check if current cell is in new col,
 					// refresh state count col map 
-					let _newCol := mod(j, _marker)
-					if iszero(eq(col, _newCol)) {
+					if iszero(eq(col, mod(j, _marker))) {
 						col := mod(j, _marker)
 						stateCountMapCol := 0
 					}
 
 					// Check if current cell is in new row,
 					// refresh state count row map
-					let _newRow := div(j, _marker)
-					if iszero(eq(row, _newRow)) {
+					if iszero(eq(row, div(j, _marker))) {
 						row := div(j, _marker)
 						stateCountMapRow := 0
 					}
 
 					// Bit AND state count map and check if already exists 
 					if and(stateCountMapRow, shl(state, 1)) {
-						pass := 0
 						return (0, 0)
 					}
 
 					if and(stateCountMapCol, shl(state, 1)) {
-						pass := 0
 						return (0, 0)
 					}
 
@@ -189,6 +146,5 @@ contract LevelConfigurator {
 				}
 			}
 		}
-	}
-
+	}	
 }

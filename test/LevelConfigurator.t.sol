@@ -12,16 +12,15 @@ contract TestLevelConfigurator is Test {
         levelConfig = new LevelConfigurator();
     }
 
-    function test_initLevel() external view {
+    function test_initLevel() external {
         console.log("Test init level");
 
+        uint8[4] memory _levelcode = [0xe7, 0x78, 0x3a, 0x66];
+        uint8[4] memory _levelstate = [0x01, 0x01, 0x01, 0x01];
 
-        uint32[1] memory sample = 
-                [0xe7783a66];
+        bytes memory data = abi.encode(_levelcode);
+        bytes memory data1 = abi.encode(_levelstate);
 
-        assertEq(levelConfig.initLevel(sample), 
-            0x00000000000000000000000000000000000000000000000000000000e7783a66, "value mistmatch");
+        levelConfig.initLevel(data, data1);
     }
 }
-
-//0x00000000000000000000000000000000000000000000000000000000e7783a66
