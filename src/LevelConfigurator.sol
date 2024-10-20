@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.27;
-// /import {console} from "forge-std/console.sol";
+import {console} from "forge-std/console.sol";
 import "./BaseState.sol";
+import "./IGoV.sol";
 
 error BiddersAddressInvalid();
 error BiddersLevelCodeSizeInvalid();
@@ -10,7 +11,9 @@ error BiddersStatesInvalid();
 
 contract LevelConfigurator {
 
-	// Constants (Slot 0 and Slot 1)
+	// Constants (Slot 0, 1 and 2)
+	address constant internal GOV_ADDRESS = address(
+		0x5FbDB2315678afecb367f032d93F642f64180aa3);
 	uint8 constant internal MAX_LEVEL_STATE = type(uint8).max;
 	uint256 constant internal MAX_LEVEL_CODESIZE = 500000; // 500k
 
@@ -22,8 +25,9 @@ contract LevelConfigurator {
 	// Reads the level proposal
 	function initLevel(bytes calldata _levelCode,
 					   bytes calldata _levelState) 
-		external {
+		external returns(bool success) {
 
+		success = false;
 		// Check for sender's address
 		if (msg.sender != address(0))
 			revert BiddersAddressInvalid();
@@ -44,6 +48,59 @@ contract LevelConfigurator {
 		// TODO: check for return value (return var causes stack too deep)
 		_checkStateValidity(uint8(_levelState.length), 1);
 
+		// Store level code and state
+		uint256 levelLoc = _loadLevel(_levelCode.length, 
+							uint8(_levelState.length));
+
+		// Call GoV contract to approve level
+		// with level memory location
+		address addr = GOV_ADDRESS;
+		assembly {
+			if iszero(extcodesize(addr)) {
+				revert(0, 0)
+			}
+		}
+
+		IGoV(addr).approveValidLevelProposal(levelLoc);
+		success = true;
+	}
+
+	// Deploys the level
+	function deployLevel(uint256 levelLoc, uint256 salt) 
+		external payable returns(address target) {
+
+		// Deploy using create2
+		assembly {
+
+			// level code length is 2 memory location 
+			target := create2(0, levelLoc, mload(
+				add(levelLoc, 0x20)), salt)
+		}
+	}
+
+	// Add level rules to rule base
+	function _addLevelRules() internal returns(bool success) {
+
+		//
+	}
+
+	// Load level code and state in memory 
+	function _loadLevel(uint256 codeLen, uint8 stateLen)
+		internal pure returns (uint256 location) {
+
+		// 0x80 |-----level------|
+		// 0xA0 |-----cells------|
+		// 0xC0 |-----marker-----|
+		// 0xD0 |---levelcode----|
+		// 0x__ |---levelstate---|
+
+		// Store level code and state
+		location = uint256(0xD0);
+		assembly {
+			calldatacopy(location, 0x04, codeLen)
+			calldatacopy(add(location, codeLen), 
+				add(0x04, codeLen), stateLen)
+		}
 	}
 
 	// Check level and state relation
@@ -67,9 +124,9 @@ contract LevelConfigurator {
 		// Load the previous level in memory
 		// TODO: optimize for packed struct
 		assembly {
-			mstore(0x80, level.offset)
-			mstore(add(0x80, 0x20), cells.offset)
-			mstore(add(0x80, 0x40), marker.offset)
+			mstore(0x80, level.offset)					// 0x80 |-----level------|
+			mstore(add(0x80, 0x20), cells.offset)		// 0xA0 |-----cells------|
+			mstore(add(0x80, 0x40), marker.offset)		// 0xC0 |-----marker-----|
 		}
 
 		level = _level;

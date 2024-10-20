@@ -17,12 +17,18 @@ contract Level is BaseLevel, BaseState {
 	// Level value
 	uint8 public levelnum;
 
+	// Unicode mapping
+	mapping (CellValueL1 => bytes8) symbols;
+
 	// Board State
 	StateL1 board;
 
 	constructor(uint8 _levelnum, StateL1 memory _board) {
 		levelnum = _levelnum;
 		board = _board;
+		symbols[CellValueL1.X] = "u2716"; 
+		symbols[CellValueL1.O] = "u0030"; 
+
 		//board.v = uint8[](_board.v.length);
 	}
 
@@ -31,4 +37,9 @@ contract Level is BaseLevel, BaseState {
 
 		_cellValue = uint8(board.v[1]);
 	}
+
+	function setCellu2716 () external view {
+
+	}
+
 }
