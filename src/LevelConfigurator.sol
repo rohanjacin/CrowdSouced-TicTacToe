@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.27;
-import {console} from "forge-std/console.sol";
+// /import {console} from "forge-std/console.sol";
 import "./BaseState.sol";
 
 error BiddersAddressInvalid();
@@ -63,6 +63,14 @@ contract LevelConfigurator {
 		if ((_stateLen <= type(uint8).max) && 
 			(_stateLen <= numCells))
 			pass = false;
+
+		// Load the previous level in memory
+		// TODO: optimize for packed struct
+		assembly {
+			mstore(0x80, level.offset)
+			mstore(add(0x80, 0x20), cells.offset)
+			mstore(add(0x80, 0x40), marker.offset)
+		}
 
 		level = _level;
 		cells = numCells;
@@ -129,6 +137,27 @@ contract LevelConfigurator {
 					if iszero(eq(row, div(j, _marker))) {
 						row := div(j, _marker)
 						stateCountMapRow := 0
+					}
+
+					// Check for State Empty in previous
+					// level state cells
+					{
+						//outer bound = previous marker (Level1 - 3)
+						let l := mload(add(0x80, 0x40))
+						//inner bound = current marker - outer bound (Level1 - 6)
+						let m := sub(_marker, l)
+
+						if gt(row, l) {
+							if lt(row, m ) {
+								if gt(col, l) {
+									if lt(col, m) {
+										if iszero(eq(state, 0)) {
+											return (0,0)
+										}
+									}
+								}
+							}
+						}
 					}
 
 					// Bit AND state count map and check if already exists 
