@@ -1,3 +1,4 @@
 [profile.default]
 # Enables or disables the optimizer
 optimizer = true
+evm_version = "cancun"

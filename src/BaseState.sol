@@ -9,4 +9,9 @@ contract BaseState {
 	struct DefaultState {
 		CellValue[9] v;
 	}
+
+	// To be overriden by level
+    function supportedStates() 
+    	public view virtual returns (bytes memory) {
+	}	
 }

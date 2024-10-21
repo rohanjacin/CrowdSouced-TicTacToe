@@ -7,6 +7,6 @@ contract BaseLevel {
 	// Cells
 	struct Cells {
 		uint8[] row;
-		uint8[] col;		
+		uint8[] col;
 	}
 }

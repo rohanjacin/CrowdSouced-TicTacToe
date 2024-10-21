@@ -3,28 +3,34 @@ pragma solidity 0.8.27;
 import {console} from "forge-std/console.sol";
 import "./BaseState.sol";
 import "./IGoV.sol";
+import "./IRuleEngine.sol";
 
 error BiddersAddressInvalid();
 error BiddersLevelCodeSizeInvalid();
 error BiddersLevelStateSizeInvalid();
 error BiddersStatesInvalid();
+error BiddersStatesSymbolsInvalid();
 
 contract LevelConfigurator {
 
-	// Constants (Slot 0, 1 and 2)
+	// Constants (Slot 0, 1, 2 and 3)
 	address constant internal GOV_ADDRESS = address(
 		0x5FbDB2315678afecb367f032d93F642f64180aa3);
+	address constant internal RULEENGINE_ADDRESS = address(
+		0x5FbDB2315678afecb367f032d93F642f64180aa3);
+
 	uint8 constant internal MAX_LEVEL_STATE = type(uint8).max;
 	uint256 constant internal MAX_LEVEL_CODESIZE = 500000; // 500k
 
-	// Level Config (Slot 3)
+	// Level Config (Slot 4)
 	uint8 level;
 	uint8 cells;
 	uint8 marker;
 
 	// Reads the level proposal
 	function initLevel(bytes calldata _levelCode,
-					   bytes calldata _levelState) 
+					   bytes calldata _levelState,
+					   bytes calldata _levelSymbols) 
 		external returns(bool success) {
 
 		success = false;
@@ -40,17 +46,23 @@ contract LevelConfigurator {
 		if (_levelState.length <= MAX_LEVEL_STATE)
 			revert BiddersLevelStateSizeInvalid();
 
+		// Check for state symbols length
+		if (_levelSymbols.length < MAX_LEVEL_STATE)
+			revert BiddersStatesSymbolsInvalid();
+
 		// Check level and state relation
 		if(!_checkLevelValidity(_levelState.length))
 			revert BiddersLevelStateSizeInvalid();
 
 		// Check state against common level rules
 		// TODO: check for return value (return var causes stack too deep)
-		_checkStateValidity(uint8(_levelState.length), 1);
+		_checkStateValidity(uint8(_levelState.length), 
+							uint8(_levelSymbols.length));
 
 		// Store level code and state
 		uint256 levelLoc = _loadLevel(_levelCode.length, 
-							uint8(_levelState.length));
+							uint8(_levelState.length),
+							uint8(_levelSymbols.length));
 
 		// Call GoV contract to approve level
 		// with level memory location
@@ -62,6 +74,7 @@ contract LevelConfigurator {
 		}
 
 		IGoV(addr).approveValidLevelProposal(levelLoc);
+
 		success = true;
 	}
 
@@ -72,27 +85,111 @@ contract LevelConfigurator {
 		// Deploy using create2
 		assembly {
 
-			// level code length is 2 memory location 
-			target := create2(0, levelLoc, mload(
-				add(levelLoc, 0x20)), salt)
+			// level code length is at 0xD0,
+			// state length is at 0xE0 
+			target := create2(0, levelLoc, 
+				add(mload(levelLoc), mload(add(levelLoc, 0x20))), salt)
 		}
+
+		_addLevelRules(target, levelLoc);
 	}
 
 	// Add level rules to rule base
-	function _addLevelRules() internal returns(bool success) {
+	function _addLevelRules(address levelAddress, uint256 levelLoc)
+		internal returns(bool success) {
 
-		//
+		// Iterate over state symbols
+		uint8 numSymbols; 
+		uint256 symbolsLen;
+		assembly {
+			symbolsLen := mload(add(levelLoc, 0x40))
+
+			if iszero(symbolsLen) { return(0, 0) }
+
+			// Symbol location
+			let loc := add(mload(levelLoc), mload(add(levelLoc, 0x20)))
+
+			// Number of symbol words
+			let l := 0x20
+			let k := div(symbolsLen, 0x20)
+			if iszero(k) { k := 1 l := mod(symbolsLen, 0x20) }
+
+			// Minimum 4 bytes represent a symbol, so min 1 symbol check
+			if lt(l, 4) { return(0, 0) }
+
+
+			// Each symbol word
+			let j
+			for { let i := 0 } lt(i, k) { i := add(i, 1) } {
+
+				// Each symbol for each state (inclusive of prev level state symbols)
+				for { j := 0 } lt(j, div(l, 0x04)) { j := add(j, 1) } {
+					//shr(32, mload(add(loc, i)))
+				}
+			}
+
+			// Store symbol count, useful in verifying level contract
+			// actually store same symbol when deployed
+			tstore(j, symbolsLen)
+			numSymbols := j
+		}
+
+		// Make sure symbol len is in bounds
+		assert(numSymbols <= (type(uint8).max-1));
+
+		// Prepare default getter of public "symbols" storage
+		// to later verify
+		string memory returnType;
+		uint8[] memory states;
+		for (uint8 i = 1; i <= numSymbols; i++) {
+
+			returnType = string(abi.encodePacked(returnType, "uint"));
+			states[i] = i;
+		}
+
+		string memory symbolsGetter = string(abi.encodePacked(
+			"symbols()returns(", returnType, ")")); 
+		
+		// Call default getter for storage
+		(bool symbolSuccess, bytes memory symbols) = 
+			levelAddress.call{
+				value: msg.value
+			}(abi.encodeWithSignature(symbolsGetter));
+
+		// Assert call was successful
+		assert(symbolSuccess == true);
+
+		// Get local copy of symbols from memory
+		bytes memory sloc;
+		assembly {
+			// Symbol location
+			sloc := add(mload(levelLoc), mload(add(levelLoc, 0x20)))
+		}
+
+		// Check if loacl symbols and level contract symbols are the same
+		assert(sloc.length == symbolsLen);
+		assert(keccak256(abi.encodePacked(symbols)) == 
+			keccak256(abi.encodePacked(sloc)));
+
+		// Add rules to rule engine		
+		IRuleEngine(RULEENGINE_ADDRESS).addRules(levelAddress, states, symbols);
+
+		success = true;
 	}
 
 	// Load level code and state in memory 
-	function _loadLevel(uint256 codeLen, uint8 stateLen)
+	function _loadLevel(uint256 codeLen, uint8 stateLen, uint8 symbolLen)
 		internal pure returns (uint256 location) {
 
 		// 0x80 |-----level------|
 		// 0xA0 |-----cells------|
 		// 0xC0 |-----marker-----|
-		// 0xD0 |---levelcode----|
+		// 0xD0 |----levellen----|
+		// 0xE0 |----statelen----|
+		// 0xF0 |---symbollen----|
+		// 0x100|---levelcode----|
 		// 0x__ |---levelstate---|
+		// 0x__ |--levelsymbols--|
 
 		// Store level code and state
 		location = uint256(0xD0);
@@ -100,6 +197,8 @@ contract LevelConfigurator {
 			calldatacopy(location, 0x04, codeLen)
 			calldatacopy(add(location, codeLen), 
 				add(0x04, codeLen), stateLen)
+			calldatacopy(add(location, add(codeLen, stateLen)), 
+				add(0x04, stateLen), symbolLen)			
 		}
 	}
 

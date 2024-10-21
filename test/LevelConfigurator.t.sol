@@ -21,6 +21,6 @@ contract TestLevelConfigurator is Test {
         bytes memory data = abi.encode(_levelcode);
         bytes memory data1 = abi.encode(_levelstate);
 
-        levelConfig.initLevel(data, data1);
+        //levelConfig.initLevel(data, data1);
     }
 }

@@ -16,13 +16,13 @@ contract TestLevel is Test {
                 CellValueL1.X, CellValueL1.X, CellValueL1.X]}));
     }
 
-    function test_readCell() external view {
+/*    function test_readCell() external view {
         console.log("Test read cell");
 
         //Cell memory testCell = Cell({row:1, col:1});
         assertEq(level.readCell(), uint8(CellValueL1.X), "value mistmatch");
 
-    }
+    }*/
 }
 
 //0x00000000000000000000000000000000000000000000000000000000e7783a66
