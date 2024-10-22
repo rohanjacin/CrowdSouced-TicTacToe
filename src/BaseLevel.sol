@@ -2,11 +2,12 @@
 pragma solidity 0.8.27;
 
 // Basic level layout
-contract BaseLevel {
+abstract contract BaseLevel {
 
-	// Cells
-	struct Cells {
-		uint8[] row;
-		uint8[] col;
+	// Level value
+	uint8 public levelnum;
+
+	constructor(uint8 _levelnum) {
+		levelnum = _levelnum;
 	}
 }

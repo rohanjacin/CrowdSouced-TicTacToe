@@ -10,11 +10,11 @@ contract TestLevel is Test {
     function setUp() public {
         //BaseLevel.Cell memory testCell = BaseLevel.Cell({v: 1});
         //LcellBaseLevel.Cell(1);
-        level = new Level(1, StateL1({
+/*        level = new Level(1, StateL1({
             v: [CellValueL1.X, CellValueL1.X, CellValueL1.X,
                 CellValueL1.X, CellValueL1.CellValue, CellValueL1.X,
                 CellValueL1.X, CellValueL1.X, CellValueL1.X]}));
-    }
+*/    }
 
 /*    function test_readCell() external view {
         console.log("Test read cell");

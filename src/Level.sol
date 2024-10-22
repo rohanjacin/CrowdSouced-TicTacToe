@@ -14,25 +14,23 @@ struct StateL1 {
 }
 
 struct Symbols {
-	uint u2716;
+	uint256 u2716;
+	uint256 u2717;
 }
 
 // Level defination and implementation
 contract Level is BaseLevel, BaseState {
 
-	// Level value
-	uint8 public levelnum;
-
 	// Unicode mapping
 	Symbols public symbols;
 
-	// Board State
-	StateL1 board;
+	constructor(uint8 _levelnum, State memory _state, 
+		bytes memory _symbols)
+		BaseLevel(_levelnum)
+		BaseState(_state) {
 
-	constructor(uint8 _levelnum, StateL1 memory _board) {
-		levelnum = _levelnum;
-		board = _board;
-		//board.v = uint8[](_board.v.length);
+		// Store the symbols
+		//symbols.u2716 = _symbols[0:32];
 	}
 
 	// readBoard
@@ -41,7 +39,9 @@ contract Level is BaseLevel, BaseState {
 		_cellValue = uint8(board.v[1]);
 	}
 */
+
 	function setCellu2716 () external view {
+
 
 	}
 

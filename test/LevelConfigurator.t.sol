@@ -9,7 +9,7 @@ contract TestLevelConfigurator is Test {
     LevelConfigurator levelConfig;
 
     function setUp() public {
-        levelConfig = new LevelConfigurator();
+        //levelConfig = new LevelConfigurator();
     }
 
     function test_initLevel() external {

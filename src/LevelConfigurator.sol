@@ -5,7 +5,9 @@ import "./BaseState.sol";
 import "./IGoV.sol";
 import "./IRuleEngine.sol";
 
+error ContractAddressesInvalid();
 error BiddersAddressInvalid();
+error BiddersLevelNumberInvalid();
 error BiddersLevelCodeSizeInvalid();
 error BiddersLevelStateSizeInvalid();
 error BiddersStatesInvalid();
@@ -13,22 +15,58 @@ error BiddersStatesSymbolsInvalid();
 
 contract LevelConfigurator {
 
-	// Constants (Slot 0, 1, 2 and 3)
-	address constant internal GOV_ADDRESS = address(
-		0x5FbDB2315678afecb367f032d93F642f64180aa3);
-	address constant internal RULEENGINE_ADDRESS = address(
-		0x5FbDB2315678afecb367f032d93F642f64180aa3);
+	// Contract addresses (Slot 0, 1, 2)
+	address internal govAddress;
+	address internal ruleengineAddress;
+	address internal gameAddress;
 
+	// Constants (Slot 3)
 	uint8 constant internal MAX_LEVEL_STATE = type(uint8).max;
-	uint256 constant internal MAX_LEVEL_CODESIZE = 500000; // 500k
+	uint8 constant internal MAX_LEVELS = 2; 
+	uint8 constant internal MAX_CELLS_L1 = 9;
+	uint8 constant internal MAX_CELLS_L2 = 81;
+	uint32 constant internal MAX_LEVEL_CODESIZE = 500000; // 500k
 
-	// Level Config (Slot 4)
-	uint8 level;
-	uint8 cells;
-	uint8 marker;
+	struct LevelConfig {
+		uint256 level;
+		uint256 cells;
+		uint256 marker;
+	}
+
+	constructor (address _govAddress,
+		address _gameAddress,
+		address _ruleengineAddress) {
+
+		if ((_govAddress == address(0)) ||
+			(_gameAddress == address(0)) ||
+			(_ruleengineAddress == address(0))) {
+
+			revert ContractAddressesInvalid();
+		}
+
+		govAddress =_govAddress;
+		gameAddress =_gameAddress;
+		ruleengineAddress = _ruleengineAddress;
+	}
+
+	// Enables Level configuration
+	// supplied with previous level number
+	function start(LevelConfig calldata prevLevel) external {
+
+		// Store the previous level in memory
+		// TODO: optimize for packed struct
+		assembly {
+
+			calldatacopy(0x80, 0x04, 0x60)
+			// 0x80  |-----level------|
+			// 0x100 |-----cells------|
+			// 0x120 |-----marker-----|
+		}
+	}
 
 	// Reads the level proposal
 	function initLevel(bytes calldata _levelCode,
+					   bytes calldata _levelNumber,
 					   bytes calldata _levelState,
 					   bytes calldata _levelSymbols) 
 		external returns(bool success) {
@@ -38,6 +76,11 @@ contract LevelConfigurator {
 		if (msg.sender != address(0))
 			revert BiddersAddressInvalid();
 
+		// Check for level number
+		uint8 levelNum = abi.decode(_levelNumber, (uint8));
+		if (levelNum <= MAX_LEVELS)
+			revert BiddersLevelNumberInvalid();
+
 		// Check for code length
 		if (_levelCode.length <= MAX_LEVEL_CODESIZE)
 			revert BiddersLevelCodeSizeInvalid();
@@ -46,13 +89,13 @@ contract LevelConfigurator {
 		if (_levelState.length <= MAX_LEVEL_STATE)
 			revert BiddersLevelStateSizeInvalid();
 
+		// Check for number of state cells 
+		if (_levelState.length < MAX_CELLS_L2)
+			revert BiddersLevelStateSizeInvalid();
+
 		// Check for state symbols length
 		if (_levelSymbols.length < MAX_LEVEL_STATE)
 			revert BiddersStatesSymbolsInvalid();
-
-		// Check level and state relation
-		if(!_checkLevelValidity(_levelState.length))
-			revert BiddersLevelStateSizeInvalid();
 
 		// Check state against common level rules
 		// TODO: check for return value (return var causes stack too deep)
@@ -66,14 +109,7 @@ contract LevelConfigurator {
 
 		// Call GoV contract to approve level
 		// with level memory location
-		address addr = GOV_ADDRESS;
-		assembly {
-			if iszero(extcodesize(addr)) {
-				revert(0, 0)
-			}
-		}
-
-		IGoV(addr).approveValidLevelProposal(levelLoc);
+		IGoV(govAddress).approveValidLevelProposal(levelLoc);
 
 		success = true;
 	}
@@ -172,7 +208,8 @@ contract LevelConfigurator {
 			keccak256(abi.encodePacked(sloc)));
 
 		// Add rules to rule engine		
-		IRuleEngine(RULEENGINE_ADDRESS).addRules(levelAddress, states, symbols);
+		IRuleEngine(ruleengineAddress).addRules(
+			levelAddress, states, symbols);
 
 		success = true;
 	}
@@ -202,40 +239,9 @@ contract LevelConfigurator {
 		}
 	}
 
-	// Check level and state relation
-	function _checkLevelValidity(uint256 _stateLen) internal returns(bool pass) {
-
-		uint8 cellsPerRow;
-		uint8 numCells;
-
-		pass = true;
-
-		// Check level number
-		uint8 _level = 2;
-
-		// Check for state length
-		cellsPerRow = ((_level-1)*_level)*3 + 3;
-		numCells = cellsPerRow*cellsPerRow;
-		if ((_stateLen <= type(uint8).max) && 
-			(_stateLen <= numCells))
-			pass = false;
-
-		// Load the previous level in memory
-		// TODO: optimize for packed struct
-		assembly {
-			mstore(0x80, level.offset)					// 0x80 |-----level------|
-			mstore(add(0x80, 0x20), cells.offset)		// 0xA0 |-----cells------|
-			mstore(add(0x80, 0x40), marker.offset)		// 0xC0 |-----marker-----|
-		}
-
-		level = _level;
-		cells = numCells;
-		marker = cellsPerRow;
-	}
-
 	// Check state validity
 	function _checkStateValidity(uint8 _stateLen,
-		uint8 _stateCount) internal view {
+		uint8 _stateCount)internal view {
 
 		// Check if State has valid entries
 		uint validState = uint(CellValue.Empty) + _stateCount;
@@ -243,7 +249,8 @@ contract LevelConfigurator {
 
 		uint256 stateCountMapRow;
 		uint256 stateCountMapCol;
-		uint8 _marker = marker;
+		uint8 _marker = MAX_CELLS_L1;
+		//bytes32 _prevLevel = levelConfigLoc;
 
 		// Validation logic 
 			// 0 xor 1 = 1
