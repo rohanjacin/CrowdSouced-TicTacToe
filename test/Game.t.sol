@@ -3,12 +3,12 @@ pragma solidity ^0.8.27;
 
 import "forge-std/Test.sol";
 
-import "src/TicTacToe.sol";
+import "src/Game.sol";
 
-contract TestTicTacToe is Test {
-    TicTacToe c;
+contract TestGame is Test {
+    Game c;
 
     function setUp() public {
-        c = new TicTacToe();
+        c = new Game();
     }
 }

@@ -2,7 +2,7 @@
 pragma solidity 0.8.27;
 
 // Possible cell values
-enum CellValue { Empty, X, Y}
+enum CellValue { Empty, X, O}
 
 // Base State
 abstract contract BaseState {
