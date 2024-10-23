@@ -105,6 +105,10 @@ contract Game {
 		// Winner in columns
 		(Player _winnerCol, uint8 _countCol) = _winnerInColumns();
 
+		// Winers in both diagonals
+		(Player _winnerDiag, uint8 _countDiag) = _winnerInDiagonals();
+
+		// Compare winning row and winning column
 		if (_winnerRow == _winnerCol) {
 			winner = _winnerRow;
 			if (_countRow > _countCol) {
@@ -122,6 +126,23 @@ contract Game {
 			}
 			else {
 				count = _countRow;
+			}
+		}
+
+		// Compare winning row or column to 
+		// winning diagonal
+		if (winner == _winnerDiag) {
+
+			if (_countDiag > count) {
+				count = _countDiag;
+			}
+		}
+		else if (winner != _winnerDiag) {
+
+			if (_countDiag > count) {
+				winner = _winnerDiag;
+			}
+			else if (count == _countDiag) {
 			}
 		}
 	}
