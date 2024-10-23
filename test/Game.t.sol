@@ -9,6 +9,6 @@ contract TestGame is Test {
     Game c;
 
     function setUp() public {
-        c = new Game();
+        //c = new Game();
     }
 }

@@ -10,4 +10,9 @@ abstract contract BaseLevel {
 	constructor(uint8 _levelnum) {
 		levelnum = _levelnum;
 	}
+
+	// Should be overridden by Level implementation
+	function copyLevel() external virtual returns(bool success) {
+	}
+
 }

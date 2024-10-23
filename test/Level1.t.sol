@@ -2,10 +2,10 @@
 pragma solidity ^0.8.27;
 
 import "forge-std/Test.sol";
-import "src/Level.sol";
+import "src/Level1.sol";
 
-contract TestLevel is Test {
-    Level level;
+contract TestLevel1 is Test {
+    Level1 level;
 
     function setUp() public {
         //BaseLevel.Cell memory testCell = BaseLevel.Cell({v: 1});

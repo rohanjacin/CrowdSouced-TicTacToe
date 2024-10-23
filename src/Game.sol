@@ -1,40 +1,104 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.27;
 
+import "./BaseLevel.sol";
 import "./BaseState.sol";
+import "./BaseSymbol.sol";
+import "./LevelConfigurator.sol";
+//import "./ILevelConfigurator.sol";
+import "./RuleEngine.sol";
 
 // Players
 enum Player { None, Player1, Player2 }
 
+// Errors
+error LevelInvalid();
 error PlayerAddressInvalid();
 
+contract GameHouse {
+	address public goV;
+	address public levelConfigurator;
+	address public ruleEngine;
+
+	constructor() {
+		//goV = new goV();
+		//levelConfigurator = new LevelConfigurator();
+		//ruleEngine = new RuleEngine();
+	}
+}
+
 // Game
-contract Game {
+contract Game is BaseLevel, BaseState, BaseSymbol {
 
 	// Game info
 	struct GameInfo {
+		GameHouse house;
 		address player1;
 		address player2;
 		Player winner;
-		Player turn;		
+		Player turn;
+		mapping (uint8 => uint8[]) cellValues;
 	}
 
 	// Players move
 	struct Move {
-		uint8 row;	
+		uint8 row;
 		uint8 col;
 	}
 
-	// Game instance
-	GameInfo game;
-	uint8[][] board;
+	// SLOT 0 is from BaseLevel (Do NOT use SLOT 0)
+	uint8 level;
+
+	// SLOT 1 is from BaseState (Do NOT use SLOT 1)
+	State board;
+
+	// SLOT 2 is from BaseSymbols (Do NOT use SLOT 2)
+	Symbols meta;
+
+	// Game instance (id = level number)
+	mapping(uint8 => GameInfo) games;
+
+	// Load the default state in Base State
+	constructor(uint8 _levelnum, State memory _state,
+		Symbols memory _symbols) 
+		BaseLevel(_levelnum)
+		BaseState(_state)
+		BaseSymbol(_symbols) {
+
+		// Game House components
+		games[1].house = new GameHouse();
+	}
+
+	// Loads the level
+	function loadLevel() external returns(bool success,
+		string memory message) {
+
+		//
+		if (level == 0) {
+			// Load Level 1
+			//(bool )ILevelConfigurator(games[1].house.levelConfigurator).
+			//	deployLevel(1, );
+		}
+		else if(level == 1) {
+			// Load Level 2
+		}
+
+		return (false, "Max Level (L2) limit reached");
+	}
 
 	// Starts a new game
-	function newGame() external {
+	function newGame(uint8 _level) external {
 
+		// Check if game requested is 
+		// for configured level
+		if (level != _level) {
+			revert LevelInvalid();
+		}
+
+		// Game instance is 1 for now
 		// Iinitalize game
-		game.winner = Player.None;
-		game.turn = Player.Player1;
+		games[1].winner = Player.None;
+		games[1].turn = Player.Player1;
 	}
 
 	// Join the game
@@ -46,17 +110,17 @@ contract Game {
 			revert PlayerAddressInvalid();
 		}
 
-		if (game.player1 == address(0)) {
+		if (games[1].player1 == address(0)) {
 			
 			// Store player 1
-			game.player1 = msg.sender;
+			games[1].player1 = msg.sender;
 			return (true, "You are Player1 - X");
 		}
 
-		if (game.player2 == address(0)) {
+		if (games[1].player2 == address(0)) {
 			
 			// Store player 2
-			game.player2 = msg.sender;
+			games[1].player2 = msg.sender;
 			return (true, "You are Player2 - O");			
 		}
 
@@ -68,7 +132,7 @@ contract Game {
 		string memory message) {
 
 		// Check if already winner exists
-		if (game.winner != Player.None) {
+		if (games[1].winner != Player.None) {
 			return (true, "The game has aready ended!");
 		}
 
@@ -83,12 +147,12 @@ contract Game {
 	// Gets current players who's turn it is
 	function _getCurrentPlayer() internal view returns(address player) {
 
-		if (game.turn == Player.Player1) {
-			return game.player1;
+		if (games[1].turn == Player.Player1) {
+			return games[1].player1;
 		}
 		
-		if (game.turn == Player.Player2) {
-			return game.player2;
+		if (games[1].turn == Player.Player2) {
+			return games[1].player2;
 		}
 	
 		return address(0);
@@ -160,12 +224,12 @@ contract Game {
 			// Columns
 			for (uint8 c; c < 9; c++) {
 				
-				if (board[r][c] == uint8(CellValue.X)) {
+				if (board.v[r][c] == uint8(1/*CellValue.X*/)) {
 					countX++;
 					countO = 0;
 				}
 
-				if (board[r][c] == uint8(CellValue.O)) {
+				if (board.v[r][c] == uint8(2/*CellValue.O*/)) {
 					countO++;
 					countX = 0;
 				}
@@ -206,12 +270,12 @@ contract Game {
 			// Rows
 			for (uint8 r; r < 9; r++) {
 				
-				if (board[r][c] == uint8(CellValue.X)) {
+				if (board.v[r][c] == uint8(1/*CellValue.X*/)) {
 					countX++;
 					countO = 0;
 				}
 
-				if (board[r][c] == uint8(CellValue.O)) {
+				if (board.v[r][c] == uint8(2/*CellValue.O*/)) {
 					countO++;
 					countX = 0;
 				}
@@ -269,12 +333,12 @@ contract Game {
 			
 			for (uint8 p = 1; p <= d; p++ ) {
 				// All pairs loop				
-				if (board[r][c] == board[r-1][c+1]) {
+				if (board.v[r][c] == board.v[r-1][c+1]) {
 
-					if (board[r][c] == uint8(CellValue.X)) {
+					if (board.v[r][c] == uint8(1/*CellValue.X*/)) {
 						countX = countX + 2;
 					}
-					if (board[r][c] == uint8(CellValue.O)) {
+					if (board.v[r][c] == uint8(2/*CellValue.O*/)) {
 						countO = countO + 2;
 					}
 				}
@@ -322,12 +386,12 @@ contract Game {
 			
 			for (uint8 p = 1; p <= d; p++ ) {
 				// All pairs loop				
-				if (board[r][c] == board[r-1][c+1]) {
+				if (board.v[r][c] == board.v[r-1][c+1]) {
 
-					if (board[r][c] == uint8(CellValue.X)) {
+					if (board.v[r][c] == uint8(1/*CellValue.X*/)) {
 						countX = countX + 2;
 					}
-					if (board[r][c] == uint8(CellValue.O)) {
+					if (board.v[r][c] == uint8(2/*CellValue.O*/)) {
 						countO = countO + 2;
 					}
 				}
@@ -407,5 +471,4 @@ contract Game {
 
 		return (winner, count);
 	}
-
 }

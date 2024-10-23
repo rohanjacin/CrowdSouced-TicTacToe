@@ -2,7 +2,7 @@
 pragma solidity 0.8.27;
 
 // Possible cell values
-enum CellValue { Empty, X, O}
+enum CellValue { Empty }
 
 // Base State
 abstract contract BaseState {
@@ -14,6 +14,7 @@ abstract contract BaseState {
 	// Rn | _ | _ | _ | _ |
 
 	struct State {
+		//uint8 v;
 		uint8[][] v;
 	}
 

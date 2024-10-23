@@ -6,6 +6,7 @@ import "./IGoV.sol";
 import "./IRuleEngine.sol";
 
 error ContractAddressesInvalid();
+error DeployLevelInvalid();
 error BiddersAddressInvalid();
 error BiddersLevelNumberInvalid();
 error BiddersLevelCodeSizeInvalid();
@@ -115,11 +116,22 @@ contract LevelConfigurator {
 	}
 
 	// Deploys the level
-	function deployLevel(uint256 levelLoc, uint256 salt) 
+	function deployLevel(uint8 level, uint256 salt) 
 		external payable returns(address target) {
+
+		if (!(level == 1) || (level == 2)) {
+			revert DeployLevelInvalid();
+		}
+
+		// Load level from memory
+		// TODO: Partition memory
+		bytes32 levelLoc;
 
 		// Deploy using create2
 		assembly {
+
+			if eq(level, 1) { levelLoc := 0x80 }
+			if eq(level, 2) { levelLoc := 0x580 }
 
 			// level code length is at 0xD0,
 			// state length is at 0xE0 
@@ -127,7 +139,7 @@ contract LevelConfigurator {
 				add(mload(levelLoc), mload(add(levelLoc, 0x20))), salt)
 		}
 
-		_addLevelRules(target, levelLoc);
+		//_addLevelRules(target, levelLoc);
 	}
 
 	// Add level rules to rule base
