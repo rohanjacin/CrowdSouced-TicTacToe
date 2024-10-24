@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.27;
+import "forge-std/console.sol";
 
 // Basic level layout
 abstract contract BaseLevel {
@@ -9,10 +10,16 @@ abstract contract BaseLevel {
 
 	constructor(uint8 _levelnum) {
 		levelnum = _levelnum;
+		console.log("BaseLeve: ");
 	}
 
-	// Should be overridden by Level implementation
-	function copyLevel() external virtual returns(bool success) {
-	}
+	// Updates the base level data to the callers
+	// context when delegated
+	function copyLevel() public virtual returns(bytes memory id){
+		levelnum = levelnum;
 
+		assembly {
+			id := levelnum.slot
+		}
+	}
 }

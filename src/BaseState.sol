@@ -26,6 +26,16 @@ abstract contract BaseState {
 		state = _state;
 	}
 
+	// Updates the base state data to the callers
+	// context when delegated
+	function copyState() public virtual returns(bytes memory id) {
+		state = state;
+
+		assembly {
+			id := state.slot
+		}		
+	}
+
 	// To be overriden by level
     function supportedStates() 
     	public view virtual returns (bytes memory) {

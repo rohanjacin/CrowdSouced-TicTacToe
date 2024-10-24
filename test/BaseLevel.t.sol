@@ -2,13 +2,14 @@
 pragma solidity ^0.8.27;
 
 import "forge-std/Test.sol";
-import "src/Level1.sol";
+import "src/BaseLevel.sol";
 
-contract TestLevel1 is Test {
-    Level1 level;
+contract TestBaseLevel is Test {
+    //BaseLevel blevel;
 
-    function setUp() public {
-        //level = new Level1();
+    function setUp() public pure {
+        console.log("In base setupppp");
+        //blevel = new BaseLevel(1);
         //BaseLevel.Cell memory testCell = BaseLevel.Cell({v: 1});
         //LcellBaseLevel.Cell(1);
 /*        level = new Level(1, StateL1({
@@ -17,13 +18,12 @@ contract TestLevel1 is Test {
                 CellValueL1.X, CellValueL1.X, CellValueL1.X]}));
 */    }
 
-/*    function test_readCell() external view {
-        console.log("Test read cell");
+/*    function test_copyLevel() external view {
+        console.log("Test test_copyLevellll");
+    }
 
-        //Cell memory testCell = Cell({row:1, col:1});
-        assertEq(level.readCell(), uint8(CellValueL1.X), "value mistmatch");
-
-    }*/
+*//*    function test_heyLevel() external {
+        console.log("Test test_heyLevellll");
+        blevel.heyLevel();
+    }*/    
 }
-
-//0x00000000000000000000000000000000000000000000000000000000e7783a66

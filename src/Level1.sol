@@ -15,16 +15,24 @@ contract Level1 is BaseLevel, BaseState, BaseSymbol {
 		Symbols memory _symbols)
 		BaseLevel(_levelnum)
 		BaseState(_state)
-		BaseSymbol(_symbols) {
+		BaseSymbol(_symbols) 
+		{
 	}
 
 	// Inhertied from ILevel Loads Level 1
-	function copyLevel() external override returns(bool success) {
+	function copyLevel() public override returns(bytes memory id){
 		
-		//BaseLevel(levelnum);
+		// Update Base Level
+		// Update Base State
+		// Update Base Symbol
+		id = abi.encodePacked(
+					super.copyLevel(),
+					super.copyState(),
+					super.copySymbol());
+
 	}
 
-	// ❌
+	// ❌ ⍰
 	function setCellu274C() external view {
 
 	}
@@ -35,10 +43,10 @@ contract Level1 is BaseLevel, BaseState, BaseSymbol {
 	}
 
 	// Inherited from BaseState - all implemented and supported states in level
-    function supportedStates() 
+/*    function supportedStates() 
     	public view virtual override returns (bytes memory) {
 
     	return abi.encode(this.setCellu274C.selector); 
-    }
+    }*/
 
 }

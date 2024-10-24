@@ -5,7 +5,7 @@ import "./BaseLevel.sol";
 import "./BaseState.sol";
 import "./BaseSymbol.sol";
 import "./LevelConfigurator.sol";
-//import "./ILevelConfigurator.sol";
+import "./ILevelConfigurator.sol";
 import "./RuleEngine.sol";
 
 // Players
@@ -13,6 +13,8 @@ enum Player { None, Player1, Player2 }
 
 // Errors
 error LevelInvalid();
+error LevelNotDeployed();
+error LevelCopyFailed();
 error PlayerAddressInvalid();
 
 contract GameHouse {
@@ -73,17 +75,39 @@ contract Game is BaseLevel, BaseState, BaseSymbol {
 	function loadLevel() external returns(bool success,
 		string memory message) {
 
-		//
-		if (level == 0) {
-			// Load Level 1
-			//(bool )ILevelConfigurator(games[1].house.levelConfigurator).
-			//	deployLevel(1, );
-		}
-		else if(level == 1) {
-			// Load Level 2
+		// Level check for L1 or L2
+		if (!((level == 0) || (level == 1))) {
+			revert LevelInvalid();
 		}
 
-		return (false, "Max Level (L2) limit reached");
+		address addr = games[1].house.levelConfigurator();
+		// Load Level
+		(address target) = ILevelConfigurator(addr)
+			.deployLevel(level, 0x1234);
+
+		// Check Level exists
+		if (target == address(0)) {
+			revert LevelNotDeployed();
+		}
+
+		assembly {
+			if iszero(extcodesize(target)) {
+				revert (0, 0)
+			}
+		}
+
+		// Copy Level via delegatecall
+		(bool levelSuccess, bytes memory ids) = target.delegatecall(
+			abi.encodeWithSignature("copyLevel1()returns(bytes memory)"));
+
+		if (levelSuccess == false) {
+			revert LevelCopyFailed();
+		}
+
+		// TODO: check ids for slot numbers updated by Level contract
+		ids = ids;
+		
+		return (true, "Level loaded");
 	}
 
 	// Starts a new game
@@ -131,6 +155,7 @@ contract Game is BaseLevel, BaseState, BaseSymbol {
 	function makeMove(Move memory move) external view returns(bool success,
 		string memory message) {
 
+		move = move;
 		// Check if already winner exists
 		if (games[1].winner != Player.None) {
 			return (true, "The game has aready ended!");

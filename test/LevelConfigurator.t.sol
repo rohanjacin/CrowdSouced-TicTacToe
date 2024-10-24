@@ -12,8 +12,7 @@ contract TestLevelConfigurator is Test {
         //levelConfig = new LevelConfigurator();
     }
 
-    function test_initLevel() external {
-        console.log("Test init level");
+/*    function test_initLevel() external {
 
         uint8[4] memory _levelcode = [0xe7, 0x78, 0x3a, 0x66];
         uint8[4] memory _levelstate = [0x01, 0x01, 0x01, 0x01];
@@ -22,5 +21,5 @@ contract TestLevelConfigurator is Test {
         bytes memory data1 = abi.encode(_levelstate);
 
         //levelConfig.initLevel(data, data1);
-    }
+    }*/
 }

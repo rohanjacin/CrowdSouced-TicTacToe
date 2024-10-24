@@ -51,8 +51,7 @@ contract LevelConfigurator {
 	}
 
 	// Enables Level configuration
-	// supplied with previous level number
-	function start(LevelConfig calldata prevLevel) external {
+	function start() external pure {
 
 		// Store the previous level in memory
 		// TODO: optimize for packed struct
@@ -253,7 +252,7 @@ contract LevelConfigurator {
 
 	// Check state validity
 	function _checkStateValidity(uint8 _stateLen,
-		uint8 _stateCount)internal view {
+		uint8 _stateCount) internal pure {
 
 		// Check if State has valid entries
 		uint validState = uint(CellValue.Empty) + _stateCount;

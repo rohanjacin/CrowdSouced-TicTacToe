@@ -72,6 +72,8 @@ contract RuleEngine {
 								abi.encode(levelAddress), sel));
 			rules[stateHash] = execHash;
 		}
+
+		success = true;
 	}
 
 	// Setting a cell value as per the rule

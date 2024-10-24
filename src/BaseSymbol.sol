@@ -15,4 +15,14 @@ abstract contract BaseSymbol {
 	constructor(Symbols memory _symbols) {
 		symbols = _symbols;
 	}
+
+	// Updates the base symbol data to the callers
+	// context when delegated
+	function copySymbol() public virtual returns(bytes memory id) {
+		symbols = symbols;
+
+		assembly {
+			id := symbols.slot
+		}		
+	}
 }
