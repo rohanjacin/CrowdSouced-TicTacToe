@@ -4,32 +4,35 @@ pragma solidity 0.8.27;
 import "./BaseLevel.sol";
 import "./BaseState.sol";
 import "./BaseSymbol.sol";
+import "./BaseSnap.sol";
 
 // Possible cell values
 enum CellValueL1 { CellValue , X, O}
 
 // Level defination and implementation
-contract Level1 is BaseLevel, BaseState, BaseSymbol {
+contract Level1 is BaseLevel, BaseState, BaseSymbol, BaseSnap {
 
 	constructor(uint8 _levelnum, State memory _state, 
 		Symbols memory _symbols)
 		BaseLevel(_levelnum)
 		BaseState(_state)
-		BaseSymbol(_symbols) 
-		{
+		BaseSymbol(_symbols)
+		BaseSnap() {
 	}
 
 	// Inhertied from ILevel Loads Level 1
-	function copyLevel() public override returns(bytes memory id){
+	function copyLevelData() public returns(bool success){
 		
-		// Update Base Level
-		// Update Base State
-		// Update Base Symbol
-		id = abi.encodePacked(
+		// Update Data Snapshot to caller's context
+		(bool ret, bytes memory data) = dataSnapAddr.call("");
+		ret = ret;
+		data = data;
+/*		id = abi.encodePacked(
 					super.copyLevel(),
 					super.copyState(),
 					super.copySymbol());
-
+*/
+		success = true;
 	}
 
 	// ❌ ⍰

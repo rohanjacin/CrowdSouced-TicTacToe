@@ -6,7 +6,8 @@ import {console} from "forge-std/console.sol";
 contract GoV {
 
 	// Approve valid level proposal
-	function approveValidLevelProposal(uint256 levelLoc) external {
+	function approveValidLevelProposal(address levelAddr,
+		address stateSnap) external {
 
 		
 	}	

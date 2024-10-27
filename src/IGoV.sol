@@ -4,5 +4,6 @@ pragma solidity 0.8.27;
 interface IGoV {
 	
 	// Approve valid level proposal
-	function approveValidLevelProposal(uint256 levelLoc) external;
+	function approveValidLevelProposal(address levelAddr,
+		address stateSnap) external;
 }

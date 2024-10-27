@@ -6,7 +6,6 @@ import "./IGoV.sol";
 import "./IRuleEngine.sol";
 
 error ContractAddressesInvalid();
-error DeployLevelInvalid();
 error BiddersAddressInvalid();
 error BiddersLevelNumberInvalid();
 error BiddersLevelCodeSizeInvalid();
@@ -103,39 +102,28 @@ contract LevelConfigurator {
 							uint8(_levelSymbols.length));
 
 		// Store level code and state
-		uint256 levelLoc = _loadLevel(_levelCode.length, 
-							uint8(_levelState.length),
-							uint8(_levelSymbols.length));
+		(bytes32 levelLoc, address stateSnap) = _storeLevel();
+
+		// Deploy level contract
+		bytes32 salt = keccak256(abi.encodePacked(msg.sender));
+		address levelAddr = _deployLevel(levelLoc, salt);
 
 		// Call GoV contract to approve level
 		// with level memory location
-		IGoV(govAddress).approveValidLevelProposal(levelLoc);
+		IGoV(govAddress).approveValidLevelProposal(levelAddr, stateSnap);
 
 		success = true;
 	}
 
 	// Deploys the level
-	function deployLevel(uint8 level, uint256 salt) 
-		external payable returns(address target) {
+	function _deployLevel(bytes32 levelLoc, bytes32 salt) 
+		internal returns(address target) {
 
-		if (!(level == 1) || (level == 2)) {
-			revert DeployLevelInvalid();
-		}
-
-		// Load level from memory
-		// TODO: Partition memory
-		bytes32 levelLoc;
-
-		// Deploy using create2
+		// Deploy using create
 		assembly {
 
-			if eq(level, 1) { levelLoc := 0x80 }
-			if eq(level, 2) { levelLoc := 0x580 }
-
-			// level code length is at 0xD0,
-			// state length is at 0xE0 
-			target := create2(0, levelLoc, 
-				add(mload(levelLoc), mload(add(levelLoc, 0x20))), salt)
+			target := create2(0, add(levelLoc, 0x20), 
+				mload(levelLoc), salt)
 		}
 
 		//_addLevelRules(target, levelLoc);
@@ -225,9 +213,9 @@ contract LevelConfigurator {
 		success = true;
 	}
 
-	// Load level code and state in memory 
-	function _loadLevel(uint256 codeLen, uint8 stateLen, uint8 symbolLen)
-		internal pure returns (uint256 location) {
+	// Store level code and state in memory 
+	function _storeLevel() internal returns (
+		bytes32 _location, address _stateSnap) {
 
 		// 0x80 |-----level------|
 		// 0xA0 |-----cells------|
@@ -240,13 +228,36 @@ contract LevelConfigurator {
 		// 0x__ |--levelsymbols--|
 
 		// Store level code and state
-		location = uint256(0xD0);
 		assembly {
-			calldatacopy(location, 0x04, codeLen)
-			calldatacopy(add(location, codeLen), 
-				add(0x04, codeLen), stateLen)
-			calldatacopy(add(location, add(codeLen, stateLen)), 
-				add(0x04, stateLen), symbolLen)			
+
+			// Copy level code 
+			let loc := mload(0x40)
+			let off := calldataload(0x04)
+			let len := sub(off, 0x20)
+			calldatacopy(loc, off, len)
+			_location := loc
+
+			// Copy level state 
+			loc := mload(0x40)
+			off := add(off, 0x20)
+			len := sub(off, 0x20)
+			let stateOff := off 
+			let stateLen := len 
+			calldatacopy(loc, off, len)
+
+			// Copy level symbols 
+			loc := mload(0x40)
+			off := add(off, 0x20)
+			len := sub(off, 0x20)
+			calldatacopy(loc, off, len)
+
+			// Copy level state to new memory 
+			loc := mload(0x40)
+			calldatacopy(loc, stateOff, stateLen)
+			// Take snapshot of state
+			loc := mload(0x40)
+			mstore(loc, 0x60005260206000F3) // Constructor 
+			_stateSnap := create(0, loc, stateLen)
 		}
 	}
 

@@ -20,17 +20,17 @@ contract Level2 is BaseLevel, BaseState, BaseSymbol {
 	}
 
 	// Inhertied from ILevel Loads Level 2
-	function copyLevel() public override returns(bytes memory id){
+	function copyLevelData() public returns(bytes memory id){
 		
 		// Update Base Level
 		// Update Base State
 		// Update Base Symbol
-		id = abi.encodePacked(
+/*		id = abi.encodePacked(
 					super.copyLevel(),
 					super.copyState(),
 					super.copySymbol());
 
-	}
+*/	}
 
 	// ⭐
 	function setCellu2B50() external view {

@@ -72,30 +72,28 @@ contract Game is BaseLevel, BaseState, BaseSymbol {
 	}
 
 	// Loads the level
-	function loadLevel() external returns(bool success,
-		string memory message) {
+	function loadLevel(uint8 _level, address _levelState) 
+		external pure returns(bool success, string memory message) {
 
 		// Level check for L1 or L2
-		if (!((level == 0) || (level == 1))) {
+		// TODO check with existing level
+		if (!((_level == 0) || (_level == 1))) {
 			revert LevelInvalid();
 		}
-
-		address addr = games[1].house.levelConfigurator();
-		// Load Level
-		(address target) = ILevelConfigurator(addr)
-			.deployLevel(level, 0x1234);
-
-		// Check Level exists
-		if (target == address(0)) {
-			revert LevelNotDeployed();
-		}
-
+		_levelState=_levelState;
+/*		// Check if Level State snapshot exists 
 		assembly {
-			if iszero(extcodesize(target)) {
+			let len := extcodesize(_levelState)
+			let off := mload(0x40)
+
+			if iszero(len) {
 				revert (0, 0)
 			}
-		}
 
+			extcodecopy(_levelState, off, 0, len)
+		}
+*/
+/*
 		// Copy Level via delegatecall
 		(bool levelSuccess, bytes memory ids) = target.delegatecall(
 			abi.encodeWithSignature("copyLevel1()returns(bytes memory)"));
@@ -106,8 +104,8 @@ contract Game is BaseLevel, BaseState, BaseSymbol {
 
 		// TODO: check ids for slot numbers updated by Level contract
 		ids = ids;
-		
-		return (true, "Level loaded");
+
+*/		return (true, "Level loaded");
 	}
 
 	// Starts a new game
