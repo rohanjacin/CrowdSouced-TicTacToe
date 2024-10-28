@@ -9,6 +9,9 @@ import "./Level1.sol";
 // Possible cell values
 enum CellValueL2 { CellValueL1, Star, Bomb}
 
+//error WrongStateForLevel();
+//error WrongSymbolsForLevel();
+
 // Level defination and implementation
 contract Level2 is BaseLevel, BaseState, BaseSymbol {
 
@@ -17,6 +20,32 @@ contract Level2 is BaseLevel, BaseState, BaseSymbol {
 		BaseLevel(_levelnum)
 		BaseState(_state)
 		BaseSymbol(_symbols) {
+
+		assembly {
+			// Fetch dimension of state
+			let ptr := mload(_state)
+			let len := mload(ptr)
+			let d, s
+
+			switch _levelnum
+			case 2 { d := 9 s := 4 }
+			default {
+				revert(0, 0)
+			}
+
+			// Check state length for level
+			if iszero(eq(len, d)) {
+				revert (0, 0)
+			}
+
+			ptr := mload(_symbols)
+			len := mload(ptr)
+
+			// Check symbol length for level
+			if iszero(eq(len, s)) {
+				revert (0, 0)
+			}
+		}
 	}
 
 	// Inhertied from ILevel Loads Level 2

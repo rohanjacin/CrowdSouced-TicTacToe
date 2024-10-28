@@ -82,23 +82,57 @@ contract BaseState {
 
 	// Updates the base state data to the callers
 	// context when delegated
-	function copyState(bytes memory data) public virtual returns(bool success) {
+	function copyState(State memory _state) public virtual returns(bool success) {
 		//state = state; 
 
-/*		assembly {
+		assembly {
+			let d
+			// Fetch dimension
+			let ptr := mload(_state)
+			let len := mload(ptr)
 
-			// Loop through state byte and store in cells in [][]v
-			// Each byte occupies one slot for now
-			let len := mload(data)
+			// Revert if length is not 9 for Level 1
+			// Revert if length is not 81 for Level 2
+			switch len
+			case 3 { d := 3 }
+			case 9 { d := 9 }
+			default {
+				revert(0, 0)
+			}
 
-			for { let i := 0 } lt(i, len) { add(i, 1) } {
-				
-				for { let j := 0 } lt(j, 32) { add(j, 1) } {
-					
-					sstore(, num)
+			ptr := add(ptr, 0x20)
+
+			// Find length of next 3 arrays
+			// and compare with dimension,
+			// all should be 3 
+			for { let i := 0 } lt(i, 1) { i := add(i, 1) } {
+
+				ptr := mload(add(ptr, mul(i, 0x20)))			
+				len := mload(ptr)
+				if iszero(eq(len, d)) {
+					revert (0, 0)
+				}
+
+				ptr := add(ptr, 0x20)
+
+				for { let j := 0 let v := 0 let s := 0 let p := 0 } 
+					lt(j, len) { j := add(j, 1) } {
+
+					 // Calculate the slot and store					
+					 v := mload(add(ptr, mul(j, 0x20)))
+					 p := mload(0x40)
+					 mstore(p, state.slot)
+					 mstore(mload(0x40), add(keccak256(p, add(p, 0x20)), i))
+					 p := mload(0x40)
+					 s := add(keccak256(p, add(p, 0x20)), j)
+					 sstore(s, v)
 				}
 			}
-		}*/
+		}
+	}
+
+	function getstate() public view {
+
 	}
 
 	// To be overriden by level

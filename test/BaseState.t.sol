@@ -4,8 +4,6 @@ pragma solidity ^0.8.27;
 import "forge-std/Test.sol";
 import { BaseState } from "src/BaseState.sol";
 
-type Cell is uint256;
-
 contract TestBaseState is Test {
 
     function setUp() public {
@@ -202,5 +200,36 @@ contract TestBaseState is Test {
         state4=state4;
     }
 
-    // TODO: Test copy state    
+    // Test copy state 
+    function test_copyState() external {
+
+        BaseState.State memory s1;
+        // Should pass if length of state is 9 i.e 3x3 matrix
+        s1 = BaseState.State({v: new uint256[][](3)});
+        s1.v[0] = new uint256[](3);
+        s1.v[1] = new uint256[](3);
+        s1.v[2] = new uint256[](3);
+
+        // [1, 2, 3] R0
+        s1.v[0][0] = uint256(1);
+        s1.v[0][1] = uint256(2);
+        s1.v[0][2] = uint256(3);
+
+        // [4, 5, 7] R1
+        s1.v[1][0] = uint256(4);
+        s1.v[1][1] = uint256(5);
+        s1.v[1][2] = uint256(6);
+
+        // [7, 8, 9] R2
+        s1.v[2][0] = uint256(7);
+        s1.v[2][1] = uint256(8);
+        s1.v[2][2] = uint256(9);        
+
+        // C0  C1 C2
+        // [1, 2, 3] R0
+        // [4, 5, 7] R1
+        // [7, 8, 9] R2
+        BaseState S1 = new BaseState(s1);        
+        S1.copyState(s1);
+    }   
 }

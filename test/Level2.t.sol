@@ -2,14 +2,14 @@
 pragma solidity ^0.8.27;
 
 import "forge-std/Test.sol";
-import "src/Level1.sol";
+import "src/Level2.sol";
 import { BaseState } from "src/BaseState.sol";
 import { BaseSymbol } from "src/BaseSymbol.sol";
 
-contract TestLevel1 is Test {
+contract TestLevel2 is Test {
 
     function setUp() public {
-        //level = new Level1();
+        //level = new Level2();
     }
 
     // Internal function to set levelnum
@@ -19,7 +19,7 @@ contract TestLevel1 is Test {
     }
 
     // Internal function to set state
-    function _setState(uint8 _num) internal returns (Level1.State memory state) {
+    function _setState(uint8 _num) internal returns (Level2.State memory state) {
 
         if (_num == 1) {
             // Set state of level 1 i.e 3x3 matrix
@@ -175,7 +175,7 @@ contract TestLevel1 is Test {
     }
 
     // Internal function to set symbols
-    function _setSymbol(uint8 num) internal returns (Level1.Symbols memory symbols) {
+    function _setSymbol(uint8 num) internal returns (Level2.Symbols memory symbols) {
 
         if (num == 1) {
             // Set if length of symbols is 2
@@ -204,19 +204,20 @@ contract TestLevel1 is Test {
         }
     }
 
-    // Test Level 1 contract creation
-    function test_level1() external {
+    // Test Level 2 contract creation
+    function test_level2() external {
 
-        // Should pass for levelnum = 1, state = 3x3 and symbols = 2
-        Level1 levelA = new Level1(_setLevelNum(1), _setState(1), _setSymbol(1));
+        // Should pass for levelnum = 2, state = 9x9 and symbols = 4
+        Level2 levelA = new Level2(_setLevelNum(2), _setState(2), _setSymbol(2));
 
-        // Should fail for levelnum = 1, state = 3x3 and symbols = 4
+
+        // Should fail for levelnum = 2, state = 3x3 and symbols = 2
         vm.expectRevert();
-        Level1 levelB = new Level1(_setLevelNum(1), _setState(1), _setSymbol(2));
+        Level2 levelB = new Level2(_setLevelNum(2), _setState(1), _setSymbol(1));
         
 
-        // Should fail for levelnum = 1, state = 9x9 and symbols = 4
+        // Should fail for levelnum = 1, state = 3x3 and symbols = 2
         vm.expectRevert();
-        Level1 levelC = new Level1(_setLevelNum(1), _setState(2), _setSymbol(2));
+        Level2 levelC = new Level2(_setLevelNum(1), _setState(1), _setSymbol(1));
     }
 }

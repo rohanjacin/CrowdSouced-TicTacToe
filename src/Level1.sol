@@ -9,32 +9,60 @@ import "./BaseSnap.sol";
 // Possible cell values
 enum CellValueL1 { CellValue , X, O}
 
+error WrongStateForLevel();
+error WrongSymbolsForLevel();
+
 // Level defination and implementation
-contract Level1 is BaseLevel, BaseState, BaseSymbol, BaseSnap {
+contract Level1 is BaseLevel, BaseState, BaseSymbol {
 
 	constructor(uint8 _levelnum, State memory _state, 
 		Symbols memory _symbols)
 		BaseLevel(_levelnum)
 		BaseState(_state)
-		BaseSymbol(_symbols)
-		BaseSnap() {
+		BaseSymbol(_symbols) {
+
+		assembly {
+			// Fetch dimension of state
+			let ptr := mload(_state)
+			let len := mload(ptr)
+			let d, s
+
+			switch _levelnum
+			case 1 { d := 3 s := 2 }
+			default {
+				revert(0, 0)
+			}
+
+			// Check state length for level
+			if iszero(eq(len, d)) {
+				revert (0, 0)
+			}
+
+			ptr := mload(_symbols)
+			len := mload(ptr)
+
+			// Check symbol length for level
+			if iszero(eq(len, s)) {
+				revert (0, 0)
+			}
+		}
 	}
 
 	// Inhertied from ILevel Loads Level 1
-	function copyLevelData() public returns(bool success){
+/*	function copyLevelData() public returns(bool success){
 		
 		// Update Data Snapshot to caller's context
 		(bool ret, bytes memory data) = dataSnapAddr.call("");
 		ret = ret;
 		data = data;
-/*		id = abi.encodePacked(
+		id = abi.encodePacked(
 					super.copyLevel(),
 					super.copyState(),
 					super.copySymbol());
-*/
+
 		success = true;
 	}
-
+*/
 	// ❌ ⍰
 	function setCellu274C() external view {
 
