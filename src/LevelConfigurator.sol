@@ -16,15 +16,15 @@ error BiddersStatesSymbolsInvalid();
 contract LevelConfigurator {
 
 	// Contract addresses (Slot 0, 1, 2)
-	address internal govAddress;
+/*	address internal govAddress;
 	address internal ruleengineAddress;
 	address internal gameAddress;
-
+*/
 	// Constants (Slot 3)
 	uint8 constant internal MAX_LEVEL_STATE = type(uint8).max;
 	uint8 constant internal MAX_LEVELS = 2; 
 	uint8 constant internal MAX_CELLS_L1 = 9;
-	uint8 constant internal MAX_CELLS_L2 = 81;
+	uint8 constant internal MAX_CELLS_L2 = 81 - MAX_CELLS_L1;
 	uint32 constant internal MAX_LEVEL_CODESIZE = 500000; // 500k
 
 	struct LevelConfig {
@@ -33,11 +33,11 @@ contract LevelConfigurator {
 		uint256 marker;
 	}
 
-	constructor (address _govAddress,
+	constructor (/*address _govAddress,
 		address _gameAddress,
-		address _ruleengineAddress) {
+		address _ruleengineAddress*/) {
 
-		if ((_govAddress == address(0)) ||
+/*		if ((_govAddress == address(0)) ||
 			(_gameAddress == address(0)) ||
 			(_ruleengineAddress == address(0))) {
 
@@ -46,7 +46,7 @@ contract LevelConfigurator {
 
 		govAddress =_govAddress;
 		gameAddress =_gameAddress;
-		ruleengineAddress = _ruleengineAddress;
+		ruleengineAddress = _ruleengineAddress;*/
 	}
 
 	// Enables Level configuration
@@ -70,35 +70,56 @@ contract LevelConfigurator {
 					   bytes calldata _levelSymbols) 
 		external returns(bool success) {
 
-		success = false;
 		// Check for sender's address
-		if (msg.sender != address(0))
+		if (msg.sender == address(0))
 			revert BiddersAddressInvalid();
 
-		// Check for level number
-		uint8 levelNum = abi.decode(_levelNumber, (uint8));
-		if (levelNum <= MAX_LEVELS)
-			revert BiddersLevelNumberInvalid();
-
 		// Check for code length
-		if (_levelCode.length <= MAX_LEVEL_CODESIZE)
+		if ((_levelCode.length > MAX_LEVEL_CODESIZE) || 
+			(_levelCode.length == 0))
 			revert BiddersLevelCodeSizeInvalid();
 
+		// Check for level number
+		(uint8 levelNum) = abi.decode(_levelNumber, (uint8));
+
+		if ((levelNum > MAX_LEVELS) || 
+			(levelNum == 0))
+			revert BiddersLevelNumberInvalid();
+
 		// Check for state length
-		if (_levelState.length <= MAX_LEVEL_STATE)
+		if ((_levelState.length >= MAX_LEVEL_STATE) ||
+		    (_levelState.length == 0))
 			revert BiddersLevelStateSizeInvalid();
 
 		// Check for number of state cells 
-		if (_levelState.length < MAX_CELLS_L2)
-			revert BiddersLevelStateSizeInvalid();
-
+		if (levelNum == 1) {
+			if (_levelState.length > MAX_CELLS_L1)
+				revert BiddersLevelStateSizeInvalid();
+		}
+		else if (levelNum == 2) {
+			if (_levelState.length > MAX_CELLS_L2)
+				revert BiddersLevelStateSizeInvalid();
+		}
+		
 		// Check for state symbols length
-		if (_levelSymbols.length < MAX_LEVEL_STATE)
+		if ((_levelSymbols.length >= MAX_LEVEL_STATE) ||
+		    (_levelSymbols.length == 0))
 			revert BiddersStatesSymbolsInvalid();
+
+		// Check for number of symbols in level 
+		if (levelNum == 1) {
+			if (_levelSymbols.length > 8) // ❌ and ⭕
+				revert BiddersStatesSymbolsInvalid();
+		}
+		else if (levelNum == 2) {
+			if (_levelSymbols.length > 16) // ❌, ⭕, ⭐ and 💣
+				revert BiddersStatesSymbolsInvalid();
+		}
+
 
 		// Check state against common level rules
 		// TODO: check for return value (return var causes stack too deep)
-		_checkStateValidity(uint8(_levelState.length), 
+/*		_checkStateValidity(_levelState, uint8(_levelState.length), 
 							uint8(_levelSymbols.length));
 
 		// Store level code and state
@@ -110,8 +131,8 @@ contract LevelConfigurator {
 
 		// Call GoV contract to approve level
 		// with level memory location
-		IGoV(govAddress).approveValidLevelProposal(levelAddr, stateSnap);
-
+		//IGoV(govAddress).approveValidLevelProposal(levelAddr, stateSnap);
+*/
 		success = true;
 	}
 
@@ -207,8 +228,8 @@ contract LevelConfigurator {
 			keccak256(abi.encodePacked(sloc)));
 
 		// Add rules to rule engine		
-		IRuleEngine(ruleengineAddress).addRules(
-			levelAddress, states, symbols);
+		//IRuleEngine(ruleengineAddress).addRules(
+		//	levelAddress, states, symbols);
 
 		success = true;
 	}
@@ -262,28 +283,163 @@ contract LevelConfigurator {
 	}
 
 	// Check state validity
-	function _checkStateValidity(uint8 _stateLen,
-		uint8 _stateCount) internal pure {
+	function _checkStateValidity(uint8 _levelNum,
+		bytes memory _state, bytes memory _symbols) external pure {
+
+		uint8 _symbolLen;
+		assembly {
+			_symbolLen := div(mload(_symbols), 4)
+		}
 
 		// Check if State has valid entries
-		uint validState = uint(CellValue.Empty) + _stateCount;
-		// TODO: assert validState fits in uint8 
+		uint validState = uint(CellValue.Empty) + _symbolLen;
 
-		uint256 stateCountMapRow;
-		uint256 stateCountMapCol;
-		uint8 _marker = MAX_CELLS_L1;
-		//bytes32 _prevLevel = levelConfigLoc;
+		//uint256 rowBitMap;
+		//uint256 row;
+		//uint256 state;
+     	assembly {
+			let state
+			let colBitMap := 0
+			let rowBitMap := 0
+			let s, ptr
+			let col := 0
+			let row := 0 
+			let _marker
+			//let len := mload(_state)
 
-		// Validation logic 
-			// 0 xor 1 = 1
-			// 1 xor 1 = 0
-			// 2 xor 1 = 3
-			// 3 xor 1 = 2
-			// 4 xor 1 = 5
-			// 5 xor 1 = 4	
-			// So if (state xor mask) is less than max valid state
-			// then the state is valid or else invalid  		
-		assembly {
+			ptr := add(_state, 0x20)
+			s := add(div(mload(_state), 32), 1)
+
+/*				if eq(s, 2)
+				{
+					revert (0,0)
+				}
+*/
+			switch _levelNum
+			case 1 { _marker := 0 }
+			case 2 { _marker := 9 }
+			default { _marker := 0 }
+
+			//  Compare state word if within valid state 
+			for { let i := 0 let k := 0
+				  switch lt(mload(_state), 32)
+				  case 0 { k := 32 }
+				  case 1 { k := mod(mload(_state), 32) }
+			    }
+				lt(i, s) 
+				{ i := add(i, 1) ptr := add(ptr, 0x20)
+				  switch sub(s, i)
+				  case 1 { k := mload(_state) }
+				  default { k := mul(add(i, 1), 32) }
+				} {
+				
+				// Each state check
+				for { let j := mul(i, 32) } lt(j, k) { j := add(j, 1) } {
+
+/*					if eq(j, 34) {
+						revert(0, 0)
+					}*/
+					state := byte(mod(j, 32), mload(ptr))
+
+					if iszero(state) {
+						continue
+					}
+
+					if lt(validState, state) {
+						//revert (0, 0)
+					}
+
+					//if eq(state, 2) {
+					//	revert(0, 0)
+					//}
+					//  0   1   2   3   4   5   6   7   8
+		            //  C0  C1  C2  C3  C4  C5  C6  C7  C8
+		            // [ X ,   , O ,   ,   ,   ,   ,   ,   ] R0
+		            // [   ,   ,   ,   ,   ,   ,   ,   ,   ] R1
+		            // [   ,   ,   ,   ,   ,   ,   ,   ,   ] R2
+		            // [   ,   ,   , X , O ,   ,   ,   ,   ] R3
+		            // [   ,   ,   ,   ,   ,   ,   ,   ,   ] R4
+		            // [ X , O ,   ,   ,   ,   ,   ,   ,   ] R5
+		            // [   ,   ,   ,   ,   ,   ,   ,   ,   ] R6
+		            // [   ,   ,   ,   ,   ,   ,   ,   ,   ] R7
+		            // [   ,   ,   ,   ,   ,   ,   ,   ,   ] R8
+
+		            // [ X ,   , O ,   ,   ,   ,   ,   ,   ] R0
+		            if iszero(_marker) {
+		            	//revert (0, 0)
+		            }
+
+					// Check if current cell is in new col,
+					// refresh state count col map 
+					row := div(j, _marker)
+					col := mod(j, _marker)	
+
+					if eq(and(rowBitMap, shl(mul(row, 8), 0xFF)), 
+						  shl(mul(row, 8), 0xFF)) {
+						revert (0, 0)
+					}
+
+					let m := byte(sub(31, row), xor(rowBitMap, shl(mul(row, 8), state)))
+					
+					// State already present
+					if iszero(m) {
+						revert(0, 0)
+					}
+					// Empty
+					if eq(m, state) {
+						rowBitMap := or(rowBitMap, shl(mul(row, 8), state))
+
+					}
+
+					if iszero(eq(m, state)) {
+						rowBitMap := or(rowBitMap, shl(mul(row, 8), 0xFF))
+					}
+
+
+					if eq(and(colBitMap, shl(mul(col, 8), 0xFF)), 
+						  shl(mul(col, 8), 0xFF)) {
+						revert (0, 0)
+					}
+
+					let n := byte(sub(31, col), xor(colBitMap, shl(mul(col, 8), state)))
+					
+					// State already present
+					if iszero(n) {
+						revert(0, 0)
+					}
+					// Empty
+					if eq(n, state) {
+						colBitMap := or(colBitMap, shl(mul(col, 8), state))
+
+					}
+
+					if iszero(eq(n, state)) {
+						colBitMap := or(colBitMap, shl(mul(col, 8), 0xFF))
+					}					
+				}
+			}
+		}
+		//console.log("row:", row);
+		//console.log("state:", state);
+		//console.log("rowBitMap:", rowBitMap);
+	}	
+}
+
+/*					if iszero(col) {
+						symbolBitMap := 0	
+					}
+
+					let m := shl(state, 1)
+					if and(symbolBitMap, m) {
+						//revert (0, 0)
+				 	}
+
+					symbolBitMap := or(symbolBitMap, m)
+*/
+
+/*
+
+
 			let state, stateWord 
 			let i, j, k, s
 			// Num of 32 byte words
@@ -359,6 +515,6 @@ contract LevelConfigurator {
 					stateCountMapCol := or(stateCountMapRow, shl(state, 1))
 				}
 			}
-		}
-	}	
-}
+		
+
+*/
