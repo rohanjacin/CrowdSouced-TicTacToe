@@ -24,7 +24,7 @@ contract LevelConfigurator {
 	uint8 constant internal MAX_LEVEL_STATE = type(uint8).max;
 	uint8 constant internal MAX_LEVELS = 2; 
 	uint8 constant internal MAX_CELLS_L1 = 9;
-	uint8 constant internal MAX_CELLS_L2 = 81 - MAX_CELLS_L1;
+	uint8 constant internal MAX_CELLS_L2 = 81;
 	uint32 constant internal MAX_LEVEL_CODESIZE = 500000; // 500k
 
 	struct LevelConfig {
@@ -80,7 +80,10 @@ contract LevelConfigurator {
 			revert BiddersLevelCodeSizeInvalid();
 
 		// Check for level number
-		(uint8 levelNum) = abi.decode(_levelNumber, (uint8));
+		uint8 levelNum;
+		assembly {
+			levelNum := byte(0, calldataload(_levelNumber.offset))
+		}
 
 		if ((levelNum > MAX_LEVELS) || 
 			(levelNum == 0))
@@ -116,17 +119,18 @@ contract LevelConfigurator {
 				revert BiddersStatesSymbolsInvalid();
 		}
 
-
 		// Check state against common level rules
 		// TODO: check for return value (return var causes stack too deep)
-/*		_checkStateValidity(_levelState, uint8(_levelState.length), 
-							uint8(_levelSymbols.length));
+		if (1 == _checkStateValidity(_levelNumber, _levelState, _levelSymbols)) {
+			revert BiddersStatesInvalid();
+		}
 
 		// Store level code and state
-		(bytes32 levelLoc, address stateSnap) = _storeLevel();
-
+/*		_storeLevel(bytes memory _levelNum, bytes memory _state, 
+			bytes memory _symbols);
+*/
 		// Deploy level contract
-		bytes32 salt = keccak256(abi.encodePacked(msg.sender));
+/*		bytes32 salt = keccak256(abi.encodePacked(msg.sender));
 		address levelAddr = _deployLevel(levelLoc, salt);
 
 		// Call GoV contract to approve level
@@ -234,69 +238,20 @@ contract LevelConfigurator {
 		success = true;
 	}
 
-	// Store level code and state in memory 
-	function _storeLevel() internal returns (
-		bytes32 _location, address _stateSnap) {
-
-		// 0x80 |-----level------|
-		// 0xA0 |-----cells------|
-		// 0xC0 |-----marker-----|
-		// 0xD0 |----levellen----|
-		// 0xE0 |----statelen----|
-		// 0xF0 |---symbollen----|
-		// 0x100|---levelcode----|
-		// 0x__ |---levelstate---|
-		// 0x__ |--levelsymbols--|
+	// Store level code and state in IPFS 
+	function _storeLevel(bytes memory _levelNum, bytes memory _state,
+		bytes memory _symbols) internal returns (bytes32 ipfsHash) {
 
 		// Store level code and state
-		assembly {
-
-			// Copy level code 
-			let loc := mload(0x40)
-			let off := calldataload(0x04)
-			let len := sub(off, 0x20)
-			calldatacopy(loc, off, len)
-			_location := loc
-
-			// Copy level state 
-			loc := mload(0x40)
-			off := add(off, 0x20)
-			len := sub(off, 0x20)
-			let stateOff := off 
-			let stateLen := len 
-			calldatacopy(loc, off, len)
-
-			// Copy level symbols 
-			loc := mload(0x40)
-			off := add(off, 0x20)
-			len := sub(off, 0x20)
-			calldatacopy(loc, off, len)
-
-			// Copy level state to new memory 
-			loc := mload(0x40)
-			calldatacopy(loc, stateOff, stateLen)
-			// Take snapshot of state
-			loc := mload(0x40)
-			mstore(loc, 0x60005260206000F3) // Constructor 
-			_stateSnap := create(0, loc, stateLen)
-		}
+		// in IPFS (use QuickNode IPFS probably)
 	}
 
 	// Check state validity
-	function _checkStateValidity(uint8 _levelNum,
-		bytes memory _state, bytes memory _symbols) external pure {
-
-		uint8 _symbolLen;
-		assembly {
-			_symbolLen := div(mload(_symbols), 4)
-		}
-
+	function _checkStateValidity(bytes memory _levelNum,
+		bytes memory _state, bytes memory _symbols)
+		internal pure returns (uint8 ret) {
+		
 		// Check if State has valid entries
-		uint validState = uint(CellValue.Empty) + _symbolLen;
-
-		//uint256 rowBitMap;
-		//uint256 row;
-		//uint256 state;
      	assembly {
 			let state
 			let colBitMap := 0
@@ -305,22 +260,25 @@ contract LevelConfigurator {
 			let col := 0
 			let row := 0 
 			let _marker
-			//let len := mload(_state)
 
+			// Max enumeration for valid symbols
+			// including previous levels as well
+			//uint validState = uint(CellValue.Empty) + _symbolLen;
+			let validState := add(0, div(mload(_symbols), 4))
+
+			// Pointer to state word
 			ptr := add(_state, 0x20)
+			// Number of words in state
 			s := add(div(mload(_state), 32), 1)
 
-/*				if eq(s, 2)
-				{
-					revert (0,0)
-				}
-*/
-			switch _levelNum
+			// Previous level marker of row & column
+			_marker := byte(0, mload(add(_levelNum, 0x20)))
+			switch _marker
 			case 1 { _marker := 0 }
 			case 2 { _marker := 9 }
 			default { _marker := 0 }
 
-			//  Compare state word if within valid state 
+			// Compare state word if within valid state 
 			for { let i := 0 let k := 0
 				  switch lt(mload(_state), 32)
 				  case 0 { k := 32 }
@@ -336,9 +294,6 @@ contract LevelConfigurator {
 				// Each state check
 				for { let j := mul(i, 32) } lt(j, k) { j := add(j, 1) } {
 
-/*					if eq(j, 34) {
-						revert(0, 0)
-					}*/
 					state := byte(mod(j, 32), mload(ptr))
 
 					if iszero(state) {
@@ -346,12 +301,10 @@ contract LevelConfigurator {
 					}
 
 					if lt(validState, state) {
-						//revert (0, 0)
+						ret := 1
+						break
 					}
 
-					//if eq(state, 2) {
-					//	revert(0, 0)
-					//}
 					//  0   1   2   3   4   5   6   7   8
 		            //  C0  C1  C2  C3  C4  C5  C6  C7  C8
 		            // [ X ,   , O ,   ,   ,   ,   ,   ,   ] R0
@@ -366,7 +319,8 @@ contract LevelConfigurator {
 
 		            // [ X ,   , O ,   ,   ,   ,   ,   ,   ] R0
 		            if iszero(_marker) {
-		            	//revert (0, 0)
+		            	ret := 1
+		            	break
 		            }
 
 					// Check if current cell is in new col,
@@ -376,14 +330,16 @@ contract LevelConfigurator {
 
 					if eq(and(rowBitMap, shl(mul(row, 8), 0xFF)), 
 						  shl(mul(row, 8), 0xFF)) {
-						revert (0, 0)
+						ret := 1
+						break
 					}
 
 					let m := byte(sub(31, row), xor(rowBitMap, shl(mul(row, 8), state)))
 					
 					// State already present
 					if iszero(m) {
-						revert(0, 0)
+						ret := 1
+						break
 					}
 					// Empty
 					if eq(m, state) {
@@ -398,14 +354,16 @@ contract LevelConfigurator {
 
 					if eq(and(colBitMap, shl(mul(col, 8), 0xFF)), 
 						  shl(mul(col, 8), 0xFF)) {
-						revert (0, 0)
+						ret := 1
+						break
 					}
 
 					let n := byte(sub(31, col), xor(colBitMap, shl(mul(col, 8), state)))
 					
 					// State already present
 					if iszero(n) {
-						revert(0, 0)
+						ret := 1
+						break
 					}
 					// Empty
 					if eq(n, state) {
@@ -419,102 +377,6 @@ contract LevelConfigurator {
 				}
 			}
 		}
-		//console.log("row:", row);
-		//console.log("state:", state);
-		//console.log("rowBitMap:", rowBitMap);
-	}	
+	}
 }
 
-/*					if iszero(col) {
-						symbolBitMap := 0	
-					}
-
-					let m := shl(state, 1)
-					if and(symbolBitMap, m) {
-						//revert (0, 0)
-				 	}
-
-					symbolBitMap := or(symbolBitMap, m)
-*/
-
-/*
-
-
-			let state, stateWord 
-			let i, j, k, s
-			// Num of 32 byte words
-			let col := 0xFF
-			let row := 0xFF 
-
-			// Bit XOR state word and compare if within valid state 
-			for { i := 0 k := 0x20 s := 0x04 }
-				lt(i, div(_stateLen, 0x20)) 
-				{ i := add(i, 1) s := add(s, 0x20) } {
-
-				stateWord := xor(calldataload(s),
-					0x0101010101010101010101010101010101010101010101010101010101010101)
-
-				if eq(i, sub(div(_stateLen, 0x20), 1)) {
-					k := mod(_stateLen, 0x20)
-				}
-
-				// Each state check
-				for { j := 0 } lt(j, k) { j := add(j, 1) } {
-
-					state := byte(stateWord, j)
-					if gt(state, validState) {
-						return (0, 0)
-					}
-
-					// Check if current cell is in new col,
-					// refresh state count col map 
-					if iszero(eq(col, mod(j, _marker))) {
-						col := mod(j, _marker)
-						stateCountMapCol := 0
-					}
-
-					// Check if current cell is in new row,
-					// refresh state count row map
-					if iszero(eq(row, div(j, _marker))) {
-						row := div(j, _marker)
-						stateCountMapRow := 0
-					}
-
-					// Check for State Empty in previous
-					// level state cells
-					{
-						//outer bound = previous marker (Level1 - 3)
-						let l := mload(add(0x80, 0x40))
-						//inner bound = current marker - outer bound (Level1 - 6)
-						let m := sub(_marker, l)
-
-						if gt(row, l) {
-							if lt(row, m ) {
-								if gt(col, l) {
-									if lt(col, m) {
-										if iszero(eq(state, 0)) {
-											return (0,0)
-										}
-									}
-								}
-							}
-						}
-					}
-
-					// Bit AND state count map and check if already exists 
-					if and(stateCountMapRow, shl(state, 1)) {
-						return (0, 0)
-					}
-
-					if and(stateCountMapCol, shl(state, 1)) {
-						return (0, 0)
-					}
-
-					// Update state count in row and col
-					stateCountMapRow := or(stateCountMapRow, shl(state, 1))
-					stateCountMapCol := or(stateCountMapRow, shl(state, 1))
-				}
-			}
-		
-
-*/

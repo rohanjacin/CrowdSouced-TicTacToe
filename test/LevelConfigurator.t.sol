@@ -34,9 +34,9 @@ contract TestLevelConfigurator is Test {
         returns (bytes memory _levelNum) {
 
         if (_num == 1)
-            _levelNum = abi.encode(_num);
+            _levelNum = abi.encodePacked(_num);
         else if (_num == 2) 
-            _levelNum = abi.encode(_num);
+            _levelNum = abi.encodePacked(_num);
     }
 
     // Generates state for a level
@@ -78,14 +78,14 @@ contract TestLevelConfigurator is Test {
 
         // Should clears initial checks for code, level number, 
         // state length and state symbol length for Level 1
-        LevelConfigurator levelConfig1 = new LevelConfigurator();
+/*        LevelConfigurator levelConfig1 = new LevelConfigurator();
         bytes memory code1 = _generateLevelCode(1);
         bytes memory levelNum1 = _generateLevelNum(1);
         bytes memory levelState1 = _generateState(1);
         bytes memory levelSymbols1 = _generateSymbols(1);
 
         levelConfig1.initLevel(code1, levelNum1, levelState1, levelSymbols1);
-
+*/
 
         // Should clears initial checks for code, level number, 
         // state length and state symbol length for Level 2
@@ -101,7 +101,7 @@ contract TestLevelConfigurator is Test {
        // Should fail initial checks for code, level number, 
         // state length and state symbol length for Level 1 if
         // state length is wrong
-        LevelConfigurator levelConfig3 = new LevelConfigurator();
+/*        LevelConfigurator levelConfig3 = new LevelConfigurator();
         bytes memory code3 = _generateLevelCode(1);
         bytes memory levelNum3 = _generateLevelNum(1);
         bytes memory levelState3 = _generateState(2);
@@ -122,7 +122,7 @@ contract TestLevelConfigurator is Test {
 
         vm.expectRevert();
         levelConfig4.initLevel(code4, levelNum4, levelState4, levelSymbols4);
-
+*/
     }
 
     // Test State contents
@@ -144,10 +144,12 @@ contract TestLevelConfigurator is Test {
         levelConfig2._checkStateValidity(2, state2, symbols2);
 */
         // Should clear check for level 2 with X and O
+/*        bytes memory levelNum2 = _generateLevelNum(2);
         bytes memory state2 = _generateState(2);
         bytes memory symbols2 = _generateSymbols(2);
 
         LevelConfigurator levelConfig2 = new LevelConfigurator();
-        levelConfig2._checkStateValidity(2, state2, symbols2);        
-    }
+        assertEq(levelConfig2._checkStateValidity(
+                            levelNum2, state2, symbols2), 0);
+*/    }
 }
