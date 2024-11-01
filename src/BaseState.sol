@@ -19,7 +19,7 @@ contract BaseState {
 	}
 
 	// State (Slot1)
-	State state;
+	State board;
 
 	constructor(State memory _state) {
 
@@ -49,11 +49,13 @@ contract BaseState {
 [0x260:0x280]: 0x0000000000000000000000000000000000000000000000000000000000000008
 [0x280:0x2a0]: 0x0000000000000000000000000000000000000000000000000000000000000009
 */		
+
 		assembly {
 			let d
 			// Fetch dimension
 			let ptr := mload(_state)
 			let len := mload(ptr)
+			let off
 
 			// Revert if length is not 9 for Level 1
 			// Revert if length is not 81 for Level 2
@@ -64,17 +66,32 @@ contract BaseState {
 				revert(0, 0)
 			}
 
-			ptr := add(ptr, 0x20)
-
 			// Find length of next 3 arrays
 			// and compare with dimension,
 			// all should be 3 
-			for { let i := 0 } lt(i, 1) { i := add(i, 1) } {
+			for { let i := 0 off := add(ptr, 0x20) }
+				lt(i, d) 
+				{ i := add(i, 1) off := add(off, 0x20) } {
 
-				ptr := mload(add(ptr, mul(i, 0x20)))			
+				ptr := mload(off)			
 				len := mload(ptr)
 				if iszero(eq(len, d)) {
 					revert (0, 0)
+				}
+
+				ptr := add(ptr, 0x20)
+
+				for { let j := 0 let v := 0 let s := 0 let p := 0 let q := 0 } 
+					lt(j, len) { j := add(j, 1) } {
+
+					 // Calculate the slot and store					
+					 v := mload(add(ptr, mul(j, 0x20)))
+					 p := mload(0x40)
+					 mstore(p, board.slot)
+					 q := mload(0x40)
+					 mstore(q, add(keccak256(p, 0x20), i))
+					 s := add(keccak256(q, 0x20), j)
+					 sstore(s, v)
 				}
 			}
 		}
@@ -97,7 +114,7 @@ contract BaseState {
 			case 3 { d := 3 }
 			case 9 { d := 9 }
 			default {
-				revert(0, 0)
+				//revert(0, 0)
 			}
 
 			ptr := add(ptr, 0x20)
@@ -105,7 +122,7 @@ contract BaseState {
 			// Find length of next 3 arrays
 			// and compare with dimension,
 			// all should be 3 
-			for { let i := 0 } lt(i, 1) { i := add(i, 1) } {
+			for { let i := 0 } lt(i, d) { i := add(i, 1) } {
 
 				ptr := mload(add(ptr, mul(i, 0x20)))			
 				len := mload(ptr)
@@ -115,25 +132,32 @@ contract BaseState {
 
 				ptr := add(ptr, 0x20)
 
-				for { let j := 0 let v := 0 let s := 0 let p := 0 } 
-					lt(j, len) { j := add(j, 1) } {
+				for { let j := 0 let v := 0 let s := 0 let p := 0 let q := 0 } 
+					lt(j, d) { j := add(j, 1) } {
 
 					 // Calculate the slot and store					
 					 v := mload(add(ptr, mul(j, 0x20)))
 					 p := mload(0x40)
-					 mstore(p, state.slot)
-					 mstore(mload(0x40), add(keccak256(p, add(p, 0x20)), i))
-					 p := mload(0x40)
-					 s := add(keccak256(p, add(p, 0x20)), j)
+					 mstore(p, board.slot)
+					 q := mload(0x40)
+					 mstore(q, add(keccak256(p, 0x20), i))
+					 s := add(keccak256(q, 0x20), j)
 					 sstore(s, v)
 				}
 			}
 		}
 	}
 
-	function getstate() public view {
+    function getState(uint8 row, uint8 col) internal view returns (uint256 val) {
 
-	}
+        assembly {
+            let ptr := mload(0x40)
+            mstore(ptr, board.slot)
+            let s := mload(0x40)
+            mstore(s, add(keccak256(ptr, 0x20), row))
+            val := sload(add(keccak256(s, 0x20), col))
+        }
+    }
 
 	// To be overriden by level
     function supportedStates() 

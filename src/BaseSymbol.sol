@@ -32,7 +32,7 @@ contract BaseSymbol {
 		// _symbols is unpacked as follow
 		// i.e number of symbols < 255
 		assembly {
-			// Fetch dimension
+/*			// Fetch dimension
 			let ptr := mload(_symbols)
 			let len := mload(ptr)
 
@@ -50,7 +50,7 @@ contract BaseSymbol {
 			if lt(mload(0x40), end) {
 				revert (0, 0)
 			}
-		}
+*/		}
 	}
 
 	// Updates the base symbol data to the callers

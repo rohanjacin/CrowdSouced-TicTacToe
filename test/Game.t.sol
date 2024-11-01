@@ -2,7 +2,8 @@
 pragma solidity ^0.8.27;
 
 import "forge-std/Test.sol";
-
+import { console } from "forge-std/console.sol";
+import "src/Level1.sol";
 import "src/Game.sol";
 
 contract TestGame is Test {
@@ -11,4 +12,238 @@ contract TestGame is Test {
     function setUp() public {
         //c = new Game();
     }
+
+    // Internal function to set levelnum
+    // Generates level number
+    function _setLevelNum(uint8 _num) internal 
+        returns (bytes memory _levelNum) {
+
+        if (_num == 1)
+            _levelNum = abi.encodePacked(_num);
+        else if (_num == 2) 
+            _levelNum = abi.encodePacked(_num);
+    }
+
+    // Internal function to set state
+    function _setState(uint8 _num) internal returns (Game.State memory state) {
+
+        if (_num == 1) {
+            // Set state of level 1 i.e 3x3 matrix
+            state = BaseState.State({v: new uint256[][](3)});
+            state.v[0] = new uint256[](3);
+            state.v[1] = new uint256[](3);
+            state.v[2] = new uint256[](3);
+
+            // [1, 2, 3] R0
+            state.v[0][0] = uint(CellValueL1.O);
+            state.v[0][1] = uint(CellValueL1.X);
+            state.v[0][2] = uint(CellValueL1.O);
+
+            // [4, 5, 7] R1
+            state.v[1][0] = uint(CellValueL1.O);
+            state.v[1][1] = uint(CellValueL1.O);
+            state.v[1][2] = uint(CellValueL1.X);
+
+            // [7, 8, 9] R2
+            state.v[2][0] = uint(CellValueL1.X);
+            state.v[2][1] = uint(CellValueL1.O);
+            state.v[2][2] = uint(CellValueL1.O);        
+
+            // C0  C1 C2
+            // [X, X, X] R0
+            // [ ,  ,  ] R1
+            // [ ,  ,  ] R2
+        }
+        else if (_num == 2) {
+
+            // Set state of level 2 i.e 9x9 matrix
+            state = BaseState.State({v: new uint256[][](9)});
+            state.v[0] = new uint256[](9);
+            state.v[1] = new uint256[](9);
+            state.v[2] = new uint256[](9);
+            state.v[3] = new uint256[](9);
+            state.v[4] = new uint256[](9);
+            state.v[5] = new uint256[](9);
+            state.v[6] = new uint256[](9);
+            state.v[7] = new uint256[](9);
+            state.v[8] = new uint256[](9);
+
+            // [1, 2, 3, 4, 5, 6, 7, 8, 9] R0
+            state.v[0][0] = uint(CellValueL1.X);
+            state.v[0][1] = uint(CellValueL1.O);
+            state.v[0][2] = uint(CellValueL1.X);
+            state.v[0][3] = uint(CellValueL1.O);
+            state.v[0][4] = uint(CellValueL1.X);
+            state.v[0][5] = uint(CellValueL1.O);
+            state.v[0][6] = uint(CellValueL1.O);
+            state.v[0][7] = uint(CellValueL1.O);
+            state.v[0][8] = uint(CellValueL1.X);
+
+            // [10, 11, 12, 13, 14, 15, 16, 17, 18] R1
+            state.v[1][0] = uint(CellValueL1.X);
+            state.v[1][1] = uint(CellValueL1.O);
+            state.v[1][2] = uint(CellValueL1.X);
+            state.v[1][3] = uint(CellValueL1.X);
+            state.v[1][4] = uint(CellValueL1.X);
+            state.v[1][5] = uint(CellValueL1.O);
+            state.v[1][6] = uint(CellValueL1.O);
+            state.v[1][7] = uint(CellValueL1.X);
+            state.v[1][8] = uint(CellValueL1.X);
+
+            // [19, 20, 21, 22, 23, 24, 25, 26, 27] R2
+            state.v[2][0] = uint(CellValueL1.X);
+            state.v[2][1] = uint(CellValueL1.O);
+            state.v[2][2] = uint(CellValueL1.X);
+            state.v[2][3] = uint(CellValueL1.O);
+            state.v[2][4] = uint(CellValueL1.X);
+            state.v[2][5] = uint(CellValueL1.O);
+            state.v[2][6] = uint(CellValueL1.X);
+            state.v[2][7] = uint(CellValueL1.O);
+            state.v[2][8] = uint(CellValueL1.X);
+
+            // [28, 29, 30, 31, 32, 33, 34, 35, 36] R3
+            state.v[3][0] = uint(CellValueL1.O);
+            state.v[3][1] = uint(CellValueL1.O);
+            state.v[3][2] = uint(CellValueL1.X);
+            state.v[3][3] = uint(CellValueL1.X);
+            state.v[3][4] = uint(CellValueL1.X);
+            state.v[3][5] = uint(CellValueL1.X);
+            state.v[3][6] = uint(CellValueL1.X);
+            state.v[3][7] = uint(CellValueL1.O);
+            state.v[3][8] = uint(CellValueL1.X);
+
+            // [37, 38, 39, 40, 41, 42, 43, 44, 45] R4
+            state.v[4][0] = uint(CellValueL1.O);
+            state.v[4][1] = uint(CellValueL1.O);
+            state.v[4][2] = uint(CellValueL1.X);
+            state.v[4][3] = uint(CellValueL1.O);
+            state.v[4][4] = uint(CellValueL1.X);
+            state.v[4][5] = uint(CellValueL1.O);
+            state.v[4][6] = uint(CellValueL1.X);
+            state.v[4][7] = uint(CellValueL1.O);
+            state.v[4][8] = uint(CellValueL1.X); 
+
+            // [46, 47, 48, 49, 50, 51, 52, 53, 54] R5
+            state.v[5][0] = uint(CellValueL1.O);
+            state.v[5][1] = uint(CellValueL1.X);
+            state.v[5][2] = uint(CellValueL1.X);
+            state.v[5][3] = uint(CellValueL1.O);
+            state.v[5][4] = uint(CellValueL1.X);
+            state.v[5][5] = uint(CellValueL1.O);
+            state.v[5][6] = uint(CellValueL1.X);
+            state.v[5][7] = uint(CellValueL1.O);
+            state.v[5][8] = uint(CellValueL1.X);
+
+            // [55, 56, 57, 58, 59, 60, 61, 62, 63] R6
+            state.v[6][0] = uint(CellValueL1.X);
+            state.v[6][1] = uint(CellValueL1.O);
+            state.v[6][2] = uint(CellValueL1.X);
+            state.v[6][3] = uint(CellValueL1.O);
+            state.v[6][4] = uint(CellValueL1.X);
+            state.v[6][5] = uint(CellValueL1.O);
+            state.v[6][6] = uint(CellValueL1.X);
+            state.v[6][7] = uint(CellValueL1.O);
+            state.v[6][8] = uint(CellValueL1.X);
+
+            // [64, 65, 66, 67, 68, 69, 70, 71, 72] R7
+            state.v[7][0] = uint(CellValueL1.X);
+            state.v[7][1] = uint(CellValueL1.O);
+            state.v[7][2] = uint(CellValueL1.X);
+            state.v[7][3] = uint(CellValueL1.O);
+            state.v[7][4] = uint(CellValueL1.X);
+            state.v[7][5] = uint(CellValueL1.O);
+            state.v[7][6] = uint(CellValueL1.X);
+            state.v[7][7] = uint(CellValueL1.O);
+            state.v[7][8] = uint(CellValueL1.X);
+
+            // [73, 74, 75, 76, 77, 78, 79, 80, 81] R8
+            state.v[8][0] = uint(CellValueL1.X);
+            state.v[8][1] = uint(CellValueL1.O);
+            state.v[8][2] = uint(CellValueL1.X);
+            state.v[8][3] = uint(CellValueL1.O);
+            state.v[8][4] = uint(CellValueL1.X);
+            state.v[8][5] = uint(CellValueL1.O);
+            state.v[8][6] = uint(CellValueL1.X);
+            state.v[8][7] = uint(CellValueL1.O);
+            state.v[8][8] = uint(CellValueL1.X);
+
+            //  C0  C1  C2  C3  C4  C5  C6  C7  C8
+            // [01, 02, 03, 04, 05, 06, 07, 08, 09] R0
+            // [10, 11, 12, 13, 14, 15, 16, 17, 18] R1
+            // [19, 20, 21, 22, 23, 24, 25, 26, 27] R2
+            // [28, 29, 30, 31, 32, 33, 34, 35, 36] R3
+            // [37, 38, 39, 40, 41, 42, 43, 44, 45] R4
+            // [46, 47, 48, 49, 50, 51, 52, 53, 54] R5
+            // [55, 56, 57, 58, 59, 60, 61, 62, 63] R6
+            // [64, 65, 66, 67, 68, 69, 70, 71, 72] R7
+            // [73, 74, 75, 76, 77, 78, 79, 80, 81] R8
+        }
+    }
+
+    // Internal function to set symbols
+    function _setSymbol(uint8 num) internal returns (Game.Symbols memory symbols) {
+
+        if (num == 1) {
+            // Set if length of symbols is 2
+            symbols = BaseSymbol.Symbols({v: new bytes32[](2)});
+            symbols.v[0] = bytes32(hex"274C");
+            symbols.v[1] = bytes32(hex"2B55");
+            
+            // C0
+            // [0x274c000000000000000000000000000000000000000000000000000000000000] R0
+            // [0x2b55000000000000000000000000000000000000000000000000000000000000] R1
+        }
+        else if (num == 2) {
+
+            // Set if length of symbols is 4
+            symbols = BaseSymbol.Symbols({v: new bytes32[](4)});
+            symbols.v[0] = bytes32(hex"274C");
+            symbols.v[1] = bytes32(hex"2B55");
+            symbols.v[2] = bytes32(hex"2B50");
+            symbols.v[3] = bytes32(hex"01F4A3");
+
+            // C0
+            // [0x274c000000000000000000000000000000000000000000000000000000000000] R0
+            // [0x2b55000000000000000000000000000000000000000000000000000000000000] R1
+            // [0x2b50000000000000000000000000000000000000000000000000000000000000] R2
+            // [0x01f4a300000000000000000000000000000000000000000000000000000000000] R3
+        }
+    }
+
+    // Test the Game contract constructor
+    function test_game() external {
+
+        // Should initialize game state for Level 1 
+        Game game1 = new Game(_setLevelNum(1), _setState(1), _setSymbol(1));
+    }
+
+    function test__winnerInRows() external {
+
+        // Should initialize game state for Level 1
+        // with all X in first row 
+        Game game1 = new Game(_setLevelNum(2), _setState(2), _setSymbol(2));
+
+        // Should return Player 1 as winner
+        //assertEq(uint(1), uint(game1._winnerInRows()));
+    }
+
+    function test__winnerInColumns() external {
+
+        // Should initialize game state for Level 1
+        // with all X in first row 
+        Game game1 = new Game(_setLevelNum(2), _setState(2), _setSymbol(2));
+
+        // Should return Player 1 as winner
+        //assertEq(uint(1), uint(game1._winnerInColumns()));
+    }
+
+    function test_winnerInDiagonals() external {
+
+        // Should initialize game state for Level 1
+        // with all X in first row 
+        Game game1 = new Game(_setLevelNum(2), _setState(2), _setSymbol(2));
+
+        // Should return Player 1 as winner
+        //assertEq(uint(1), uint(game1._winnerInDiagonals()));
+    }    
 }

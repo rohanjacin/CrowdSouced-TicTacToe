@@ -10,6 +10,8 @@ import "./RuleEngine.sol";
 
 // Players
 enum Player { None, Player1, Player2 }
+// Possible cell values
+enum CellValueL { CellValue , X, O}
 
 // Errors
 error LevelInvalid();
@@ -49,10 +51,10 @@ contract Game is BaseLevel, BaseState, BaseSymbol {
 	}
 
 	// SLOT 0 is from BaseLevel (Do NOT use SLOT 0)
-	uint8 level;
+	//uint8 level;
 
 	// SLOT 1 is from BaseState (Do NOT use SLOT 1)
-	State board;
+	//State board;
 
 	// SLOT 2 is from BaseSymbols (Do NOT use SLOT 2)
 	Symbols meta;
@@ -61,12 +63,13 @@ contract Game is BaseLevel, BaseState, BaseSymbol {
 	mapping(uint8 => GameInfo) games;
 
 	// Load the default state in Base State
-	constructor(uint8 _levelnum, State memory _state,
+	constructor(bytes memory _levelnum, State memory _state,
 		Symbols memory _symbols) 
 		BaseLevel(_levelnum)
 		BaseState(_state)
 		BaseSymbol(_symbols) {
 
+		//console.log("board.v[0][0]:", board.v[0][0]);
 		// Game House components
 		games[1].house = new GameHouse();
 	}
@@ -182,316 +185,273 @@ contract Game is BaseLevel, BaseState, BaseSymbol {
 	}
 
 	// Finds the winner 
-	function _calculateWinner() internal view returns (Player winner, uint8 count) {
-
-		winner = Player.None;
+	function _calculateWinner() internal view returns (Player winner) {
 
 		// Winner in rows
-		(Player _winnerRow, uint8 _countRow) = _winnerInRows();
+		winner = _winnerInRows();
+		if (winner != Player.None)
+			return winner;
 
 		// Winner in columns
-		(Player _winnerCol, uint8 _countCol) = _winnerInColumns();
+		winner = _winnerInColumns();
+		if (winner != Player.None)
+			return winner;
 
 		// Winers in both diagonals
-		(Player _winnerDiag, uint8 _countDiag) = _winnerInDiagonals();
-
-		// Compare winning row and winning column
-		if (_winnerRow == _winnerCol) {
-			winner = _winnerRow;
-			if (_countRow > _countCol) {
-				count = _countRow;
-			}
-		}
-		else if (_winnerRow != _winnerCol) {
-			if (_countRow > _countCol) {
-				winner = _winnerRow;
-				count = _countRow;
-			}
-			else if (_countRow < _countCol) {
-				winner = _winnerCol;
-				count = _countCol;
-			}
-			else {
-				count = _countRow;
-			}
-		}
-
-		// Compare winning row or column to 
-		// winning diagonal
-		if (winner == _winnerDiag) {
-
-			if (_countDiag > count) {
-				count = _countDiag;
-			}
-		}
-		else if (winner != _winnerDiag) {
-
-			if (_countDiag > count) {
-				winner = _winnerDiag;
-			}
-			else if (count == _countDiag) {
-			}
-		}
+		winner = _winnerInDiagonals();
+		if (winner != Player.None)
+			return winner;
 	}
 
 	// Check longest X or O sequence in all rows
-	function _winnerInRows() internal view returns (Player winner, uint8 count){
+	function _winnerInRows() internal view returns (Player winner){
 
 		uint8 countX;
 		uint8 countO;
-		winner = Player.None;
+		uint8 _marker;
+		uint8 _tuples;
+
+		if (level == 1) {
+			_marker = 3;
+			_tuples = 1;
+		}
+		else if (level == 2) {
+			_marker = 9;
+			_tuples = 6;
+		}
 
 		// Rows
-		for (uint8 r = 0; r < 9; r++) {
+		for (uint8 r = 0; r < _marker; r++) {
 
-			// Columns
-			for (uint8 c; c < 9; c++) {
-				
-				if (board.v[r][c] == uint8(1/*CellValue.X*/)) {
-					countX++;
-					countO = 0;
+			console.log("r:", r);
+
+			for (uint8 c = 0; c < _tuples; c++) {
+				console.log("c:", c);
+
+				if (level == 1) {
+					if ((getState(r, c) == getState(r, c+1)) &&
+					    (getState(r, c+1) == getState(r, c+2))) {
+
+						if (getState(r, c) == uint8(CellValueL.X)) {
+						   	countX = 1;
+							console.log("countX:", countX);
+						   	winner = Player.Player1;							
+						}
+						else if (getState(r, c) == uint8(CellValueL.O)) {
+						   	countO = 1;
+							console.log("countO:", countO);
+						   	winner = Player.Player2;							
+						} 
+					}
 				}
+				else if (level == 2) {
+					if ((getState(r, c) == getState(r, c+1)) &&
+					   (getState(r, c+1) == getState(r, c+2)) &&
+					   (getState(r, c+2) == getState(r, c+3))) {
 
-				if (board.v[r][c] == uint8(2/*CellValue.O*/)) {
-					countO++;
-					countX = 0;
+					   	if (getState(r, c) == uint8(CellValueL.X)) {
+						   	countX = 1;
+							console.log("countX:", countX);
+						   	winner = Player.Player1;
+					   	}
+					   	if (getState(r, c) == uint8(CellValueL.O)) {
+						   	countO = 1;
+							console.log("countO:", countO);
+						   	winner = Player.Player2;
+					   	}
+					}
 				}
 			}
 
-			if (countX > countO) {
-				if (count < countX) {
-					count = countX;
-				}
-				winner = Player.Player1;	
-			}
-			if (countX < countO) {
-				if (count < countO) {
-					count = countO;
-				}
-				winner = Player.Player2;
-			}
 			if (countX == countO) {
-				if (count < countX) {
-					count = countX;
-				}
 				winner = Player.None;
 			}
+			else {
+				break;
+			}
 		}
+
+		console.log("winner:", uint(winner));
 	}
 
 	// Check longest X or O sequence in all columns
-	function _winnerInColumns() internal view returns (Player winner, uint8 count){
+	// Check longest X or O sequence in all rows
+	function _winnerInColumns() internal view returns (Player winner){
 
 		uint8 countX;
 		uint8 countO;
-		winner = Player.None;
-		count = 0;
+		uint8 _marker;
+		uint8 _tuples;
+
+		if (level == 1) {
+			_marker = 3;
+			_tuples = 1;
+		}
+		else if (level == 2) {
+			_marker = 9;
+			_tuples = 6;
+		}
 
 		// Columns
-		for (uint8 c = 0; c < 9; c++) {
+		for (uint8 c = 0; c < _marker; c++) {
 
-			// Rows
-			for (uint8 r; r < 9; r++) {
-				
-				if (board.v[r][c] == uint8(1/*CellValue.X*/)) {
-					countX++;
-					countO = 0;
+			console.log("c:", c);
+
+			for (uint8 r = 0; r < _tuples; r++) {
+				console.log("r:", r);
+
+				if (level == 1) {
+					if ((getState(r, c) == getState(r+1, c)) &&
+					    (getState(r+1, c) == getState(r+2, c))) {
+
+						if (getState(r, c) == uint8(CellValueL.X)) {
+						   	countX = 1;
+							console.log("countX:", countX);
+						   	winner = Player.Player1;							
+						}
+						else if (getState(r, c) == uint8(CellValueL.O)) {
+						   	countO = 1;
+							console.log("countO:", countO);
+						   	winner = Player.Player2;							
+						} 
+					}
 				}
+				else if (level == 2) {
+					if ((getState(r, c) == getState(r+1, c)) &&
+					   (getState(r+1, c) == getState(r+2, c)) &&
+					   (getState(r+2, c) == getState(r+3, c))) {
 
-				if (board.v[r][c] == uint8(2/*CellValue.O*/)) {
-					countO++;
-					countX = 0;
+					   	if (getState(r, c) == uint8(CellValueL.X)) {
+						   	countX = 1;
+							console.log("countX:", countX);
+						   	winner = Player.Player1;
+					   	}
+					   	if (getState(r, c) == uint8(CellValueL.O)) {
+						   	countO = 1;
+							console.log("countO:", countO);
+						   	winner = Player.Player2;
+					   	}
+					}
 				}
 			}
 
-			if (countX > countO) {
-				if (count < countX) {
-					count = countX;
-				}
-				winner = Player.Player1;	
-			}
-			if (countX < countO) {
-				if (count < countO) {
-					count = countO;
-				}
-				winner = Player.Player2;
-			}
 			if (countX == countO) {
-				if (count < countX) {
-					count = countX;
-				}
 				winner = Player.None;
 			}
+			else {
+				break;
+			}
 		}
+
+		console.log("winner:", uint(winner));
 	}
 
-	// Check longest X or O sequence in all diagonals
-	function _winnerInDiagonals() internal view returns (Player, uint8){
+	function _winnerInDiagonals() internal view returns (Player winner) {
 
 		uint8 countX;
 		uint8 countO;
-		uint8 r;
-		uint8 c;
-		uint8 countForwardDiag;
-		uint8 countBackwardDiag;
+		uint8 _marker;
+		uint8 _tuples;
 
-		Player winner = Player.None;
-		uint8 count;
+		if (level == 1) {
+			_marker = 3;
+			_tuples = 1;
+		}
+		else if (level == 2) {
+			_marker = 9;
+			_tuples = 6;
+		}
 
-		//     C0  C1  C2  C3  C4  C5  C6  C7  C8  
-		// R0 |   |   |   |   | * |   |   |   |   |
-		// R1 |   |   |   | * |   |   |   |   |   |
-		// R2 |   |   | * |   |   |   |   |   |   |
-		// R3 |   | * |   |   |   |   |   |   |   |
-		// R4 | * |   |   |   |   |   |   |   |   |
-		// R5 |   |   |   |   |   |   |   |   |   |
-		// R6 |   |   |   |   |   |   |   |   |   |
-		// R7 |   |   |   |   |   |   |   |   |   |
-		// R8 |   |   |   |   |   |   |   |   |   |
+		if (level == 1) {
 
-		// Forward leaning Diagonal loop (d)
-		for (uint8 d = 1; d < 8; d++) {
-			// Per diagonal loop (p)
-			r = d; c = 0;
+			if ((getState(0, 0) == getState(1, 1)) &&
+			    (getState(1, 1) == getState(2, 2))) {
+
+				if (getState(0, 0) == uint8(CellValueL.X)) {
+				   	countX = 1;
+					console.log("countX:", countX);
+				   	winner = Player.Player1;
+			   	}
+			   	if (getState(0, 0) == uint8(CellValueL.O)) {
+				   	countO = 1;
+					console.log("countO:", countO);
+				   	winner = Player.Player2;
+			   	}		
+			}
+			else if ((getState(0, 2) == getState(1, 1)) &&
+			    (getState(1, 1) == getState(2, 0))) {
+
+				if (getState(0, 2) == uint8(CellValueL.X)) {
+				   	countX = 1;
+					console.log("countX:", countX);
+				   	winner = Player.Player1;
+			   	}
+			   	if (getState(0, 2) == uint8(CellValueL.O)) {
+				   	countO = 1;
+					console.log("countO:", countO);
+				   	winner = Player.Player2;
+			   	}
+			}	
+		}
+		else if (level == 2) {
+
+			uint8 e = 0;
+			uint8 d = 0;
+
+			for (d = 0; d < _tuples; d++) {
+				console.log("backward:");
+				console.log(" d:", d);
 			
-			for (uint8 p = 1; p <= d; p++ ) {
-				// All pairs loop				
-				if (board.v[r][c] == board.v[r-1][c+1]) {
+				if ((getState(d, d) == getState(d+1, d+1)) &&
+					(getState(d+1, d+1) == getState(d+2, d+2)) &&
+					(getState(d+2, d+2) == getState(d+3, d+3))) {
 
-					if (board.v[r][c] == uint8(1/*CellValue.X*/)) {
-						countX = countX + 2;
-					}
-					if (board.v[r][c] == uint8(2/*CellValue.O*/)) {
-						countO = countO + 2;
-					}
-				}
-
-				r = r-1;
-				c = c+1;				
+				   	if (getState(d, d) == uint8(CellValueL.X)) {
+					   	countX = 1;
+						console.log("countX:", countX);
+					   	winner = Player.Player1;
+				   	}
+				   	if (getState(d, d) == uint8(CellValueL.O)) {
+					   	countO = 1;
+						console.log("countO:", countO);
+					   	winner = Player.Player2;
+				   	}
+				}			
 			}
-		}
 
-		if (countX > 2)
-			countX--;
+			if (countX == countO) {
+				d = 0;
+				for ( ; (d < _tuples && e < _tuples); ) {
+					console.log("forward:");
+					console.log(" d:", d);
+					console.log(" e:", e);
+				
+					if ((getState(e, 8-d) == getState(e+1, 7-d)) &&
+						(getState(e+1, 7-d) == getState(e+2, 6-d)) &&
+						(getState(e+2, 6-d) == getState(3+e, 5-d))) {
 
-		if (countO > 2)
-			countO--;
-
-		if (countX > countO) {
-			countForwardDiag = countX;
-			winner = Player.Player1;
-		} else if (countX < countO) {
-			countForwardDiag = countO;
-			winner = Player.Player2;
-		} else {
-			countForwardDiag = countX;
-		}
-
-		countX = 0;
-		countO = 0;
-
-
-		//     C0  C1  C2  C3  C4  C5  C6  C7  C8  
-		// R0 |   |   |   |   |   |   |   |   |   |
-		// R1 |   |   |   |   |   |   |   |   |   |
-		// R2 |   |   |   |   |   |   |   |   |   |
-		// R3 |   |   |   |   |   |   |   |   |   |
-		// R4 | * |   |   |   |   |   |   |   |   |
-		// R5 |   | * |   |   |   |   |   |   |   |
-		// R6 |   |   | * |   |   |   |   |   |   |
-		// R7 |   |   |   | * |   |   |   |   |   |
-		// R8 |   |   |   |   | * |   |   |   |   |
-
-		// Backward leaning Diagonal loop (d)
-		for (uint8 d = 7; d >= 0; d--) {
-			// Per diagonal loop (p)
-			r = d; c = 0;
-			
-			for (uint8 p = 1; p <= d; p++ ) {
-				// All pairs loop				
-				if (board.v[r][c] == board.v[r-1][c+1]) {
-
-					if (board.v[r][c] == uint8(1/*CellValue.X*/)) {
-						countX = countX + 2;
+					   	if (getState(e, 8-d) == uint8(CellValueL.X)) {
+						   	countX = 1;
+							console.log("countX:", countX);
+						   	winner = Player.Player1;
+					   	}
+					   	if (getState(e, 8-d) == uint8(CellValueL.O)) {
+						   	countO = 1;
+							console.log("countO:", countO);
+						   	winner = Player.Player2;
+					   	}
 					}
-					if (board.v[r][c] == uint8(2/*CellValue.O*/)) {
-						countO = countO + 2;
-					}
-				}
 
-				r = r+1;
-				c = c+1;				
-			}
-		}
-
-		if (countX > 2)
-			countX--;
-
-		if (countO > 2)
-			countO--;
-
-		// Player1 won backward diagonal
-		if (countX > countO) {
-			// Player1 won forward diagonal
-			if (winner == Player.Player1) {
-				countBackwardDiag = countX;
-				if (countForwardDiag > countBackwardDiag)
-					count = countForwardDiag;
-				if (countForwardDiag < countBackwardDiag)
-					count = countBackwardDiag;
-				else
-					count = countForwardDiag;
-				return (Player.Player1, count);
-			}
-		}
-		// Player2 won backward diagonal
-		else if (countX < countO) {
-			// Player2 won forward diagonal
-			if (winner == Player.Player2) {
-				countBackwardDiag = countO;
-
-				if (countForwardDiag > countBackwardDiag)
-					count = countForwardDiag;
-				if (countForwardDiag < countBackwardDiag)
-					count = countBackwardDiag;
-				else
-					count = countForwardDiag;
-				return (Player.Player2, count);				
-			}
-		} 
-		// If Player1 won forward diagonal
-		// then check if Player2 won backward diagonal 
-		// by bigger margin
-		if (winner == Player.Player1) {
-
-			// Player2 won backward diagonal
-			if (countX < countO) {
-
-				if (countForwardDiag < countO) {
-					count = countO;
-					winner = Player.Player2;
+					d++;
+					e++;			
 				}
 			}
 		}
-		// If Player2 won forward diagonal
-		// then check if Player1 won backward diagonal 
-		// by bigger margin
-		else if (winner == Player.Player2) {
 
-			// Player1 won backward diagonal
-			if (countO < countX) {
-
-				if (countForwardDiag < countX) {
-					count = countX;
-					winner = Player.Player1;
-				}
-			}
-		}
-		// Draw in forward diagonal
-		// and draw in backward diagonal
-		else {
+		if (countX == countO) {
+			winner = Player.None;
 		}
 
-		return (winner, count);
+		console.log("winner:", uint(winner));
 	}
 }

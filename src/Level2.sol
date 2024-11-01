@@ -15,7 +15,7 @@ enum CellValueL2 { CellValueL1, Star, Bomb}
 // Level defination and implementation
 contract Level2 is BaseLevel, BaseState, BaseSymbol {
 
-	constructor(uint8 _levelnum, State memory _state, 
+	constructor(bytes memory _levelnum, State memory _state, 
 		Symbols memory _symbols)
 		BaseLevel(_levelnum)
 		BaseState(_state)

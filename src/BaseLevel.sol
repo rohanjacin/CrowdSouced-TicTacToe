@@ -8,29 +8,37 @@ error InvalidLevelNumber();
 contract BaseLevel {
 
 	// Level value
-	uint8 public levelnum;
+	uint8 public level;
 
-	constructor(uint8 _levelnum) {
+	constructor(bytes memory _levelnum) {
 
 		// Level 1 and Level 2 only currently!!
-		if (!((_levelnum == 1) ||
-		    (_levelnum == 2))) {
-			revert InvalidLevelNumber();
+		uint8 _num;
+		assembly {
+
+			let len := mload(_levelnum)
+			_num := byte(0, mload(add(_levelnum, 0x20)))
+
+			switch _num
+			case 1 { sstore(level.slot, _num) }
+			case 2 { sstore(level.slot, _num) }
+			default { revert(0, 0) }
 		}
 	}
 
 	// Updates the base level data to the callers
 	// context when delegated
-	function copyLevel(bytes memory data) external returns(bool success) {
+	function copyLevel(bytes memory data) internal returns(bool success) {
 
 		// Copy the 1 byte level number assuming data is packed
 		// with only level number 
+		uint8 value;
+		uint256 sid;
 		assembly {
 			let len := mload(data)
-			let value := byte(0, mload(add(data, 0x20)))
+			value := byte(0, mload(add(data, 0x20)))
 
 			// Level 1 and Level 2 only currently!!
-
 			if iszero(value) {
 				revert (0, 0)
 			}
@@ -41,10 +49,13 @@ contract BaseLevel {
 
 			// Store one byte in slot of levelnum
 			if eq(len, 1) {
-				sstore(levelnum.slot, value)
+				sstore(level.slot, value)
 			}
 		}
 
+		console.log("sid:", sid);
+		console.log("value:", value);
+		console.log("level:", level); 
 		success = true;
 	}
 

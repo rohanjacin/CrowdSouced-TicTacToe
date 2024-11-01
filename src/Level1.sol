@@ -15,7 +15,7 @@ error WrongSymbolsForLevel();
 // Level defination and implementation
 contract Level1 is BaseLevel, BaseState, BaseSymbol {
 
-	constructor(uint8 _levelnum, State memory _state, 
+	constructor(bytes memory _levelnum, State memory _state, 
 		Symbols memory _symbols)
 		BaseLevel(_levelnum)
 		BaseState(_state)
