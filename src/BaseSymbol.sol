@@ -15,7 +15,7 @@ contract BaseSymbol {
 	Symbols symbols;
 
 	constructor(Symbols memory _symbols) {
-
+		_symbols=_symbols;
 		// dimension=1, offset=0xa0
 		// length=4@0xa0
 		// values=1@0xc0, 2@0xe0, 3@0x100, 4@0x120 
@@ -57,7 +57,7 @@ contract BaseSymbol {
 	// context when delegated
 	function copySymbol(Symbols memory _symbols) public virtual returns(bool success) {
 		//symbols = symbols; 
-
+		success=success;
 		assembly {
 			// Fetch dimension
 			let ptr := mload(_symbols)

@@ -79,7 +79,7 @@ contract RuleEngine {
 	// Setting a cell value as per the rule
 	function setCell(uint8 input) external returns(uint8 output) {
 
-		// 
+		//
 	}
 
 }

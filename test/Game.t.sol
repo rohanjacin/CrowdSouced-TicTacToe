@@ -215,6 +215,7 @@ contract TestGame is Test {
 
         // Should initialize game state for Level 1 
         Game game1 = new Game(_setLevelNum(1), _setState(1), _setSymbol(1));
+        game1=game1;
     }
 
     function test__winnerInRows() external {
@@ -223,6 +224,7 @@ contract TestGame is Test {
         // with all X in first row 
         Game game1 = new Game(_setLevelNum(2), _setState(2), _setSymbol(2));
 
+        game1=game1;
         // Should return Player 1 as winner
         //assertEq(uint(1), uint(game1._winnerInRows()));
     }
@@ -232,6 +234,7 @@ contract TestGame is Test {
         // Should initialize game state for Level 2
         Game game1 = new Game(_setLevelNum(2), _setState(2), _setSymbol(2));
 
+        game1=game1;
         // Should return Player 1 as winner
         //assertEq(uint(1), uint(game1._winnerInColumns()));
     }
@@ -241,6 +244,7 @@ contract TestGame is Test {
         // Should initialize game state for Level 2
         Game game1 = new Game(_setLevelNum(2), _setState(2), _setSymbol(2));
 
+        game1=game1;
         // Should return Player 1 as winner
         //assertEq(uint(1), uint(game1._winnerInDiagonals()));
     }
@@ -250,6 +254,7 @@ contract TestGame is Test {
         // Should initialize game state for Level 1
         Game game1 = new Game(_setLevelNum(2), _setState(2), _setSymbol(2));
 
+        game1=game1;
         // Should return Player None as winner
         //assertEq(uint(0), uint(game1._calculateWinner()));
     }
@@ -301,7 +306,7 @@ contract TestGame is Test {
         // Should revert if address zero
         vm.prank(address(0x00));
         vm.expectRevert();
-        (bool ret3, string memory message3) = game1.joinGame();
+        game1.joinGame();
 
         // Should return false if both players have joined
         vm.prank(address(0x03));
@@ -323,7 +328,7 @@ contract TestGame is Test {
 
         // Player 1 joines with address = 0x01
         vm.prank(address(0x01));
-        (bool ret1, string memory message1) = game1.joinGame();
+        game1.joinGame();
         //assertEq(address(0x01), address(game1._getCurrentPlayer())); 
     }
 
@@ -337,7 +342,7 @@ contract TestGame is Test {
 
         // Player 1 joines with address = 0x01
         vm.prank(address(0x01));
-        (bool ret1, ) = game1.joinGame();
+        game1.joinGame();
 
         // Player 2 joines with address = 0x02
         vm.prank(address(0x02));
@@ -370,7 +375,7 @@ contract TestGame is Test {
         game1.newGame(2);
         vm.prank(address(0x01));
         Move memory o = Move(2, 2);
-        (bool ret7, string memory message1) = game1.makeMove(o);
+        (bool ret7, /*string memory message1*/) = game1.makeMove(o);
         assertEq(true, ret7);
         //assertEq("You Won!", message1);
     }                   

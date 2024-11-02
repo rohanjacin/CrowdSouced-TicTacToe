@@ -238,12 +238,78 @@ contract LevelConfigurator {
 		success = true;
 	}
 
-	// Store level code and state in IPFS 
+	// Store level number, state and symbols as code  
 	function _storeLevel(bytes memory _levelNum, bytes memory _state,
-		bytes memory _symbols) internal returns (bytes32 ipfsHash) {
+		bytes memory _symbols) external returns (address location) {
 
-		// Store level code and state
-		// in IPFS (use QuickNode IPFS probably)
+		// Constructor wrapper to create contract with code
+		// eqaul to _levelNum, _state, _symbols
+		// Taken from https://github.com/0xsequence/sstore2
+	    /*
+	      0x00    0x63         0x63XXXXXX  PUSH4 _code.length  size
+	      0x01    0x80         0x80        DUP1                size size
+	      0x02    0x60         0x600e      PUSH1 14            14 size size
+	      0x03    0x60         0x6000      PUSH1 00            0 14 size size
+	      0x04    0x39         0x39        CODECOPY            size
+	      0x05    0x60         0x6000      PUSH1 00            0 size
+	      0x06    0xf3         0xf3        RETURN
+	      <CODE>
+	    */
+
+	    bytes memory data = abi.encodePacked(
+	    	hex"00",
+	    	_levelNum,
+	    	_state,
+	    	_symbols
+	    );
+
+		bytes memory code = abi.encodePacked(
+			hex"63",
+			uint32(data.length),
+			hex"80_60_0E_60_00_39_60_00_F3",
+			data
+		);
+
+		assembly {
+			location := create(0, add(code, 32), mload(code))
+		}
+
+		console.log("Location:", location);
+		if (location == address(0)) {
+			revert();
+		}
+	}
+
+	// Retrieve level number, state and symbols as data  
+	function _retrieveLevel(address loc) 
+		internal returns (bytes memory data) {
+
+		uint256 size;
+
+		if (loc == address(0)) {
+			console.log("Address is zero");
+			revert();
+		}
+
+		assembly {
+			size := extcodesize(loc)
+
+			if iszero(size) {
+				revert(0, 0)
+			}
+
+			// Allocate space for data starting from the free location
+			data := mload(0x40)
+
+			// Reserve new memory to fit data size
+			mstore(0x40, add(data, and(and(add(size, 0x20), 0x1f), not(0x1f))))
+
+			// Store length
+			mstore(data, size)
+
+			// retrieve the code from location
+			extcodecopy(loc, add(data, 0x20), 1, sub(size, 1))
+		}
 	}
 
 	// Check state validity

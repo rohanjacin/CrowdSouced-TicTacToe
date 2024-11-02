@@ -101,7 +101,7 @@ contract BaseState {
 	// context when delegated
 	function copyState(State memory _state) public virtual returns(bool success) {
 		//state = state; 
-
+		success=success;
 		assembly {
 			let d
 			// Fetch dimension

@@ -152,4 +152,22 @@ contract TestLevelConfigurator is Test {
         assertEq(levelConfig2._checkStateValidity(
                             levelNum2, state2, symbols2), 0);
 */    }
+
+
+    // Test storage of Level number, state and symbols as datasnapshot (code)
+    function test__storeLevel() external {
+
+        LevelConfigurator levelConfig2 = new LevelConfigurator();
+        bytes memory code2 = _generateLevelCode(1);
+        bytes memory levelNum2 = _generateLevelNum(1);
+        bytes memory levelState2 = _generateState(1);
+        bytes memory levelSymbols2 = _generateSymbols(1);
+
+        levelConfig2._storeLevel(levelNum2, levelState2, levelSymbols2);
+
+        //levelConfig2._retrieveLevel(loc);
+
+        //(uint256 data) = abi.decode(data, (uint256));
+        //console.log("_levelnum:", _levelnum);      
+    }
 }

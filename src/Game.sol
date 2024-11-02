@@ -156,7 +156,7 @@ contract Game is BaseLevel, BaseState, BaseSymbol {
 	function makeMove(Move memory move) external returns(bool success,
 		string memory message) {
 
-		//move = move;
+		move = move;
 		// Check if already winner exists
 		if (games[1].winner != Player.None) {
 			return (false, "The game has aready ended!");
