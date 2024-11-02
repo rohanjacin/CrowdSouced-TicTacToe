@@ -74,7 +74,7 @@ contract TestGame is Test {
             state.v[0][2] = uint(CellValueL1.X);
             state.v[0][3] = uint(CellValueL1.O);
             state.v[0][4] = uint(CellValueL1.X);
-            state.v[0][5] = uint(CellValueL1.O);
+            state.v[0][5] = uint(CellValueL1.X);
             state.v[0][6] = uint(CellValueL1.O);
             state.v[0][7] = uint(CellValueL1.O);
             state.v[0][8] = uint(CellValueL1.X);
@@ -88,7 +88,7 @@ contract TestGame is Test {
             state.v[1][5] = uint(CellValueL1.O);
             state.v[1][6] = uint(CellValueL1.O);
             state.v[1][7] = uint(CellValueL1.X);
-            state.v[1][8] = uint(CellValueL1.X);
+            state.v[1][8] = uint(CellValueL1.O);
 
             // [19, 20, 21, 22, 23, 24, 25, 26, 27] R2
             state.v[2][0] = uint(CellValueL1.X);
@@ -97,16 +97,16 @@ contract TestGame is Test {
             state.v[2][3] = uint(CellValueL1.O);
             state.v[2][4] = uint(CellValueL1.X);
             state.v[2][5] = uint(CellValueL1.O);
-            state.v[2][6] = uint(CellValueL1.X);
+            state.v[2][6] = uint(CellValueL1.O);
             state.v[2][7] = uint(CellValueL1.O);
             state.v[2][8] = uint(CellValueL1.X);
 
             // [28, 29, 30, 31, 32, 33, 34, 35, 36] R3
             state.v[3][0] = uint(CellValueL1.O);
-            state.v[3][1] = uint(CellValueL1.O);
-            state.v[3][2] = uint(CellValueL1.X);
+            state.v[3][1] = uint(CellValueL1.X);
+            state.v[3][2] = uint(CellValueL1.O);
             state.v[3][3] = uint(CellValueL1.X);
-            state.v[3][4] = uint(CellValueL1.X);
+            state.v[3][4] = uint(CellValueL1.O);
             state.v[3][5] = uint(CellValueL1.X);
             state.v[3][6] = uint(CellValueL1.X);
             state.v[3][7] = uint(CellValueL1.O);
@@ -120,8 +120,8 @@ contract TestGame is Test {
             state.v[4][4] = uint(CellValueL1.X);
             state.v[4][5] = uint(CellValueL1.O);
             state.v[4][6] = uint(CellValueL1.X);
-            state.v[4][7] = uint(CellValueL1.O);
-            state.v[4][8] = uint(CellValueL1.X); 
+            state.v[4][7] = uint(CellValueL1.X);
+            state.v[4][8] = uint(CellValueL1.O); 
 
             // [46, 47, 48, 49, 50, 51, 52, 53, 54] R5
             state.v[5][0] = uint(CellValueL1.O);
@@ -130,7 +130,7 @@ contract TestGame is Test {
             state.v[5][3] = uint(CellValueL1.O);
             state.v[5][4] = uint(CellValueL1.X);
             state.v[5][5] = uint(CellValueL1.O);
-            state.v[5][6] = uint(CellValueL1.X);
+            state.v[5][6] = uint(CellValueL1.O);
             state.v[5][7] = uint(CellValueL1.O);
             state.v[5][8] = uint(CellValueL1.X);
 
@@ -138,22 +138,22 @@ contract TestGame is Test {
             state.v[6][0] = uint(CellValueL1.X);
             state.v[6][1] = uint(CellValueL1.O);
             state.v[6][2] = uint(CellValueL1.X);
-            state.v[6][3] = uint(CellValueL1.O);
-            state.v[6][4] = uint(CellValueL1.X);
-            state.v[6][5] = uint(CellValueL1.O);
-            state.v[6][6] = uint(CellValueL1.X);
+            state.v[6][3] = uint(CellValueL1.X);
+            state.v[6][4] = uint(CellValueL1.O);
+            state.v[6][5] = uint(CellValueL1.X);
+            state.v[6][6] = uint(CellValueL1.O);
             state.v[6][7] = uint(CellValueL1.O);
             state.v[6][8] = uint(CellValueL1.X);
 
             // [64, 65, 66, 67, 68, 69, 70, 71, 72] R7
             state.v[7][0] = uint(CellValueL1.X);
             state.v[7][1] = uint(CellValueL1.O);
-            state.v[7][2] = uint(CellValueL1.X);
-            state.v[7][3] = uint(CellValueL1.O);
+            state.v[7][2] = uint(CellValueL1.O);
+            state.v[7][3] = uint(0);
             state.v[7][4] = uint(CellValueL1.X);
             state.v[7][5] = uint(CellValueL1.O);
             state.v[7][6] = uint(CellValueL1.X);
-            state.v[7][7] = uint(CellValueL1.O);
+            state.v[7][7] = uint(CellValueL1.X);
             state.v[7][8] = uint(CellValueL1.X);
 
             // [73, 74, 75, 76, 77, 78, 79, 80, 81] R8
@@ -165,7 +165,7 @@ contract TestGame is Test {
             state.v[8][5] = uint(CellValueL1.O);
             state.v[8][6] = uint(CellValueL1.X);
             state.v[8][7] = uint(CellValueL1.O);
-            state.v[8][8] = uint(CellValueL1.X);
+            state.v[8][8] = uint(CellValueL1.O);
 
             //  C0  C1  C2  C3  C4  C5  C6  C7  C8
             // [01, 02, 03, 04, 05, 06, 07, 08, 09] R0
@@ -229,8 +229,7 @@ contract TestGame is Test {
 
     function test__winnerInColumns() external {
 
-        // Should initialize game state for Level 1
-        // with all X in first row 
+        // Should initialize game state for Level 2
         Game game1 = new Game(_setLevelNum(2), _setState(2), _setSymbol(2));
 
         // Should return Player 1 as winner
@@ -239,11 +238,140 @@ contract TestGame is Test {
 
     function test_winnerInDiagonals() external {
 
-        // Should initialize game state for Level 1
-        // with all X in first row 
+        // Should initialize game state for Level 2
         Game game1 = new Game(_setLevelNum(2), _setState(2), _setSymbol(2));
 
         // Should return Player 1 as winner
         //assertEq(uint(1), uint(game1._winnerInDiagonals()));
-    }    
+    }
+
+    function test__calculateWinner() external {
+
+        // Should initialize game state for Level 1
+        Game game1 = new Game(_setLevelNum(2), _setState(2), _setSymbol(2));
+
+        // Should return Player None as winner
+        //assertEq(uint(0), uint(game1._calculateWinner()));
+    }
+
+    function test__isBoardFull() external {
+
+        // Should initialize game state for Level 1
+        Game game1 = new Game(_setLevelNum(2), _setState(2), _setSymbol(2));
+
+        // Should return Player None as winner
+       // assertTrue(game1._isBoardFull());
+    }
+
+    function test_newGame() external {
+
+        // Should initialize game state for Level 1
+        Game game1 = new Game(_setLevelNum(2), _setState(2), _setSymbol(2));
+
+        // Should return game turn as Player 1 and winner as None 
+        game1.newGame(2);
+        Player winner;
+        Player turn;
+        ( , , , winner, turn) = game1.games(1);
+        assertEq(uint(Player.None), uint(winner)); 
+        assertEq(uint(Player.Player1), uint(turn)); 
+    }
+
+    function test_joinGame() external {
+
+        // Should initialize game state for Level 1
+        Game game1 = new Game(_setLevelNum(2), _setState(2), _setSymbol(2));
+
+        game1.newGame(2);
+
+        // Should return true if address is non-zero and
+        // Player should be set to Player 1 - X  
+        vm.prank(address(0x01));
+        (bool ret1, string memory message1) = game1.joinGame();
+        assertEq(true, ret1); 
+        assertEq("You are Player1 - X", message1);
+    
+        // Should return true if address is non-zero and
+        // Player should be set to Player 2 - X  
+        vm.prank(address(0x02));
+        (bool ret2, string memory message2) = game1.joinGame();
+        assertEq(true, ret2); 
+        assertEq("You are Player2 - O", message2);
+
+        // Should revert if address zero
+        vm.prank(address(0x00));
+        vm.expectRevert();
+        (bool ret3, string memory message3) = game1.joinGame();
+
+        // Should return false if both players have joined
+        vm.prank(address(0x03));
+        (bool ret4, string memory message4) = game1.joinGame();
+        assertEq(false, ret4); 
+        assertEq("Players already joined", message4);        
+    }
+
+    function test__getCurrentPlayer() external {
+
+        // Should initialize game state for Level 1
+        Game game1 = new Game(_setLevelNum(2), _setState(2), _setSymbol(2));
+
+        // Should return player 1 address
+        game1.newGame(2);
+        Player winner;
+        Player turn;
+        ( , , , winner, turn) = game1.games(1);
+
+        // Player 1 joines with address = 0x01
+        vm.prank(address(0x01));
+        (bool ret1, string memory message1) = game1.joinGame();
+        //assertEq(address(0x01), address(game1._getCurrentPlayer())); 
+    }
+
+    function test_makeMove() external {
+
+        // Should initialize game state for Level 1
+        Game game1 = new Game(_setLevelNum(2), _setState(2), _setSymbol(2));
+
+        // Should return game turn as Player 1 and winner as None 
+        game1.newGame(2);
+
+        // Player 1 joines with address = 0x01
+        vm.prank(address(0x01));
+        (bool ret1, ) = game1.joinGame();
+
+        // Player 2 joines with address = 0x02
+        vm.prank(address(0x02));
+        game1.joinGame();
+
+        // If Player 1 makes valid move, then the next player
+        // should be Player 2
+        vm.prank(address(0x01));
+        Move memory m = Move(2, 2);
+        (bool ret3, ) = game1.makeMove(m);
+        assertEq(true, ret3);
+        vm.prank(address(0x02));
+        Move memory n = Move(2, 3);
+        (bool ret4, ) = game1.makeMove(n);
+        assertEq(true, ret4);
+
+        // If Player 1 makes valid move, and if Player 1 makes 
+        // a move again then it should fail
+        vm.prank(address(0x01));
+        Move memory p = Move(2, 2);
+        (bool ret5, ) = game1.makeMove(p);
+        assertEq(true, ret5);
+        vm.prank(address(0x01));
+        Move memory q = Move(2, 3);
+        (bool ret6, ) = game1.makeMove(q);
+        assertEq(false, ret6);
+
+        // If Player 1 makes valid move and wins then 
+        // the winner should be Player 1
+        game1.newGame(2);
+        vm.prank(address(0x01));
+        Move memory o = Move(2, 2);
+        (bool ret7, string memory message1) = game1.makeMove(o);
+        assertEq(true, ret7);
+        //assertEq("You Won!", message1);
+    }                   
 }

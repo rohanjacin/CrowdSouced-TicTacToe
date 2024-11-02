@@ -31,24 +31,24 @@ contract GameHouse {
 	}
 }
 
+// Game info
+struct GameInfo {
+	GameHouse house;
+	address player1;
+	address player2;
+	Player winner;
+	Player turn;
+	mapping (uint8 => uint8[]) cellValues;
+}
+
+// Players move
+struct Move {
+	uint8 row;
+	uint8 col;
+}
+
 // Game
 contract Game is BaseLevel, BaseState, BaseSymbol {
-
-	// Game info
-	struct GameInfo {
-		GameHouse house;
-		address player1;
-		address player2;
-		Player winner;
-		Player turn;
-		mapping (uint8 => uint8[]) cellValues;
-	}
-
-	// Players move
-	struct Move {
-		uint8 row;
-		uint8 col;
-	}
 
 	// SLOT 0 is from BaseLevel (Do NOT use SLOT 0)
 	//uint8 level;
@@ -60,7 +60,7 @@ contract Game is BaseLevel, BaseState, BaseSymbol {
 	Symbols meta;
 
 	// Game instance (id = level number)
-	mapping(uint8 => GameInfo) games;
+	mapping(uint8 => GameInfo) public games;
 
 	// Load the default state in Base State
 	constructor(bytes memory _levelnum, State memory _state,
@@ -153,13 +153,13 @@ contract Game is BaseLevel, BaseState, BaseSymbol {
 	}
 
 	// Make a move
-	function makeMove(Move memory move) external view returns(bool success,
+	function makeMove(Move memory move) external returns(bool success,
 		string memory message) {
 
-		move = move;
+		//move = move;
 		// Check if already winner exists
 		if (games[1].winner != Player.None) {
-			return (true, "The game has aready ended!");
+			return (false, "The game has aready ended!");
 		}
 
 		// Only player who's turn it is can make a move
@@ -168,6 +168,27 @@ contract Game is BaseLevel, BaseState, BaseSymbol {
 		}
 
 		// Check for move agains rule
+
+
+		// Calculator Winner
+		Player winner = _calculateWinner();
+		// There is a winner
+		if (winner != Player.None) {
+
+			// Game ended 
+			games[1].winner = winner;
+			return (true, "You Won!"); 
+		}
+
+		// Next player's turn
+		if (games[1].turn == Player.Player1) {
+			games[1].turn = Player.Player2;
+		}
+		else if (games[1].turn == Player.Player2) {
+			games[1].turn = Player.Player1;
+		}
+
+		return (true, "Next player's turn");
 	}
 
 	// Gets current players who's turn it is
@@ -201,6 +222,39 @@ contract Game is BaseLevel, BaseState, BaseSymbol {
 		winner = _winnerInDiagonals();
 		if (winner != Player.None)
 			return winner;
+
+
+		if (true == _isBoardFull()) {
+			winner = Player.None;
+		}
+
+		console.log("Final winner:", uint(winner));
+	}
+
+	// Check if there are no empty cells on the board
+	function _isBoardFull() internal view returns (bool ret) {
+
+		uint8 _marker;
+
+		ret = true;
+
+		if (level == 1) {
+			_marker = 3;
+		}
+		else if (level == 2) {
+			_marker = 9;
+		}
+
+		for (uint8 r = 0; r < _marker; r++) {
+
+			for (uint8 c = 0; c < _marker; c++) {
+
+				if (getState(r, c) == uint8(0/*CellValueL.Empty*/)) {
+					ret = false;
+					break;
+				}
+			}
+		}
 	}
 
 	// Check longest X or O sequence in all rows
@@ -220,13 +274,14 @@ contract Game is BaseLevel, BaseState, BaseSymbol {
 			_tuples = 6;
 		}
 
+		console.log("In Rows..");
 		// Rows
 		for (uint8 r = 0; r < _marker; r++) {
 
 			console.log("r:", r);
 
 			for (uint8 c = 0; c < _tuples; c++) {
-				console.log("c:", c);
+				console.log(" c:", c);
 
 				if (level == 1) {
 					if ((getState(r, c) == getState(r, c+1)) &&
@@ -234,12 +289,12 @@ contract Game is BaseLevel, BaseState, BaseSymbol {
 
 						if (getState(r, c) == uint8(CellValueL.X)) {
 						   	countX = 1;
-							console.log("countX:", countX);
+							console.log(" countX:", countX);
 						   	winner = Player.Player1;							
 						}
 						else if (getState(r, c) == uint8(CellValueL.O)) {
 						   	countO = 1;
-							console.log("countO:", countO);
+							console.log(" countO:", countO);
 						   	winner = Player.Player2;							
 						} 
 					}
@@ -251,12 +306,12 @@ contract Game is BaseLevel, BaseState, BaseSymbol {
 
 					   	if (getState(r, c) == uint8(CellValueL.X)) {
 						   	countX = 1;
-							console.log("countX:", countX);
+							console.log(" countX:", countX);
 						   	winner = Player.Player1;
 					   	}
 					   	if (getState(r, c) == uint8(CellValueL.O)) {
 						   	countO = 1;
-							console.log("countO:", countO);
+							console.log(" countO:", countO);
 						   	winner = Player.Player2;
 					   	}
 					}
@@ -292,13 +347,15 @@ contract Game is BaseLevel, BaseState, BaseSymbol {
 			_tuples = 6;
 		}
 
+		console.log("In Columns..");
+
 		// Columns
 		for (uint8 c = 0; c < _marker; c++) {
 
 			console.log("c:", c);
 
 			for (uint8 r = 0; r < _tuples; r++) {
-				console.log("r:", r);
+				console.log(" r:", r);
 
 				if (level == 1) {
 					if ((getState(r, c) == getState(r+1, c)) &&
@@ -306,12 +363,12 @@ contract Game is BaseLevel, BaseState, BaseSymbol {
 
 						if (getState(r, c) == uint8(CellValueL.X)) {
 						   	countX = 1;
-							console.log("countX:", countX);
+							console.log(" countX:", countX);
 						   	winner = Player.Player1;							
 						}
 						else if (getState(r, c) == uint8(CellValueL.O)) {
 						   	countO = 1;
-							console.log("countO:", countO);
+							console.log(" countO:", countO);
 						   	winner = Player.Player2;							
 						} 
 					}
@@ -323,12 +380,12 @@ contract Game is BaseLevel, BaseState, BaseSymbol {
 
 					   	if (getState(r, c) == uint8(CellValueL.X)) {
 						   	countX = 1;
-							console.log("countX:", countX);
+							console.log(" countX:", countX);
 						   	winner = Player.Player1;
 					   	}
 					   	if (getState(r, c) == uint8(CellValueL.O)) {
 						   	countO = 1;
-							console.log("countO:", countO);
+							console.log(" countO:", countO);
 						   	winner = Player.Player2;
 					   	}
 					}
@@ -362,6 +419,8 @@ contract Game is BaseLevel, BaseState, BaseSymbol {
 			_tuples = 6;
 		}
 
+		console.log("In Diagonals..");
+
 		if (level == 1) {
 
 			if ((getState(0, 0) == getState(1, 1)) &&
@@ -369,12 +428,12 @@ contract Game is BaseLevel, BaseState, BaseSymbol {
 
 				if (getState(0, 0) == uint8(CellValueL.X)) {
 				   	countX = 1;
-					console.log("countX:", countX);
+					console.log(" countX:", countX);
 				   	winner = Player.Player1;
 			   	}
 			   	if (getState(0, 0) == uint8(CellValueL.O)) {
 				   	countO = 1;
-					console.log("countO:", countO);
+					console.log(" countO:", countO);
 				   	winner = Player.Player2;
 			   	}		
 			}
@@ -383,12 +442,12 @@ contract Game is BaseLevel, BaseState, BaseSymbol {
 
 				if (getState(0, 2) == uint8(CellValueL.X)) {
 				   	countX = 1;
-					console.log("countX:", countX);
+					console.log(" countX:", countX);
 				   	winner = Player.Player1;
 			   	}
 			   	if (getState(0, 2) == uint8(CellValueL.O)) {
 				   	countO = 1;
-					console.log("countO:", countO);
+					console.log(" countO:", countO);
 				   	winner = Player.Player2;
 			   	}
 			}	
@@ -408,12 +467,12 @@ contract Game is BaseLevel, BaseState, BaseSymbol {
 
 				   	if (getState(d, d) == uint8(CellValueL.X)) {
 					   	countX = 1;
-						console.log("countX:", countX);
+						console.log(" countX:", countX);
 					   	winner = Player.Player1;
 				   	}
 				   	if (getState(d, d) == uint8(CellValueL.O)) {
 					   	countO = 1;
-						console.log("countO:", countO);
+						console.log(" countO:", countO);
 					   	winner = Player.Player2;
 				   	}
 				}			
@@ -432,12 +491,12 @@ contract Game is BaseLevel, BaseState, BaseSymbol {
 
 					   	if (getState(e, 8-d) == uint8(CellValueL.X)) {
 						   	countX = 1;
-							console.log("countX:", countX);
+							console.log(" countX:", countX);
 						   	winner = Player.Player1;
 					   	}
 					   	if (getState(e, 8-d) == uint8(CellValueL.O)) {
 						   	countO = 1;
-							console.log("countO:", countO);
+							console.log(" countO:", countO);
 						   	winner = Player.Player2;
 					   	}
 					}
