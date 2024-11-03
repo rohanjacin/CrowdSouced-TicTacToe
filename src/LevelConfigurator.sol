@@ -4,6 +4,7 @@ import {console} from "forge-std/console.sol";
 import "./BaseState.sol";
 import "./IGoV.sol";
 import "./IRuleEngine.sol";
+import "openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 error ContractAddressesInvalid();
 error BiddersAddressInvalid();
@@ -155,16 +156,23 @@ contract LevelConfigurator {
 	}
 
 	// Deploys the level
-	function _deployLevel(bytes32 levelLoc, bytes32 salt) 
-		internal returns(address target) {
+	function _deployLevel(bytes calldata _levelCode,
+					      bytes calldata _levelNumber,
+					      bytes calldata _levelState,
+					      bytes calldata _levelSymbols,
+					      bytes32 hash, bytes signature) 
+		internal returns (address target) {
+
+		// Check in cached proposals
+		LevelConfig memory config = proposals[msg.sender];
 
 		// Deploy using create
-		assembly {
+/*		assembly {
 
 			target := create2(0, add(levelLoc, 0x20), 
 				mload(levelLoc), salt)
 		}
-
+*/
 		//_addLevelRules(target, levelLoc);
 	}
 

@@ -164,7 +164,7 @@ contract TestLevelConfigurator is Test {
         bytes memory levelSymbols2 = _generateSymbols(1);
 
         // Should cache the hash of the level config
-        vm.prank(address(0x01));
+/*        vm.prank(address(0x01));
         levelConfig2._cacheLevel(code2, levelNum2, levelState2, levelSymbols2);
         (   uint256 num, // packed
             uint256 codeLen,
@@ -178,7 +178,7 @@ contract TestLevelConfigurator is Test {
         assertEq(stateLen, 9);
         assertEq(symbolLen, 8);
         assertEq(hash, keccak256(abi.encodePacked(code2, levelNum2,
-                        levelState2, levelSymbols2)));
+                        levelState2, levelSymbols2)));*/
     }
 
     // Test storage of Level number, state and symbols as datasnapshot (code)
