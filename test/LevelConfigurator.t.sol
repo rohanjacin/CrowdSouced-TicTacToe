@@ -154,6 +154,33 @@ contract TestLevelConfigurator is Test {
 */    }
 
 
+    // Test cache reference of Level code, number, state and symbols
+    function test__cacheLevel() external {
+
+        LevelConfigurator levelConfig2 = new LevelConfigurator();
+        bytes memory code2 = _generateLevelCode(1);
+        bytes memory levelNum2 = _generateLevelNum(1);
+        bytes memory levelState2 = _generateState(1);
+        bytes memory levelSymbols2 = _generateSymbols(1);
+
+        // Should cache the hash of the level config
+        vm.prank(address(0x01));
+        levelConfig2._cacheLevel(code2, levelNum2, levelState2, levelSymbols2);
+        (   uint256 num, // packed
+            uint256 codeLen,
+            uint256 levelNumLen,
+            uint256 stateLen,
+            uint256 symbolLen,
+            bytes32 hash
+        ) = levelConfig2.proposals(address(0x01));
+        assertEq(codeLen, 13);
+        assertEq(levelNumLen, 1);
+        assertEq(stateLen, 9);
+        assertEq(symbolLen, 8);
+        assertEq(hash, keccak256(abi.encodePacked(code2, levelNum2,
+                        levelState2, levelSymbols2)));
+    }
+
     // Test storage of Level number, state and symbols as datasnapshot (code)
     function test__storeLevel() external {
 
@@ -163,11 +190,12 @@ contract TestLevelConfigurator is Test {
         bytes memory levelState2 = _generateState(1);
         bytes memory levelSymbols2 = _generateSymbols(1);
 
-        levelConfig2._storeLevel(levelNum2, levelState2, levelSymbols2);
+        // Should return a non zero address
+        address loc = levelConfig2._storeLevel(levelNum2, levelState2, levelSymbols2);
+        assertTrue(loc != address(0));
 
-        //levelConfig2._retrieveLevel(loc);
-
-        //(uint256 data) = abi.decode(data, (uint256));
-        //console.log("_levelnum:", _levelnum);      
+        // Should return non zero size memory bytes pointer 
+        bytes memory d = levelConfig2._retrieveLevel(loc);
     }
+
 }

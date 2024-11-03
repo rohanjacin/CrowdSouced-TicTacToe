@@ -12,6 +12,17 @@ error BiddersLevelCodeSizeInvalid();
 error BiddersLevelStateSizeInvalid();
 error BiddersStatesInvalid();
 error BiddersStatesSymbolsInvalid();
+error FailedToCacheLevel();
+
+// Proposal Level configuration
+struct LevelConfig {
+	uint256 num; // packed
+	uint256 codeLen;
+	uint256 levelNumLen;
+	uint256 stateLen;
+	uint256 symbolLen;
+	bytes32 hash;
+}
 
 contract LevelConfigurator {
 
@@ -27,11 +38,8 @@ contract LevelConfigurator {
 	uint8 constant internal MAX_CELLS_L2 = 81;
 	uint32 constant internal MAX_LEVEL_CODESIZE = 500000; // 500k
 
-	struct LevelConfig {
-		uint256 level;
-		uint256 cells;
-		uint256 marker;
-	}
+	// Proposals cached
+	mapping (address => LevelConfig) public proposals;
 
 	constructor (/*address _govAddress,
 		address _gameAddress,
@@ -123,6 +131,12 @@ contract LevelConfigurator {
 		// TODO: check for return value (return var causes stack too deep)
 		if (1 == _checkStateValidity(_levelNumber, _levelState, _levelSymbols)) {
 			revert BiddersStatesInvalid();
+		}
+
+		// Cache reference for level (level code, level num, state and symbols)		
+		if (false == _cacheLevel(_levelCode, _levelNumber,
+						_levelState, _levelSymbols)) {
+			revert FailedToCacheLevel();
 		}
 
 		// Store level code and state
@@ -238,6 +252,45 @@ contract LevelConfigurator {
 		success = true;
 	}
 
+	// Cache the hash of proposal 
+	// i.e level code, number, state and symbols  
+	function _cacheLevel(bytes memory _levelCode, bytes memory _levelNum, 
+		bytes memory _state, bytes memory _symbols)
+		internal returns (bool success) {
+
+		LevelConfig memory config = LevelConfig(uint256(0), uint256(0),
+			uint256(0), uint256(0), uint256(0), bytes32(0));
+
+		// Register the lengths
+		assembly {
+			// num
+			let ptr := config
+			mstore(ptr, mload(add(_levelNum, 0x20)))
+
+			// codeLen
+			ptr := add(config, 0x20)				
+			mstore(ptr, mload(_levelCode))
+
+			// levelNumLen
+			ptr := add(config, 0x40)				
+			mstore(ptr, mload(_levelNum))
+
+			// stateLen
+			ptr := add(config, 0x60)				
+			mstore(ptr, mload(_state))
+
+			// symbolLen
+			ptr := add(config, 0x80)				
+			mstore(ptr, mload(_symbols))
+		}
+
+		// Calculate hash
+		config.hash = keccak256(abi.encodePacked(_levelCode, _levelNum,
+								_state, _symbols));
+
+		proposals[msg.sender] = config;
+	}
+
 	// Store level number, state and symbols as code  
 	function _storeLevel(bytes memory _levelNum, bytes memory _state,
 		bytes memory _symbols) external returns (address location) {
@@ -274,7 +327,6 @@ contract LevelConfigurator {
 			location := create(0, add(code, 32), mload(code))
 		}
 
-		console.log("Location:", location);
 		if (location == address(0)) {
 			revert();
 		}
@@ -282,7 +334,7 @@ contract LevelConfigurator {
 
 	// Retrieve level number, state and symbols as data  
 	function _retrieveLevel(address loc) 
-		internal returns (bytes memory data) {
+		external returns (bytes memory data) {
 
 		uint256 size;
 
