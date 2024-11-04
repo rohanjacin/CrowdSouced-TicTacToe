@@ -4,13 +4,12 @@ import {console} from "forge-std/console.sol";
 import "./BaseLevel.sol";
 import "./BaseState.sol";
 
-type LevelState is uint8;
-
 error StateCountInvalid();
 error RuleInvalid();
 
 // Applies rules across all levels
-contract RuleEngine {
+abstract contract RuleEngine {
+
     bytes16 private constant HEX_DIGITS = "0123456789abcdef";
 
 	// Rules (cell value vs function sel of rule in level)
@@ -72,8 +71,8 @@ contract RuleEngine {
 	}
 
 	// Setting a cell value as per the rule
-	function setCell(address levelAddress, uint8 row, uint8 col,
-		uint8 input) external returns(bool success) {
+	function _setCell(address levelAddress, uint8 row, uint8 col,
+		uint8 input) internal returns(bool success) {
 
 		// Check for valid address
 		if (levelAddress == address(0)) {
@@ -94,7 +93,8 @@ contract RuleEngine {
 
 		// Call level function to set cell via its selector
 		bytes4 sel = rules[input];
-		(success, ) = levelAddress.call(abi.encodePacked(sel, row, col, input));
+		(success, ) = levelAddress.delegatecall(
+						abi.encodePacked(sel, row, col, input));
 	}
 
 	// 

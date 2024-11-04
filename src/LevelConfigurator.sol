@@ -3,7 +3,6 @@ pragma solidity 0.8.27;
 import {console} from "forge-std/console.sol";
 import "./BaseState.sol";
 import "./IGoV.sol";
-import "./IRuleEngine.sol";
 import "openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import "openzeppelin-contracts/contracts/utils/cryptography/MessageHashUtils.sol";
 
@@ -196,8 +195,8 @@ contract LevelConfigurator {
 		proposals[msg.sender] = config;
 
 		success = true;
-		IRuleEngine(address(0x1)/*ruleengineAddress*/).addRules(
-				config.codeAddress, _levelSymbols);
+		//IRuleEngine(address(0x1)/*ruleengineAddress*/).addRules(
+		//		config.codeAddress, _levelSymbols);
 	}
 
 	// Add level rules to rule base

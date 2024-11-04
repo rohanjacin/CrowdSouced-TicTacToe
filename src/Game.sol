@@ -6,7 +6,7 @@ import "./BaseState.sol";
 import "./BaseSymbol.sol";
 import "./LevelConfigurator.sol";
 import "./ILevelConfigurator.sol";
-import "./IRuleEngine.sol";
+import "./RuleEngine.sol";
 
 // Players
 enum Player { None, Player1, Player2 }
@@ -48,7 +48,7 @@ struct Move {
 }
 
 // Game
-contract Game is BaseLevel, BaseState, BaseSymbol {
+contract Game is BaseLevel, BaseState, BaseSymbol, RuleEngine {
 
 	// SLOT 0 is from BaseLevel (Do NOT use SLOT 0)
 	//uint8 level;
@@ -57,7 +57,13 @@ contract Game is BaseLevel, BaseState, BaseSymbol {
 	//State board;
 
 	// SLOT 2 is from BaseSymbols (Do NOT use SLOT 2)
-	Symbols meta;
+	//Symbols symbols;
+
+	// SLOT 3 is from RuleEngine (Do NOT use SLOT 3)
+    //bytes16 private constant HEX_DIGITS = "0123456789abcdef";
+
+	// SLOT 4 is from RuleEngine (Do NOT use SLOT 4)
+	//mapping(uint8 => bytes4) rules;
 
 	// Game instance (id = level number)
 	mapping(uint8 => GameInfo) public games;
@@ -83,7 +89,7 @@ contract Game is BaseLevel, BaseState, BaseSymbol {
 		if (!((_level == 0) || (_level == 1))) {
 			revert LevelInvalid();
 		}
-		_levelState=_levelState;
+		_levelState =_levelState;
 /*		// Check if Level State snapshot exists 
 		assembly {
 			let len := extcodesize(_levelState)
@@ -184,8 +190,7 @@ contract Game is BaseLevel, BaseState, BaseSymbol {
 		}
 
 		// Execute for move as per rule
-		(success) = IRuleEngine(games[1].house.ruleEngine())
-							.setCell(games[1].levelAddress, 
+		(success) = _setCell(games[1].levelAddress, 
 								move.row, move.col, value);
 		assert(success);
 		assert(getState(move.row, move.col) == value);

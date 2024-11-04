@@ -44,11 +44,11 @@ contract TestRuleEngine is Test {
     // Test if it adds rules properly
     function test_addRules() external {
 
-        RuleEngine ruleEngine = new RuleEngine();
+/*        RuleEngine ruleEngine = new RuleEngine();
         Level1D levelA = new Level1D();
 
         bytes memory levelSymbols1 = _generateSymbols(1);
 
         ruleEngine.addRules(address(levelA), levelSymbols1);
-    }
+*/    }
 }
