@@ -279,7 +279,7 @@ contract TestGame is Test {
         game1.newGame(2);
         Player winner;
         Player turn;
-        ( , , , winner, turn) = game1.games(1);
+        ( , , , , winner, turn) = game1.games(1);
         assertEq(uint(Player.None), uint(winner)); 
         assertEq(uint(Player.Player1), uint(turn)); 
     }
@@ -326,7 +326,7 @@ contract TestGame is Test {
         game1.newGame(2);
         Player winner;
         Player turn;
-        ( , , , winner, turn) = game1.games(1);
+        ( , , , , winner, turn) = game1.games(1);
 
         // Player 1 joines with address = 0x01
         vm.prank(address(0x01));

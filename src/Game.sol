@@ -6,12 +6,12 @@ import "./BaseState.sol";
 import "./BaseSymbol.sol";
 import "./LevelConfigurator.sol";
 import "./ILevelConfigurator.sol";
-import "./RuleEngine.sol";
+import "./IRuleEngine.sol";
 
 // Players
 enum Player { None, Player1, Player2 }
 // Possible cell values
-enum CellValueL { CellValue , X, O}
+enum CellValueL { Empty , X, O}
 
 // Errors
 error LevelInvalid();
@@ -36,9 +36,9 @@ struct GameInfo {
 	GameHouse house;
 	address player1;
 	address player2;
+	address levelAddress;
 	Player winner;
 	Player turn;
-	mapping (uint8 => uint8[]) cellValues;
 }
 
 // Players move
@@ -167,8 +167,28 @@ contract Game is BaseLevel, BaseState, BaseSymbol {
 			return (false, "Not your turn");
 		}
 
-		// Check for move agains rule
+		// Check cell initial value
+		uint8 value = uint8(getState(move.row, move.col));
+		console.log("value:", value);
 
+		if (!((value == uint8(CellValueL.Empty)) ||
+		     (value > 128))) {
+			revert();
+		}
+
+		if (games[1].turn == Player.Player1) {
+			value = uint8(CellValueL.X);
+		}
+		else if (games[1].turn == Player.Player2) {
+			value = uint8(CellValueL.O);
+		}
+
+		// Execute for move as per rule
+		(success) = IRuleEngine(games[1].house.ruleEngine())
+							.setCell(games[1].levelAddress, 
+								move.row, move.col, value);
+		assert(success);
+		assert(getState(move.row, move.col) == value);
 
 		// Calculator Winner
 		Player winner = _calculateWinner();
@@ -249,7 +269,7 @@ contract Game is BaseLevel, BaseState, BaseSymbol {
 
 			for (uint8 c = 0; c < _marker; c++) {
 
-				if (getState(r, c) == uint8(0/*CellValueL.Empty*/)) {
+				if (getState(r, c) == uint8(CellValueL.Empty)) {
 					ret = false;
 					break;
 				}

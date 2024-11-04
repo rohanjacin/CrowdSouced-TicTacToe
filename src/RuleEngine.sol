@@ -13,8 +13,7 @@ error RuleInvalid();
 contract RuleEngine {
     bytes16 private constant HEX_DIGITS = "0123456789abcdef";
 
-	// Rules (cell value vs 
-	// hash of function sel of rule in level)
+	// Rules (cell value vs function sel of rule in level)
 	mapping(uint8 => bytes4) rules;
 
 	// Add a rule
@@ -52,7 +51,7 @@ contract RuleEngine {
 					((i-1)*4 + 3)])), 4);
 
 			bytes memory func = abi.encodePacked("setCellu",
-				abi.encodePacked(symbolString), "()");
+				abi.encodePacked(symbolString), "(uint8,uint8,uint8)");
 
 			// Calulate the signature for set call function
 			bytes4 sel = bytes4(keccak256(abi.encodePacked(func)));
@@ -73,9 +72,29 @@ contract RuleEngine {
 	}
 
 	// Setting a cell value as per the rule
-	function setCell(uint8 input) external returns(uint8 output) {
+	function setCell(address levelAddress, uint8 row, uint8 col,
+		uint8 input) external returns(bool success) {
 
-		//
+		// Check for valid address
+		if (levelAddress == address(0)) {
+			revert();
+		}
+
+		// Check if level contract exists
+		assembly {
+			if iszero(extcodesize(levelAddress)) {
+				revert(0, 0)
+			}
+		}
+
+		// Check for valid input state
+		if ((input == 0) || (input == type(uint8).max)) {
+			revert();
+		}
+
+		// Call level function to set cell via its selector
+		bytes4 sel = rules[input];
+		(success, ) = levelAddress.call(abi.encodePacked(sel, row, col, input));
 	}
 
 	// 

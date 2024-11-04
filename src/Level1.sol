@@ -59,13 +59,13 @@ contract Level1 is BaseLevel, BaseState, BaseSymbol {
 	}
 */
 	// ❌
-	function setCellue29d8c00() external view {
-
+	function setCellue29d8c00(uint8 row, uint8 col, uint8 value) external {
+		board.v[row][col] = value;
 	}
 	
 	// ⭕  
-	function setCellue2ad9500() external view {
-
+	function setCellue2ad9500(uint8 row, uint8 col, uint8 value) external {
+		board.v[row][col] = value;
 	}
 
 	// Inherited from BaseState - all implemented and supported states in level
