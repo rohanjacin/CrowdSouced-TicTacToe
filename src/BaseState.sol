@@ -2,9 +2,6 @@
 pragma solidity 0.8.27;
 import "forge-std/console.sol";
 
-// Possible cell values
-enum CellValue { Empty }
-
 // Base State
 contract BaseState {
 
@@ -160,7 +157,6 @@ contract BaseState {
     }
 
 	// To be overriden by level
-    function supportedStates() 
-    	public view virtual returns (bytes memory) {
+    function supportedStates() public view virtual returns (bytes memory) {
 	}
 }

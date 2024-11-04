@@ -6,12 +6,6 @@ import "./BaseState.sol";
 import "./BaseSymbol.sol";
 import "./Level1.sol";
 
-// Possible cell values
-enum CellValueL2 { CellValueL1, Star, Bomb}
-
-//error WrongStateForLevel();
-//error WrongSymbolsForLevel();
-
 // Level defination and implementation
 contract Level2 is BaseLevel, BaseState, BaseSymbol {
 
@@ -62,20 +56,19 @@ contract Level2 is BaseLevel, BaseState, BaseSymbol {
 */	}
 
 	// ⭐
-	function setCellu2B50() external view {
+	function setCellue2ad9000() external view {
 
 	}
 	
 	// 💣
-	function setCellu1F4A3() external view {
+	function setCelluf09f92a3() external view {
 
 	}
 
 	// Inherited from BaseState - all implemented and supported states in level
-    function supportedStates() 
-    	public view virtual override returns (bytes memory) {
+    function supportedStates() public view override returns (bytes memory) {
 
-    	return abi.encode(this.setCellu2B50.selector); 
+    	return abi.encodePacked(bytes4(this.setCellue2ad9000.selector),  // ⭐
+    							bytes4(this.setCelluf09f92a3.selector)); // 💣
     }
-
 }

@@ -4,7 +4,9 @@ import {console} from "forge-std/console.sol";
 import "./BaseState.sol";
 import "./IGoV.sol";
 import "./IRuleEngine.sol";
-import "openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
+import "openzeppelin-contracts/contracts/utils/cryptography/MessageHashUtils.sol";
+
 
 error ContractAddressesInvalid();
 error BiddersAddressInvalid();
@@ -14,15 +16,19 @@ error BiddersLevelStateSizeInvalid();
 error BiddersStatesInvalid();
 error BiddersStatesSymbolsInvalid();
 error FailedToCacheLevel();
+error FailedToDeployLevel();
 
 // Proposal Level configuration
 struct LevelConfig {
-	uint256 num; // packed
-	uint256 codeLen;
-	uint256 levelNumLen;
-	uint256 stateLen;
-	uint256 symbolLen;
-	bytes32 hash;
+	// packed
+	uint256 num; // 0x00
+	uint256 codeLen; // 0x20
+	uint256 levelNumLen; // 0x40
+	uint256 stateLen; // 0x60
+	uint256 symbolLen; // 0x80
+	bytes32 hash; // 0xA0
+	address codeAddress; // 0xC0
+	address dataAddress; // 0xE0
 }
 
 contract LevelConfigurator {
@@ -112,11 +118,6 @@ contract LevelConfigurator {
 			if (_levelState.length > MAX_CELLS_L2)
 				revert BiddersLevelStateSizeInvalid();
 		}
-		
-		// Check for state symbols length
-		if ((_levelSymbols.length >= MAX_LEVEL_STATE) ||
-		    (_levelSymbols.length == 0))
-			revert BiddersStatesSymbolsInvalid();
 
 		// Check for number of symbols in level 
 		if (levelNum == 1) {
@@ -140,10 +141,6 @@ contract LevelConfigurator {
 			revert FailedToCacheLevel();
 		}
 
-		// Store level code and state
-/*		_storeLevel(bytes memory _levelNum, bytes memory _state, 
-			bytes memory _symbols);
-*/
 		// Deploy level contract
 /*		bytes32 salt = keccak256(abi.encodePacked(msg.sender));
 		address levelAddr = _deployLevel(levelLoc, salt);
@@ -160,20 +157,47 @@ contract LevelConfigurator {
 					      bytes calldata _levelNumber,
 					      bytes calldata _levelState,
 					      bytes calldata _levelSymbols,
-					      bytes32 hash, bytes signature) 
-		internal returns (address target) {
+					      bytes32 msgHash, uint8 gameId, 
+					      bytes memory signature) 
+		external returns (bool success) {
 
-		// Check in cached proposals
+		// Check in cached proposals if hash matches
 		LevelConfig memory config = proposals[msg.sender];
 
-		// Deploy using create
-/*		assembly {
+		bytes32 hash = keccak256(abi.encodePacked(_levelCode, _levelNumber,
+			_levelState, _levelSymbols));
 
-			target := create2(0, add(levelLoc, 0x20), 
-				mload(levelLoc), salt)
+		// Verify level configuration
+		if ((config.codeLen != _levelCode.length) ||
+		    (config.levelNumLen != _levelNumber.length) ||
+		    (config.stateLen != _levelState.length) ||
+		    (config.symbolLen != _levelSymbols.length) ||
+		    (config.hash != hash) || (config.hash != msgHash)) {
+			revert FailedToDeployLevel();
 		}
-*/
-		//_addLevelRules(target, levelLoc);
+
+		// Verify signature
+		bytes32 sigHash = MessageHashUtils.toEthSignedMessageHash(msgHash);
+
+		if (ECDSA.recover(sigHash, signature) != msg.sender) {
+			revert FailedToDeployLevel();
+		}
+
+		// Deploy using create
+		bytes memory code = _levelCode;
+		assembly {
+			let target := create2(0, add(code, 0x20), mload(code), gameId)
+			mstore(add(config, 0xC0), target)
+		}
+
+		// Store level code and state
+		config.dataAddress = _storeLevel(_levelNumber, _levelState,
+								_levelSymbols);
+		proposals[msg.sender] = config;
+
+		success = true;
+		IRuleEngine(address(0x1)/*ruleengineAddress*/).addRules(
+				config.codeAddress, _levelSymbols);
 	}
 
 	// Add level rules to rule base
@@ -181,7 +205,7 @@ contract LevelConfigurator {
 		internal returns(bool success) {
 
 		// Iterate over state symbols
-		uint8 numSymbols; 
+/*		uint8 numSymbols; 
 		uint256 symbolsLen;
 		assembly {
 			symbolsLen := mload(add(levelLoc, 0x40))
@@ -256,7 +280,7 @@ contract LevelConfigurator {
 		// Add rules to rule engine		
 		//IRuleEngine(ruleengineAddress).addRules(
 		//	levelAddress, states, symbols);
-
+*/
 		success = true;
 	}
 
@@ -267,7 +291,8 @@ contract LevelConfigurator {
 		internal returns (bool success) {
 
 		LevelConfig memory config = LevelConfig(uint256(0), uint256(0),
-			uint256(0), uint256(0), uint256(0), bytes32(0));
+			uint256(0), uint256(0), uint256(0), bytes32(0),
+			address(0), address(0));
 
 		// Register the lengths
 		assembly {
@@ -301,7 +326,7 @@ contract LevelConfigurator {
 
 	// Store level number, state and symbols as code  
 	function _storeLevel(bytes memory _levelNum, bytes memory _state,
-		bytes memory _symbols) external returns (address location) {
+		bytes memory _symbols) internal returns (address location) {
 
 		// Constructor wrapper to create contract with code
 		// eqaul to _levelNum, _state, _symbols

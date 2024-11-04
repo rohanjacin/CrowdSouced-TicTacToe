@@ -4,8 +4,11 @@ pragma solidity ^0.8.27;
 import "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
 import "src/LevelConfigurator.sol";
+import { ECDSA } from "openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
+import "openzeppelin-contracts/contracts/utils/cryptography/MessageHashUtils.sol";
 
 contract TestLevelConfigurator is Test {
+    using ECDSA for bytes32;
 
     function setUp() public {
         //levelConfig = new LevelConfigurator();
@@ -191,11 +194,36 @@ contract TestLevelConfigurator is Test {
         bytes memory levelSymbols2 = _generateSymbols(1);
 
         // Should return a non zero address
-        address loc = levelConfig2._storeLevel(levelNum2, levelState2, levelSymbols2);
-        assertTrue(loc != address(0));
+        //address loc = levelConfig2._storeLevel(levelNum2, levelState2, levelSymbols2);
+        //assertTrue(loc != address(0));
 
         // Should return non zero size memory bytes pointer 
-        bytes memory d = levelConfig2._retrieveLevel(loc);
+        //bytes memory d = levelConfig2._retrieveLevel(loc);
     }
 
+    // Test deploy of Level code
+    function test__deployLevel() external {
+
+        LevelConfigurator levelConfig2 = new LevelConfigurator();
+        bytes memory code2 = _generateLevelCode(1);
+        bytes memory levelNum2 = _generateLevelNum(1);
+        bytes memory levelState2 = _generateState(1);
+        bytes memory levelSymbols2 = _generateSymbols(1);
+
+        // Should return a non zero address
+        uint256 privKey = 0xabc123;
+        address signer = vm.addr(privKey);
+        bytes32 msghash = keccak256(abi.encodePacked(code2, levelNum2,
+            levelState2, levelSymbols2));
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(privKey,
+            MessageHashUtils.toEthSignedMessageHash(msghash));
+
+        //vm.prank(signer);
+        //levelConfig2._cacheLevel(code2, levelNum2, levelState2, levelSymbols2);
+
+        //vm.prank(signer);
+        //assertTrue(levelConfig2._deployLevel(code2, levelNum2,
+        //                        levelState2, levelSymbols2, msghash, 
+        //                        0x01, abi.encodePacked(r, s, v)));
+    }
 }

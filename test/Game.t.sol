@@ -6,6 +6,8 @@ import { console } from "forge-std/console.sol";
 import "src/Level1.sol";
 import "src/Game.sol";
 
+enum CellValueL1 { Empty, X, O }
+
 contract TestGame is Test {
     Game c;
 
@@ -149,7 +151,7 @@ contract TestGame is Test {
             state.v[7][0] = uint(CellValueL1.X);
             state.v[7][1] = uint(CellValueL1.O);
             state.v[7][2] = uint(CellValueL1.O);
-            state.v[7][3] = uint(0);
+            state.v[7][3] = uint(CellValueL1.Empty);
             state.v[7][4] = uint(CellValueL1.X);
             state.v[7][5] = uint(CellValueL1.O);
             state.v[7][6] = uint(CellValueL1.X);

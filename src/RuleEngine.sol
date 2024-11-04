@@ -11,69 +11,65 @@ error RuleInvalid();
 
 // Applies rules across all levels
 contract RuleEngine {
+    bytes16 private constant HEX_DIGITS = "0123456789abcdef";
 
-	// Rules (Hash of cell value vs 
+	// Rules (cell value vs 
 	// hash of function sel of rule in level)
-	mapping(bytes32 => bytes32) rules;
-
+	mapping(uint8 => bytes4) rules;
 
 	// Add a rule
-	function addRules(address levelAddress,
-		uint8[] memory state, bytes calldata symbols)
-		external returns(bool success) {
-
-		// Check for valid state count
-		if (state.length >= type(uint8).max) {
-			revert StateCountInvalid();
-		}
+	function addRules(address codeAddress, bytes calldata symbols) external {
 
 		// Check if level contract exists
 		assembly {
-
-			if iszero(extcodesize(levelAddress)) {
+			if iszero(extcodesize(codeAddress)) {
 				revert(0, 0)
 			}
 		}
 
-		(bool success1, bytes memory selectors) = levelAddress.call(
-			abi.encodeWithSignature("supportedStates()returns(bytes)"));
+		(bool ret, bytes memory selectors) = codeAddress.call(
+			abi.encodeWithSignature("supportedStates()"));
 
-		if (success1 == false) {
+		if (ret == false) {
 			revert RuleInvalid();
 		}
 
 		// Check for number of symbols, it should be
 		// equal to number of states
-		uint8 numSymbols = uint8(symbols.length/32);
-		assert(numSymbols == state.length);
+		uint8 numSelectors;
+		assembly {
+			numSelectors := div(mload(add(selectors, 0x40)), 4) 
+		}
 
-		for (uint8 i = 0; i < numSymbols; i++ ) {
+		uint8 numSymbols = uint8(symbols.length/4);
+		assert(numSymbols == numSelectors);
 
-			bytes32 symbol = bytes32(symbols[i*32:(i*32 + 31)]);
+		for (uint8 i = numSymbols; i > 0; i--) {
 
-			// Append state symbol to default set cell call 
-			string memory func = string(abi.encodePacked("setCell", symbol));
+			// Append state symbol to default set cell call
+			string memory symbolString = toSymbolString(
+				uint256(bytes32(symbols[(i-1)*4:
+					((i-1)*4 + 3)])), 4);
+
+			bytes memory func = abi.encodePacked("setCellu",
+				abi.encodePacked(symbolString), "()");
 
 			// Calulate the signature for set call function
-			bytes4 sel = bytes4(keccak256(abi.encodePacked(func,
-								"(uint8)returns(uint8)")));
+			bytes4 sel = bytes4(keccak256(abi.encodePacked(func)));
 
 			// Check if rule exists in the level contract
-			bytes32 levelSel;
+			bytes4 levelSel;
 			assembly {
-				levelSel := mload(add(selectors, mul(i, 32)))
+				let word := mload(add(selectors, 0x60))
+				let shift := shr(sub(256, mul(i, 32)), word)
+				levelSel := shl(224, and(shift, 0xFFFFFFFFFFFFFFFF))
 			}
 
 			assert(levelSel == sel);
 
 			// Add the rule
-			bytes32 stateHash = keccak256(abi.encodePacked(uint8(state[i])));
-			bytes32 execHash = keccak256(abi.encodePacked(
-								abi.encode(levelAddress), sel));
-			rules[stateHash] = execHash;
+			rules[i] = levelSel;
 		}
-
-		success = true;
 	}
 
 	// Setting a cell value as per the rule
@@ -82,4 +78,19 @@ contract RuleEngine {
 		//
 	}
 
+	// 
+	function toSymbolString(uint256 value, uint256 length) internal pure returns (string memory) {
+	    uint256 localValue = value>>(28*8);
+
+	    bytes memory buffer = new bytes(2 * length);
+	    for (uint256 i = 0; i < (2 * length); i++) {
+	        buffer[(2 * length) - 1 - i] = HEX_DIGITS[localValue & 0xf];
+	        localValue >>= 4;
+	    }
+	    if (localValue != 0) {
+	        revert ();
+	    }
+	    return string(buffer);
+	}
 }
+
