@@ -81,40 +81,53 @@ contract Game is BaseLevel, BaseState, BaseSymbol, RuleEngine {
 	}
 
 	// Loads the level
-	function loadLevel(uint8 _level, address _levelState) 
-		external pure returns(bool success, string memory message) {
+	function loadLevel(address bidder) 
+		external returns(bool success, string memory message) {
+
+		LevelConfig memory config;// = ILevelConfigurator(games[1].house.levelConfigurator).proposals(bidder);
 
 		// Level check for L1 or L2
 		// TODO check with existing level
-		if (!((_level == 0) || (_level == 1))) {
+		if ((config.num == 0) || (config.num > 2)) {
 			revert LevelInvalid();
 		}
-		_levelState =_levelState;
-/*		// Check if Level State snapshot exists 
-		assembly {
-			let len := extcodesize(_levelState)
-			let off := mload(0x40)
 
-			if iszero(len) {
+		if ((config.codeLen == 0) || 
+			(config.levelNumLen == 0) ||
+			(config.stateLen == 0) ||
+			(config.symbolLen == 0) ||
+			(config.hash == bytes32(0))) {
+			revert LevelInvalid();
+		}
+
+		if ((config.codeAddress == address(0)) || 
+			(config.dataAddress == address(0))) {
+			revert LevelInvalid();
+		}
+
+		// Check if Level Contract exists 
+		assembly {
+			if iszero(extcodesize(add(config, 0xC0))) {
 				revert (0, 0)
 			}
-
-			extcodecopy(_levelState, off, 0, len)
 		}
-*/
-/*
-		// Copy Level via delegatecall
-		(bool levelSuccess, bytes memory ids) = target.delegatecall(
-			abi.encodeWithSignature("copyLevel1()returns(bytes memory)"));
 
-		if (levelSuccess == false) {
+		// Check if Level State snapshot exists 
+		assembly {
+			if iszero(extcodesize(add(config, 0xE0))) {
+				revert (0, 0)
+			}
+		}
+
+		// Copy Level via delegatecall
+		(success, ) = config.codeAddress
+			.delegatecall(abi.encodeWithSignature("copyLevelData()returns(bool success)"));
+
+		if (success == false) {
 			revert LevelCopyFailed();
 		}
 
-		// TODO: check ids for slot numbers updated by Level contract
-		ids = ids;
-
-*/		return (true, "Level loaded");
+		return (true, "Level loaded");
 	}
 
 	// Starts a new game

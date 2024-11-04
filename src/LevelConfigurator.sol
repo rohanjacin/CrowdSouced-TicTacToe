@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.27;
 import {console} from "forge-std/console.sol";
-import "./BaseState.sol";
-import "./IGoV.sol";
 import "openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import "openzeppelin-contracts/contracts/utils/cryptography/MessageHashUtils.sol";
-
+import "./BaseState.sol";
+import "./IGoV.sol";
+import "./ILevelConfigurator.sol";
 
 error ContractAddressesInvalid();
 error BiddersAddressInvalid();
@@ -30,7 +30,7 @@ struct LevelConfig {
 	address dataAddress; // 0xE0
 }
 
-contract LevelConfigurator {
+contract LevelConfigurator is ILevelConfigurator{
 
 	// Contract addresses (Slot 0, 1, 2)
 /*	address internal govAddress;
