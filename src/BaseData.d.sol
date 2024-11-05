@@ -58,7 +58,7 @@ contract BaseDataD {
 
 	// Retrieve level number, state and symbols as data  
 	function _retrieveLevel(address loc) 
-		internal returns (bytes memory _data) {
+		internal view returns (bytes memory _data) {
 
 		uint256 size;
 

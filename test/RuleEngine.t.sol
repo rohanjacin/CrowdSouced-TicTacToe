@@ -13,7 +13,7 @@ contract TestRuleEngine is Test {
     }
 
     // Generates sample level code
-    function _generateLevelCode(uint8 _num) internal 
+    function _generateLevelCode(uint8 _num) internal pure
         returns (bytes memory _levelCode) {
 
         // Level 1 contract init code (w/o constructore arguments)
@@ -26,7 +26,7 @@ contract TestRuleEngine is Test {
     }
 
     // Generates symbols for a level
-    function _generateSymbols(uint8 _num) internal 
+    function _generateSymbols(uint8 _num) internal pure 
         returns (bytes memory _levelSymbols) {
         bytes4 X = unicode"❌";
         bytes4 O = unicode"⭕";            

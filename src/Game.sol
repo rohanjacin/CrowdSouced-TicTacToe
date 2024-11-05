@@ -69,23 +69,27 @@ contract Game is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 	// SLOT 5 is from RuleEngine (Do NOT use SLOT 5)
 	//mapping(uint8 => bytes4) rules;
 
-	// Game instance (id = level number)
+	// SLOT 6 is for Game Admin
+	address admin;
+
+	// SLOT 7 is Game instance (id = level number)
 	mapping(uint8 => GameInfo) public games;
 
 	// Load the default state in Base State
-	constructor() 
+	constructor(address _admin) 
 		BaseLevelD()
 		BaseStateD()
 		BaseSymbolD()
 		BaseData() {
 
+		admin = _admin;
 		// Game House components
 		games[1].house = new GameHouse();
 	}
 
 	// Loads the level
-	function loadLevel(address bidder) 
-		external returns(bool success, string memory message) {
+	function loadLevel(address bidder) external onlyAdmin
+		returns(bool success, string memory message) {
 
 		LevelConfig memory config = LevelConfig(0, 0, 0, 0, 0, 0,
 									address(0), address(0)); 
@@ -120,7 +124,7 @@ contract Game is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 	}
 
 	// Starts a new game
-	function newGame(uint8 _level) external {
+	function newGame(uint8 _level) external onlyAdmin {
 
 		// Check if game requested is 
 		// for configured level
@@ -161,8 +165,8 @@ contract Game is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 	}
 
 	// Make a move
-	function makeMove(Move memory move) external returns(bool success,
-		string memory message) {
+	function makeMove(Move memory move) external onlyPlayers
+		returns(bool success, string memory message) {
 
 		// Check if already winner exists
 		if (games[1].winner != Player.None) {
@@ -539,4 +543,15 @@ contract Game is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 
 		console.log("winner:", uint(winner));
 	}
+
+    modifier onlyAdmin {
+        if (msg.sender != admin) revert("Not Admin");
+        _;
+    }
+
+    modifier onlyPlayers {
+        if ((msg.sender != games[1].player1) &&
+        	(msg.sender != games[1].player2)) revert("Not Player");
+        _;
+    }
 }

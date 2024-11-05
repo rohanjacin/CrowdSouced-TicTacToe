@@ -21,7 +21,6 @@ contract BaseStateD {
 	// Updates the base state data to the callers
 	// context when delegated
 	function copyState(State memory _state) public virtual returns(bool success) {
-		//state = state; 
 		assembly {
 			let d
 			// Fetch dimension
@@ -34,7 +33,7 @@ contract BaseStateD {
 			case 3 { d := 3 }
 			case 9 { d := 9 }
 			default {
-				//revert(0, 0)
+				revert(0, 0)
 			}
 
 			ptr := add(ptr, 0x20)
@@ -66,6 +65,7 @@ contract BaseStateD {
 				}
 			}
 		}
+		success = true;
 	}
 
     function getState(uint8 row, uint8 col) internal view returns (uint256 val) {
@@ -80,6 +80,6 @@ contract BaseStateD {
     }
 
 	// To be overriden by level
-    function supportedStates() public view virtual returns (bytes memory) {
+    function supportedStates() public pure virtual returns (bytes memory) {
 	}
 }

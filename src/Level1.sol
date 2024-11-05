@@ -42,21 +42,6 @@ contract Level1 is BaseLevel, BaseState, BaseSymbol {
 		}
 	}
 
-	// Inhertied from ILevel Loads Level 1
-/*	function copyLevelData() public returns(bool success){
-		
-		// Update Data Snapshot to caller's context
-		(bool ret, bytes memory data) = dataSnapAddr.call("");
-		ret = ret;
-		data = data;
-		id = abi.encodePacked(
-					super.copyLevel(),
-					super.copyState(),
-					super.copySymbol());
-
-		success = true;
-	}
-*/
 	// ❌
 	function setCellue29d8c00(uint8 row, uint8 col, uint8 value) external {
 		board.v[row][col] = value;
@@ -68,7 +53,7 @@ contract Level1 is BaseLevel, BaseState, BaseSymbol {
 	}
 
 	// Inherited from BaseState - all implemented and supported states in level
-    function supportedStates() public view override returns (bytes memory) {
+    function supportedStates() public pure override returns (bytes memory) {
 
     	return abi.encodePacked(bytes4(this.setCellue29d8c00.selector),  // ❌
     							bytes4(this.setCellue2ad9500.selector)); // ⭕

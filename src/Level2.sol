@@ -42,19 +42,6 @@ contract Level2 is BaseLevel, BaseState, BaseSymbol {
 		}
 	}
 
-	// Inhertied from ILevel Loads Level 2
-/*	function copyLevelData() public returns(bytes memory id){
-		
-		// Update Base Level
-		// Update Base State
-		// Update Base Symbol
-		id = abi.encodePacked(
-					super.copyLevel(),
-					super.copyState(),
-					super.copySymbol());
-
-	}*/
-
 	// ⭐
 	function setCellue2ad9000(uint8 row, uint8 col, uint8 value) external {
 		board.v[row][col] = value;
@@ -66,7 +53,7 @@ contract Level2 is BaseLevel, BaseState, BaseSymbol {
 	}
 
 	// Inherited from BaseState - all implemented and supported states in level
-    function supportedStates() public view override returns (bytes memory) {
+    function supportedStates() public pure override returns (bytes memory) {
 
     	return abi.encodePacked(bytes4(this.setCellue2ad9000.selector),  // ⭐
     							bytes4(this.setCelluf09f92a3.selector)); // 💣

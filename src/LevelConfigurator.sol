@@ -32,49 +32,25 @@ struct LevelConfig {
 
 contract LevelConfigurator {
 
-	// Contract addresses (Slot 0, 1, 2)
-/*	address internal govAddress;
-	address internal ruleengineAddress;
-	address internal gameAddress;
-*/
-	// Constants (Slot 3)
+	// Admin (Slot 0)
+	address admin;
+
+	// Constants (Slot 1)
 	uint8 constant internal MAX_LEVEL_STATE = type(uint8).max;
 	uint8 constant internal MAX_LEVELS = 2; 
 	uint8 constant internal MAX_CELLS_L1 = 9;
 	uint8 constant internal MAX_CELLS_L2 = 81;
 	uint32 constant internal MAX_LEVEL_CODESIZE = 500000; // 500k
 
-	// Proposals cached
+	// Level Proposals (Slot 2)
 	mapping (address => LevelConfig) public proposals;
 
-	constructor (/*address _govAddress,
-		address _gameAddress,
-		address _ruleengineAddress*/) {
-
-/*		if ((_govAddress == address(0)) ||
-			(_gameAddress == address(0)) ||
-			(_ruleengineAddress == address(0))) {
-
-			revert ContractAddressesInvalid();
-		}
-
-		govAddress =_govAddress;
-		gameAddress =_gameAddress;
-		ruleengineAddress = _ruleengineAddress;*/
+	constructor (address _admin) {
+		admin = _admin;
 	}
 
 	// Enables Level configuration
-	function start() external pure {
-
-		// Store the previous level in memory
-		// TODO: optimize for packed struct
-		assembly {
-
-			calldatacopy(0x80, 0x04, 0x60)
-			// 0x80  |-----level------|
-			// 0x100 |-----cells------|
-			// 0x120 |-----marker-----|
-		}
+	function start() external view onlyAdmin {
 	}
 
 	// Reads the level proposal
@@ -82,7 +58,7 @@ contract LevelConfigurator {
 					   bytes calldata _levelNumber,
 					   bytes calldata _levelState,
 					   bytes calldata _levelSymbols) 
-		external returns(bool success) {
+		external payable returns(bool success) {
 
 		// Check for sender's address
 		if (msg.sender == address(0))
@@ -140,14 +116,6 @@ contract LevelConfigurator {
 			revert FailedToCacheLevel();
 		}
 
-		// Deploy level contract
-/*		bytes32 salt = keccak256(abi.encodePacked(msg.sender));
-		address levelAddr = _deployLevel(levelLoc, salt);
-
-		// Call GoV contract to approve level
-		// with level memory location
-		//IGoV(govAddress).approveValidLevelProposal(levelAddr, stateSnap);
-*/
 		success = true;
 	}
 
@@ -158,20 +126,23 @@ contract LevelConfigurator {
 					      bytes calldata _levelSymbols,
 					      bytes32 msgHash, uint8 gameId, 
 					      bytes memory signature) 
-		external returns (bool success) {
+		external payable returns (bool success) {
 
 		// Check in cached proposals if hash matches
 		LevelConfig memory config = proposals[msg.sender];
-
-		bytes32 hash = keccak256(abi.encodePacked(_levelCode, _levelNumber,
-			_levelState, _levelSymbols));
 
 		// Verify level configuration
 		if ((config.codeLen != _levelCode.length) ||
 		    (config.levelNumLen != _levelNumber.length) ||
 		    (config.stateLen != _levelState.length) ||
-		    (config.symbolLen != _levelSymbols.length) ||
-		    (config.hash != hash) || (config.hash != msgHash)) {
+		    (config.symbolLen != _levelSymbols.length)) {
+			revert FailedToDeployLevel();
+		}
+
+		bytes32 hash = keccak256(abi.encodePacked(_levelCode, _levelNumber,
+			_levelState, _levelSymbols));
+
+		if ((config.hash != hash) || (config.hash != msgHash)) {
 			revert FailedToDeployLevel();
 		}
 
@@ -198,92 +169,6 @@ contract LevelConfigurator {
 		config.dataAddress = abi.decode(addr, (address));
 		proposals[msg.sender] = config;
 
-		success = true;
-		//IRuleEngine(address(0x1)/*ruleengineAddress*/).addRules(
-		//		config.codeAddress, _levelSymbols);
-	}
-
-	// Add level rules to rule base
-	function _addLevelRules(address levelAddress, uint256 levelLoc)
-		internal returns(bool success) {
-
-		// Iterate over state symbols
-/*		uint8 numSymbols; 
-		uint256 symbolsLen;
-		assembly {
-			symbolsLen := mload(add(levelLoc, 0x40))
-
-			if iszero(symbolsLen) { return(0, 0) }
-
-			// Symbol location
-			let loc := add(mload(levelLoc), mload(add(levelLoc, 0x20)))
-
-			// Number of symbol words
-			let l := 0x20
-			let k := div(symbolsLen, 0x20)
-			if iszero(k) { k := 1 l := mod(symbolsLen, 0x20) }
-
-			// Minimum 4 bytes represent a symbol, so min 1 symbol check
-			if lt(l, 4) { return(0, 0) }
-
-
-			// Each symbol word
-			let j
-			for { let i := 0 } lt(i, k) { i := add(i, 1) } {
-
-				// Each symbol for each state (inclusive of prev level state symbols)
-				for { j := 0 } lt(j, div(l, 0x04)) { j := add(j, 1) } {
-					//shr(32, mload(add(loc, i)))
-				}
-			}
-
-			// Store symbol count, useful in verifying level contract
-			// actually store same symbol when deployed
-			tstore(j, symbolsLen)
-			numSymbols := j
-		}
-
-		// Make sure symbol len is in bounds
-		assert(numSymbols <= (type(uint8).max-1));
-
-		// Prepare default getter of public "symbols" storage
-		// to later verify
-		string memory returnType;
-		uint8[] memory states;
-		for (uint8 i = 1; i <= numSymbols; i++) {
-
-			returnType = string(abi.encodePacked(returnType, "uint"));
-			states[i] = i;
-		}
-
-		string memory symbolsGetter = string(abi.encodePacked(
-			"symbols()returns(", returnType, ")")); 
-		
-		// Call default getter for storage
-		(bool symbolSuccess, bytes memory symbols) = 
-			levelAddress.call{
-				value: msg.value
-			}(abi.encodeWithSignature(symbolsGetter));
-
-		// Assert call was successful
-		assert(symbolSuccess == true);
-
-		// Get local copy of symbols from memory
-		bytes memory sloc;
-		assembly {
-			// Symbol location
-			sloc := add(mload(levelLoc), mload(add(levelLoc, 0x20)))
-		}
-
-		// Check if loacl symbols and level contract symbols are the same
-		assert(sloc.length == symbolsLen);
-		assert(keccak256(abi.encodePacked(symbols)) == 
-			keccak256(abi.encodePacked(sloc)));
-
-		// Add rules to rule engine		
-		//IRuleEngine(ruleengineAddress).addRules(
-		//	levelAddress, states, symbols);
-*/
 		success = true;
 	}
 
@@ -325,6 +210,8 @@ contract LevelConfigurator {
 								_state, _symbols));
 
 		proposals[msg.sender] = config;
+
+		success = true;
 	}
 
 	// Check state validity
@@ -459,5 +346,10 @@ contract LevelConfigurator {
 			}
 		}
 	}
+
+    modifier onlyAdmin {
+        if (msg.sender != admin) revert("Not Admin");
+        _;
+    }	
 }
 

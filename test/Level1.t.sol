@@ -13,14 +13,15 @@ contract TestLevel1 is Test {
     }
 
     // Internal function to set levelnum
-    function _setLevelNum(uint8 _num) internal 
+    function _setLevelNum(uint8 _num) internal pure 
         returns (bytes memory _levelNum) {
 
         _levelNum = abi.encodePacked(_num);
     }
 
     // Internal function to set state
-    function _setState(uint8 _num) internal returns (Level1.State memory state) {
+    function _setState(uint8 _num) internal pure 
+        returns (Level1.State memory state) {
 
         if (_num == 1) {
             // Set state of level 1 i.e 3x3 matrix
@@ -176,7 +177,8 @@ contract TestLevel1 is Test {
     }
 
     // Internal function to set symbols
-    function _setSymbol(uint8 num) internal returns (Level1.Symbols memory symbols) {
+    function _setSymbol(uint8 num) internal pure 
+        returns (Level1.Symbols memory symbols) {
 
         if (num == 1) {
             // Set if length of symbols is 2
@@ -210,14 +212,16 @@ contract TestLevel1 is Test {
 
         // Should pass for levelnum = 1, state = 3x3 and symbols = 2
         Level1 levelA = new Level1(_setLevelNum(1), _setState(1), _setSymbol(1));
+        levelA=levelA;
 
         // Should fail for levelnum = 1, state = 3x3 and symbols = 4
         vm.expectRevert();
         Level1 levelB = new Level1(_setLevelNum(1), _setState(1), _setSymbol(2));
-        
+        levelB=levelB;
 
         // Should fail for levelnum = 1, state = 9x9 and symbols = 4
         vm.expectRevert();
         Level1 levelC = new Level1(_setLevelNum(1), _setState(2), _setSymbol(2));
+        levelC=levelC;
     }
 }

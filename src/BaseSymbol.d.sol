@@ -17,7 +17,6 @@ contract BaseSymbolD {
 	// Updates the base symbol data to the callers
 	// context when delegated
 	function copySymbol(Symbols memory _symbols) public virtual returns(bool success) {
-		//symbols = symbols; 
 		assembly {
 			// Fetch dimension
 			let ptr := mload(_symbols)
@@ -51,5 +50,6 @@ contract BaseSymbolD {
 				 sstore(s, v)
 			}
 		}
+		success = true;
 	}
 }

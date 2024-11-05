@@ -32,11 +32,11 @@ contract Level1D is BaseLevelD, BaseStateD, BaseSymbolD, BaseDataD {
 		assembly {
 			let len := mload(_data)
 			let ptr := add(_data, 0x20)
-			_num := mload(ptr)
+			_num := ptr
 			ptr := add(ptr, mul(_numlen, 0x20))
-			_state := mload(ptr)
+			_state := ptr
 			ptr := add(ptr, mul(_statelen, 0x20))
-			_symbol := mload(ptr)
+			_symbol := ptr
 			ptr := add(ptr, mul(_symbollen, 0x20))
 
 			if gt(ptr, add(add(_data, 0x20), len)) {
@@ -44,12 +44,15 @@ contract Level1D is BaseLevelD, BaseStateD, BaseSymbolD, BaseDataD {
 			}
 		}
 
+		// Copy level num
+		assert(BaseLevelD.copyLevel(_num));
 		// Copy level state as per schema
 		assert(this._copyState1(_state));
-		assert(BaseLevelD.copyLevel(_num));
+		// Copy level symbols as per schema
 		assert(this._copySymbol1(_symbol));
 	}
 
+	// Copies state into game storage as per schema
 	function _copyState1(bytes calldata cell) public returns (bool success){
 
 		State memory _state = State({v: new uint256[][](3)});
@@ -79,6 +82,7 @@ contract Level1D is BaseLevelD, BaseStateD, BaseSymbolD, BaseDataD {
 		success = BaseStateD.copyState(_state);
 	}	
 
+	// Copies symbols into game storage as per schema
 	function _copySymbol1(bytes calldata _symbols) public returns (bool success){
 
         Symbols memory s = Symbols({v: new bytes4[](2)});
@@ -89,17 +93,17 @@ contract Level1D is BaseLevelD, BaseStateD, BaseSymbolD, BaseDataD {
 	}
 
 	// ❌
-	function setCellue29d8c00() external view {
-
+	function setCellue29d8c00(uint8 row, uint8 col, uint8 value) external {
+		board.v[row][col] = value;
 	}
 	
 	// ⭕  
-	function setCellue2ad9500() external view {
-
+	function setCellue2ad9500(uint8 row, uint8 col, uint8 value) external {
+		board.v[row][col] = value;
 	}
 
 	// Inherited from BaseState - all implemented and supported states in level
-    function supportedStates() public view override returns (bytes memory) {
+    function supportedStates() public pure override returns (bytes memory) {
 
     	return abi.encodePacked(bytes4(this.setCellue29d8c00.selector),  // ❌
     							bytes4(this.setCellue2ad9500.selector)); // ⭕
