@@ -15,10 +15,10 @@ contract TestBaseSymbol is Test {
     function test_symbols() external {
 
         // Should pass if length of symbols is 1
-        BaseSymbol.Symbols memory s1 = BaseSymbol.Symbols({v: new bytes32[](1)});
+        BaseSymbol.Symbols memory s1 = BaseSymbol.Symbols({v: new bytes4[](1)});
 
         // [0x274c000000000000000000000000000000000000000000000000000000000000] R0
-        s1.v[0] = bytes32(hex"274C");
+        s1.v[0] = bytes4(hex"274C");
 
         // C0  
         // [0x274c000000000000000000000000000000000000000000000000000000000000] R0
@@ -27,10 +27,10 @@ contract TestBaseSymbol is Test {
 
 
         // Should pass if length of symbols is 255
-        BaseSymbol.Symbols memory s2 = BaseSymbol.Symbols({v: new bytes32[](255)});
+        BaseSymbol.Symbols memory s2 = BaseSymbol.Symbols({v: new bytes4[](255)});
 
         // [0x274c000000000000000000000000000000000000000000000000000000000000] R254
-        s2.v[254] = bytes32(hex"274C");
+        s2.v[254] = bytes4(hex"274C");
 
         // C0  
         // [0x274c000000000000000000000000000000000000000000000000000000000000] R254
@@ -39,10 +39,10 @@ contract TestBaseSymbol is Test {
 
 
         // Should fail if length of symbols > 255
-        BaseSymbol.Symbols memory s3 = BaseSymbol.Symbols({v: new bytes32[](256)});
+        BaseSymbol.Symbols memory s3 = BaseSymbol.Symbols({v: new bytes4[](256)});
 
         // [0x274c000000000000000000000000000000000000000000000000000000000000] R255
-        s3.v[255] = bytes32(hex"274C");
+        s3.v[255] = bytes4(hex"274C");
 
         // C0  
         // [0x274c000000000000000000000000000000000000000000000000000000000000] R255
@@ -56,11 +56,11 @@ contract TestBaseSymbol is Test {
 
         // Should pass if length of symbols is 4
         BaseSymbol.Symbols memory s1;
-        s1 = BaseSymbol.Symbols({v: new bytes32[](4)});
-        s1.v[0] = bytes32(hex"274C");
-        s1.v[1] = bytes32(hex"2B55");
-        s1.v[2] = bytes32(hex"2B50");
-        s1.v[3] = bytes32(hex"01F4A3");
+        s1 = BaseSymbol.Symbols({v: new bytes4[](4)});
+        s1.v[0] = bytes4(hex"274C");
+        s1.v[1] = bytes4(hex"2B55");
+        s1.v[2] = bytes4(hex"2B50");
+        s1.v[3] = bytes4(hex"01F4A3");
 
         // C0
         // [0x274c000000000000000000000000000000000000000000000000000000000000] R0
@@ -74,11 +74,11 @@ contract TestBaseSymbol is Test {
 
         // Should fail if length of symbols is 256
         BaseSymbol.Symbols memory s2;
-        s2 = BaseSymbol.Symbols({v: new bytes32[](256)});
-        s2.v[252] = bytes32(hex"274C");
-        s2.v[253] = bytes32(hex"2B55");
-        s2.v[254] = bytes32(hex"2B50");
-        s2.v[255] = bytes32(hex"01F4A3");
+        s2 = BaseSymbol.Symbols({v: new bytes4[](256)});
+        s2.v[252] = bytes4(hex"274C");
+        s2.v[253] = bytes4(hex"2B55");
+        s2.v[254] = bytes4(hex"2B50");
+        s2.v[255] = bytes4(hex"01F4A3");
 
         // C0
         // [0x274c000000000000000000000000000000000000000000000000000000000000] R252

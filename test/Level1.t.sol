@@ -180,9 +180,9 @@ contract TestLevel1 is Test {
 
         if (num == 1) {
             // Set if length of symbols is 2
-            symbols = BaseSymbol.Symbols({v: new bytes32[](2)});
-            symbols.v[0] = bytes32(hex"274C");
-            symbols.v[1] = bytes32(hex"2B55");
+            symbols = BaseSymbol.Symbols({v: new bytes4[](2)});
+            symbols.v[0] = bytes4(hex"274C");
+            symbols.v[1] = bytes4(hex"2B55");
             
             // C0
             // [0x274c000000000000000000000000000000000000000000000000000000000000] R0
@@ -191,11 +191,11 @@ contract TestLevel1 is Test {
         else if (num == 2) {
 
             // Set if length of symbols is 4
-            symbols = BaseSymbol.Symbols({v: new bytes32[](4)});
-            symbols.v[0] = bytes32(hex"274C");
-            symbols.v[1] = bytes32(hex"2B55");
-            symbols.v[2] = bytes32(hex"2B50");
-            symbols.v[3] = bytes32(hex"01F4A3");
+            symbols = BaseSymbol.Symbols({v: new bytes4[](4)});
+            symbols.v[0] = bytes4(hex"274C");
+            symbols.v[1] = bytes4(hex"2B55");
+            symbols.v[2] = bytes4(hex"2B50");
+            symbols.v[3] = bytes4(hex"01F4A3");
 
             // C0
             // [0x274c000000000000000000000000000000000000000000000000000000000000] R0

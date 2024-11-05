@@ -4,7 +4,6 @@ pragma solidity 0.8.27;
 import "./BaseLevel.sol";
 import "./BaseState.sol";
 import "./BaseSymbol.sol";
-import "./BaseSnap.sol";
 import {console} from "forge-std/console.sol";
 
 // Level defination and implementation

@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.27;
 import {console} from "forge-std/console.sol";
-import "./BaseLevel.sol";
-import "./BaseState.sol";
+import "./BaseLevel.d.sol";
+import "./BaseState.d.sol";
+import "./BaseSymbol.d.sol";
 
 error StateCountInvalid();
 error RuleInvalid();
@@ -16,14 +17,7 @@ abstract contract RuleEngine {
 	mapping(uint8 => bytes4) rules;
 
 	// Add a rule
-	function addRules(address codeAddress, bytes calldata symbols) external {
-
-		// Check if level contract exists
-		assembly {
-			if iszero(extcodesize(codeAddress)) {
-				revert(0, 0)
-			}
-		}
+	function addRules(address codeAddress, Symbols memory symbols) internal {
 
 		(bool ret, bytes memory selectors) = codeAddress.call(
 			abi.encodeWithSignature("supportedStates()"));
@@ -39,15 +33,21 @@ abstract contract RuleEngine {
 			numSelectors := div(mload(add(selectors, 0x40)), 4) 
 		}
 
-		uint8 numSymbols = uint8(symbols.length/4);
+		uint8 numSymbols;
+		assembly {
+			numSymbols := mload(add(symbols, 0x20))
+		}
 		assert(numSymbols == numSelectors);
 
 		for (uint8 i = numSymbols; i > 0; i--) {
 
 			// Append state symbol to default set cell call
-			string memory symbolString = toSymbolString(
-				uint256(bytes32(symbols[(i-1)*4:
-					((i-1)*4 + 3)])), 4);
+			uint256 _symbol;
+			assembly {
+				let ptr := add(symbols, 0x20)
+				_symbol := mload(add(ptr, mul(i, 0x20))) 
+			}
+			string memory symbolString = toSymbolString(uint256(_symbol), 4);
 
 			bytes memory func = abi.encodePacked("setCellu",
 				abi.encodePacked(symbolString), "(uint8,uint8,uint8)");
@@ -71,7 +71,7 @@ abstract contract RuleEngine {
 	}
 
 	// Setting a cell value as per the rule
-	function _setCell(address levelAddress, uint8 row, uint8 col,
+	function setCell(address levelAddress, uint8 row, uint8 col,
 		uint8 input) internal returns(bool success) {
 
 		// Check for valid address

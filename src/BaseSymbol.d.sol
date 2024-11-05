@@ -3,13 +3,13 @@ pragma solidity 0.8.27;
 
 import "forge-std/console.sol";
 
+// Symbols (unicode 4 bytes max)
+struct Symbols {
+	bytes4[] v;
+}
+
 // Basic symbol layout
 contract BaseSymbolD {
-
-	// Symbols (unicode 4 bytes max)
-	struct Symbols {
-		bytes32[] v;
-	}
 
 	// Unicode mapping
 	Symbols symbols;
@@ -18,7 +18,6 @@ contract BaseSymbolD {
 	// context when delegated
 	function copySymbol(Symbols memory _symbols) public virtual returns(bool success) {
 		//symbols = symbols; 
-		success=success;
 		assembly {
 			// Fetch dimension
 			let ptr := mload(_symbols)

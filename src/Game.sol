@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.27;
 
-import "./BaseLevel.sol";
-import "./BaseState.sol";
-import "./BaseSymbol.sol";
+import "./BaseLevel.d.sol";
+import "./BaseState.d.sol";
+import "./BaseSymbol.d.sol";
+import "./BaseData.sol";
 import "./LevelConfigurator.sol";
 import "./ILevelConfigurator.sol";
 import "./RuleEngine.sol";
@@ -48,7 +49,7 @@ struct Move {
 }
 
 // Game
-contract Game is BaseLevel, BaseState, BaseSymbol, RuleEngine {
+contract Game is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 
 	// SLOT 0 is from BaseLevel (Do NOT use SLOT 0)
 	//uint8 level;
@@ -59,23 +60,25 @@ contract Game is BaseLevel, BaseState, BaseSymbol, RuleEngine {
 	// SLOT 2 is from BaseSymbols (Do NOT use SLOT 2)
 	//Symbols symbols;
 
-	// SLOT 3 is from RuleEngine (Do NOT use SLOT 3)
-    //bytes16 private constant HEX_DIGITS = "0123456789abcdef";
+	// SLOT 3 is from BaseData (Do NOT use SLOT 3)
+	//address data;
 
 	// SLOT 4 is from RuleEngine (Do NOT use SLOT 4)
+    //bytes16 private constant HEX_DIGITS = "0123456789abcdef";
+
+	// SLOT 5 is from RuleEngine (Do NOT use SLOT 5)
 	//mapping(uint8 => bytes4) rules;
 
 	// Game instance (id = level number)
 	mapping(uint8 => GameInfo) public games;
 
 	// Load the default state in Base State
-	constructor(bytes memory _levelnum, State memory _state,
-		Symbols memory _symbols) 
-		BaseLevel(_levelnum)
-		BaseState(_state)
-		BaseSymbol(_symbols) {
+	constructor() 
+		BaseLevelD()
+		BaseStateD()
+		BaseSymbolD()
+		BaseData() {
 
-		//console.log("board.v[0][0]:", board.v[0][0]);
 		// Game House components
 		games[1].house = new GameHouse();
 	}
@@ -84,48 +87,34 @@ contract Game is BaseLevel, BaseState, BaseSymbol, RuleEngine {
 	function loadLevel(address bidder) 
 		external returns(bool success, string memory message) {
 
-		LevelConfig memory config;// = ILevelConfigurator(games[1].house.levelConfigurator).proposals(bidder);
+		LevelConfig memory config = LevelConfig(0, 0, 0, 0, 0, 0,
+									address(0), address(0)); 
+		(config.num, config.codeLen, config.levelNumLen, config.stateLen,
+		 config.symbolLen, config.hash, config.codeAddress, config.dataAddress)
+		 = ILevelConfigurator(games[1].house.levelConfigurator()).proposals(bidder);
 
 		// Level check for L1 or L2
-		// TODO check with existing level
-		if ((config.num == 0) || (config.num > 2)) {
+		if (!(config.num == level+1)) {
 			revert LevelInvalid();
-		}
-
-		if ((config.codeLen == 0) || 
-			(config.levelNumLen == 0) ||
-			(config.stateLen == 0) ||
-			(config.symbolLen == 0) ||
-			(config.hash == bytes32(0))) {
-			revert LevelInvalid();
-		}
-
-		if ((config.codeAddress == address(0)) || 
-			(config.dataAddress == address(0))) {
-			revert LevelInvalid();
-		}
-
-		// Check if Level Contract exists 
-		assembly {
-			if iszero(extcodesize(add(config, 0xC0))) {
-				revert (0, 0)
-			}
-		}
-
-		// Check if Level State snapshot exists 
-		assembly {
-			if iszero(extcodesize(add(config, 0xE0))) {
-				revert (0, 0)
-			}
 		}
 
 		// Copy Level via delegatecall
 		(success, ) = config.codeAddress
-			.delegatecall(abi.encodeWithSignature("copyLevelData()returns(bool success)"));
+			.delegatecall(abi.encodeWithSignature("copyLevelData()returns(bool)"));
 
 		if (success == false) {
 			revert LevelCopyFailed();
 		}
+
+		// Store level address
+		games[1].levelAddress = config.codeAddress;
+
+		// Add level rules
+		Symbols memory _symbols = Symbols({v: new bytes4[](config.symbolLen)});
+		for (uint8 i = 0; i < config.symbolLen; i++) {
+			_symbols.v[i] = bytes4(symbols.v[i]);
+		}
+		addRules(games[1].levelAddress, _symbols);
 
 		return (true, "Level loaded");
 	}
@@ -175,7 +164,6 @@ contract Game is BaseLevel, BaseState, BaseSymbol, RuleEngine {
 	function makeMove(Move memory move) external returns(bool success,
 		string memory message) {
 
-		move = move;
 		// Check if already winner exists
 		if (games[1].winner != Player.None) {
 			return (false, "The game has aready ended!");
@@ -203,7 +191,7 @@ contract Game is BaseLevel, BaseState, BaseSymbol, RuleEngine {
 		}
 
 		// Execute for move as per rule
-		(success) = _setCell(games[1].levelAddress, 
+		(success) = setCell(games[1].levelAddress, 
 								move.row, move.col, value);
 		assert(success);
 		assert(getState(move.row, move.col) == value);
