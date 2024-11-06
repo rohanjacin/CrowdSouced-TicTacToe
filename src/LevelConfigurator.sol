@@ -96,11 +96,11 @@ contract LevelConfigurator {
 
 		// Check for number of symbols in level 
 		if (levelNum == 1) {
-			if (_levelSymbols.length > 8) // ❌ and ⭕
+			if (!(_levelSymbols.length == 8)) // ❌ and ⭕
 				revert BiddersStatesSymbolsInvalid();
 		}
 		else if (levelNum == 2) {
-			if (_levelSymbols.length > 16) // ❌, ⭕, ⭐ and 💣
+			if (!(_levelSymbols.length == 16)) // ❌, ⭕, ⭐ and 💣
 				revert BiddersStatesSymbolsInvalid();
 		}
 
@@ -273,9 +273,9 @@ contract LevelConfigurator {
 						break
 					}
 
-					//  0   1   2   3   4   5   6   7   8
+ 					//  0   1   2   3   4   5   6   7   8
 		            //  C0  C1  C2  C3  C4  C5  C6  C7  C8
-		            // [ X ,   , O ,   ,   ,   ,   ,   ,   ] R0
+		            // [ X ,   , O ,   ,   ,   ,   ,   ,   ] R0 
 		            // [   ,   ,   ,   ,   ,   ,   ,   ,   ] R1
 		            // [   ,   ,   ,   ,   ,   ,   ,   ,   ] R2
 		            // [   ,   ,   , X , O ,   ,   ,   ,   ] R3

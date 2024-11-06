@@ -16,11 +16,9 @@ contract BaseLevelD {
 
 		// Copy the 1 byte level number assuming data is packed
 		// with only level number 
-		uint8 value;
-		uint256 sid;
 		assembly {
 			let len := mload(data)
-			value := byte(0, mload(add(data, 0x20)))
+			let value := byte(0, mload(add(data, 0x20)))
 
 			// Level 1 and Level 2 only currently!!
 			if iszero(value) {
@@ -37,9 +35,6 @@ contract BaseLevelD {
 			}
 		}
 
-		console.log("sid:", sid);
-		console.log("value:", value);
-		console.log("level:", level); 
 		success = true;
 	}
 

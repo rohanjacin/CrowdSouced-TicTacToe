@@ -16,16 +16,19 @@ contract BaseStateD {
 	}
 
 	// State (Slot1)
-	State board;
+	State board; 
 
 	// Updates the base state data to the callers
 	// context when delegated
 	function copyState(State memory _state) public virtual returns(bool success) {
+		uint256 len;
+		uint256 v;
+		uint256 s;
 		assembly {
 			let d
 			// Fetch dimension
-			let ptr := mload(_state)
-			let len := mload(ptr)
+			let ptr := add(_state, 0x20)
+			len := mload(ptr)
 
 			// Revert if length is not 9 for Level 1
 			// Revert if length is not 81 for Level 2
@@ -41,25 +44,32 @@ contract BaseStateD {
 			// Find length of next 3 arrays
 			// and compare with dimension,
 			// all should be 3 
-			for { let i := 0 } lt(i, d) { i := add(i, 1) } {
+			for { let i := 0 let ptr1} lt(i, d) { i := add(i, 1) } {
 
-				ptr := mload(add(ptr, mul(i, 0x20)))			
-				len := mload(ptr)
+				ptr1 := mload(add(ptr, mul(i, 0x20)))
+				len := mload(ptr1)			
+
 				if iszero(eq(len, d)) {
 					revert (0, 0)
 				}
 
-				ptr := add(ptr, 0x20)
+				ptr1 := add(ptr1, 0x20)
 
-				for { let j := 0 let v := 0 let s := 0 let p := 0 let q := 0 } 
+				// TODO: Check if all state are present in memory
+
+				for { let j := 0 v := 0 s := 0 let p := 0 let q := 0 } 
 					lt(j, d) { j := add(j, 1) } {
 
 					 // Calculate the slot and store					
-					 v := mload(add(ptr, mul(j, 0x20)))
+					 v := mload(add(ptr1, mul(j, 0x20)))
 					 p := mload(0x40)
 					 mstore(p, board.slot)
+					 mstore(0x40, add(p, 0x20))
+
 					 q := mload(0x40)
 					 mstore(q, add(keccak256(p, 0x20), i))
+					 mstore(0x40, add(q, 0x20))
+
 					 s := add(keccak256(q, 0x20), j)
 					 sstore(s, v)
 				}
@@ -68,14 +78,17 @@ contract BaseStateD {
 		success = true;
 	}
 
-    function getState(uint8 row, uint8 col) internal view returns (uint256 val) {
+    function getState(uint8 row, uint8 col) public virtual view returns (uint256 val) {
 
         assembly {
             let ptr := mload(0x40)
             mstore(ptr, board.slot)
-            let s := mload(0x40)
-            mstore(s, add(keccak256(ptr, 0x20), row))
-            val := sload(add(keccak256(s, 0x20), col))
+            mstore(0x40, add(ptr, 0x20))
+            let ptr1 := mload(0x40)
+            mstore(ptr1, add(keccak256(ptr, 0x20), row))
+            mstore(0x40, add(ptr1, 0x20))
+            let s := add(keccak256(ptr1, 0x20), col)
+			val := sload(s)
         }
     }
 

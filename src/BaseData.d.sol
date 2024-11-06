@@ -78,7 +78,7 @@ contract BaseDataD {
 			_data := mload(0x40)
 
 			// Reserve new memory to fit data size
-			mstore(0x40, add(_data, and(and(add(size, 0x20), 0x1f), not(0x1f))))
+			mstore(0x40, add(_data, and(add(add(size, 0x20), 0x1f), not(0x1f))))
 
 			// Store length
 			mstore(_data, size)
@@ -90,8 +90,7 @@ contract BaseDataD {
 
 	// Updates the data to the callers
 	// context when delegated
-	function copyLevelData() public virtual returns(bytes memory _data){
-	
-		_data = _retrieveLevel(data);
+	function copyLevelData() public virtual returns(bytes memory){	
+		return _retrieveLevel(data);
 	}
 }

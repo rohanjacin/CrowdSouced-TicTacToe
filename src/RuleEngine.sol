@@ -17,7 +17,7 @@ abstract contract RuleEngine {
 	mapping(uint8 => bytes4) rules;
 
 	// Add a rule
-	function addRules(address codeAddress, Symbols memory symbols) internal {
+	function addRules(address codeAddress, BaseSymbolD.Symbols memory symbols) internal {
 
 		(bool ret, bytes memory selectors) = codeAddress.call(
 			abi.encodeWithSignature("supportedStates()"));
