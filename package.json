@@ -1,0 +1,45 @@
+{
+  "name": "crowdsouced-tictactoe",
+  "version": "1.0.0",
+  "description": "The main idea is that of a crowdsourced contract upgrade, the usecase of which is a simple tic-tac-toe game. The usecase can be extended to other complex defi strategies and socialmedia recommendation algorithm",
+  "main": "index.js",
+  "directories": {
+    "app": "app",
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "webpack-dev-server .",
+    "build": "webpack ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rohanjacin/CrowdSouced-TicTacToe.git"
+  },
+  "keywords": [
+    "TicTacToe",
+    "Blockchain"
+  ],
+  "author": "Rohan Jacinto",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rohanjacin/CrowdSouced-TicTacToe/issues"
+  },
+  "homepage": "https://github.com/rohanjacin/CrowdSouced-TicTacToe#readme",
+  "devDependencies": {
+    "@babel/cli": "^7.25.9",
+    "@babel/core": "^7.26.0",
+    "@babel/preset-env": "^7.26.0",
+    "@babel/preset-react": "^7.25.9",
+    "babel-loader": "^9.2.1",
+    "html-webpack-plugin": "^5.6.3",
+    "webpack": "^5.96.1",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^5.1.0"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  }
+}

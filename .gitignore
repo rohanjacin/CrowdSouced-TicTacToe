@@ -3,3 +3,4 @@ out/
 lib/forge-std
 lib/openzeppelin-contracts
 broadcast/
+node_modules/
