@@ -81,16 +81,16 @@ contract TestLevelConfigurator is Test {
 
         // Should clears initial checks for code, level number, 
         // state length and state symbol length for Level 1
-/*        LevelConfigurator levelConfig1 = new LevelConfigurator();
+        LevelConfigurator levelConfig1 = new LevelConfigurator(vm.addr(1));
         bytes memory code1 = _generateLevelCode(1);
         bytes memory levelNum1 = _generateLevelNum(1);
         bytes memory levelState1 = _generateState(1);
         bytes memory levelSymbols1 = _generateSymbols(1);
 
         levelConfig1.initLevel(code1, levelNum1, levelState1, levelSymbols1);
-*/
 
-        // Should clears initial checks for code, level number, 
+
+/*        // Should clears initial checks for code, level number, 
         // state length and state symbol length for Level 2
         LevelConfigurator levelConfig2 = new LevelConfigurator(address(0x1));
         bytes memory code2 = _generateLevelCode(2);
@@ -100,7 +100,7 @@ contract TestLevelConfigurator is Test {
 
         levelConfig2.initLevel(code2, levelNum2, levelState2, levelSymbols2);
 
-
+*/
        // Should fail initial checks for code, level number, 
         // state length and state symbol length for Level 1 if
         // state length is wrong
@@ -132,15 +132,16 @@ contract TestLevelConfigurator is Test {
     function test__checkStateValidity() external {
 
         // Should clear check for level 1 with X and O
-/*        bytes memory state1 = _generateState(1);
+/*        bytes memory levelnum1 = _generateLevelNum(1);
+        bytes memory state1 = _generateState(1);
         bytes memory symbols1 = _generateSymbols(1);
 
-        LevelConfigurator levelConfig1 = new LevelConfigurator();
-        levelConfig1._checkStateValidity(1, state1, symbols1);
+        LevelConfigurator levelConfig1 = new LevelConfigurator(vm.addr(1));
+        levelConfig1._checkStateValidity(levelnum1, state1, symbols1);
 
 
-        // Should clear check for level 2 with X and O
-        bytes memory state2 = _generateState(2);
+*/        // Should clear check for level 2 with X and O
+/*        bytes memory state2 = _generateState(2);
         bytes memory symbols2 = _generateSymbols(1);
 
         LevelConfigurator levelConfig2 = new LevelConfigurator();

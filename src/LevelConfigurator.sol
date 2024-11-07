@@ -40,7 +40,7 @@ contract LevelConfigurator {
 	uint8 constant internal MAX_LEVELS = 2; 
 	uint8 constant internal MAX_CELLS_L1 = 9;
 	uint8 constant internal MAX_CELLS_L2 = 81;
-	uint32 constant internal MAX_LEVEL_CODESIZE = 500000; // 500k
+	uint32 constant internal MAX_LEVEL_CODESIZE = 24000; // 24kB
 
 	// Level Proposals (Slot 2)
 	mapping (address => LevelConfig) public proposals;
@@ -86,11 +86,11 @@ contract LevelConfigurator {
 
 		// Check for number of state cells 
 		if (levelNum == 1) {
-			if (_levelState.length > MAX_CELLS_L1)
+			if (!(_levelState.length == MAX_CELLS_L1))
 				revert BiddersLevelStateSizeInvalid();
 		}
 		else if (levelNum == 2) {
-			if (_levelState.length > MAX_CELLS_L2)
+			if (!(_levelState.length == MAX_CELLS_L2))
 				revert BiddersLevelStateSizeInvalid();
 		}
 
@@ -120,7 +120,7 @@ contract LevelConfigurator {
 	}
 
 	// Deploys the level
-	function _deployLevel(bytes calldata _levelCode,
+	function deployLevel(bytes calldata _levelCode,
 					      bytes calldata _levelNumber,
 					      bytes calldata _levelState,
 					      bytes calldata _levelSymbols,
@@ -153,21 +153,25 @@ contract LevelConfigurator {
 			revert FailedToDeployLevel();
 		}
 
-		// Deploy using create
-		bytes memory code = abi.encodePacked(_levelCode,
+		// Deploy using create2
+		bytes memory code = abi.encodePacked(abi.encode(_levelCode),
 								abi.encode(_levelNumber),
 								abi.encode(_levelState),
-								abi.encode(_levelSymbols));
+								abi.encode(_levelSymbols));		
+
 		assembly {
 			let target := create2(0, add(code, 0x20), mload(code), gameId)
 			mstore(add(config, 0xC0), target)
 		}
 
 		// Register data address
-		(, bytes memory addr) = config.codeAddress.call(
+		(bool ret , bytes memory addr) = config.codeAddress.call{value:0}(
 			abi.encodeWithSignature("data()returns(address)"));
-		config.dataAddress = abi.decode(addr, (address));
-		proposals[msg.sender] = config;
+
+		if (ret == true) {
+			config.dataAddress = abi.decode(addr, (address));
+			proposals[msg.sender] = config;
+		}
 
 		success = true;
 	}
@@ -242,7 +246,7 @@ contract LevelConfigurator {
 			// Previous level marker of row & column
 			_marker := byte(0, mload(add(_levelNum, 0x20)))
 			switch _marker
-			case 1 { _marker := 0 }
+			case 1 { _marker := 3 }
 			case 2 { _marker := 9 }
 			default { _marker := 0 }
 

@@ -120,5 +120,4 @@ contract Level1D is BaseLevelD, BaseStateD, BaseSymbolD, BaseDataD {
     	return abi.encodePacked(bytes4(this.setCellue29d8c00.selector),  // ❌
     							bytes4(this.setCellue2ad9500.selector)); // ⭕
     }
-
 }
