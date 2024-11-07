@@ -12,11 +12,56 @@ function Game() {
 	}
 
 	return(
-		<div>
-			<h1>Game</h1>
-			<Board cells={cells} onCellClick={handleCellClick}/>
+		<div className="game">
+			<h1>
+				<div>
+				<Board quad={0} cells={cells} onCellClick={handleCellClick}/>
+				</div>
+			</h1>
+			<h1>
+				<div>
+				<Board quad={1} cells={cells} onCellClick={handleCellClick}/>
+				</div>
+			</h1>
+			<h1>
+				<div>
+				<Board quad={2} cells={cells} onCellClick={handleCellClick}/>
+				</div>
+			</h1>
+			<h1>
+				<div>
+				<Board quad={3} cells={cells} onCellClick={handleCellClick}/>
+				</div>
+			</h1>
+			<h1>
+				<div>
+				<Board quad={4} cells={cells} onCellClick={handleCellClick}/>
+				</div>
+			</h1>
+			<h1>
+				<div>
+				<Board quad={5} cells={cells} onCellClick={handleCellClick}/>
+				</div>
+			</h1>
+			<h1>
+				<div>
+				<Board quad={6} cells={cells} onCellClick={handleCellClick}/>
+				</div>
+			</h1>
+			<h1>
+				<div>
+				<Board quad={7} cells={cells} onCellClick={handleCellClick}/>
+				</div>
+			</h1>
+			<h1>
+				<div>
+				<Board quad={8} cells={cells} onCellClick={handleCellClick}/>
+				</div>
+			</h1>
 		</div>
+
 	);
 }
+			//<Board cells={cells} onCellClick={handleCellClick}/>
 
 export default Game;

@@ -10,6 +10,14 @@ h1 {
   text-align: center;
 }
 
+.game {
+  display: grid;
+  grid-template-columns: 300px 300px 300px;
+  grid-template-rows: 300px 300px 300px;
+  cursor: pointer;
+  position: relative;
+}
+
 .board {
   display: grid;
   grid-template-columns: 100px 100px 100px;
@@ -20,16 +28,16 @@ h1 {
 
 .cell {
   color: currentColor;
-  font-size: 2em;
+  font-size: 1em;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
 .right-border {
-  border-right: 0.2em solid #ffffff;
+  border-right: 0.1em solid #ffffff;
 }
 
 .bottom-border {
-  border-bottom: 0.2em solid #ffffff;
+  border-bottom: 0.1em solid #ffffff;
 }
