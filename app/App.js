@@ -1,11 +1,11 @@
 import React from "react";
+import Game from "./components/Game.jsx";
+import "./App.css";
 
 const App = () =>{
     return (
-        <h1>
-            Hello world! I am using React
-        </h1>
-    )
+        <Game/>
+    );
 }
 
 export default App
