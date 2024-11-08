@@ -28,13 +28,15 @@ function Game() {
 	// Player turn
 	const [playerTurn, setPlayer] = useState(PLAYER_O);
 
+	const row = "2";
+	const col = "2";
 	// Strike
-	const row = "0";
-	const col = "1";
-	const colS = 0;
+	const colS = 2;
 	const rowS = 0;
+	const diagS = 0;
+	const winningPattern = "bckwddiag";
 
-	const [strikeClass, setStrikeClass] = useState(`strike-row-${level}-${row}`); 
+	const [strikeClass, setStrikeClass] = useState(`strike-${winningPattern}-${level}`); 
 
 	// On move send row and col of cell to Game.sol
 	const handleCellClick = (index) => {
@@ -122,7 +124,7 @@ function Game() {
 				</div>
 			</h1>
 		{(level == 2)? <Strike level={level} strikeClass={strikeClass}
-		strikeStyle={{row: 0, col: 1, combo: "winnerInCol"}}/> :  <div> </div>}
+		strikeStyle={{row: rowS, col: colS, diag: diagS, combo: winningPattern}}/> :  <div> </div>}
 		</div>
 	);
 }

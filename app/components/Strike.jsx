@@ -1,7 +1,6 @@
 import React from "react";
 
 function Strike({ level, strikeClass, strikeStyle }) {
-	console.log("strikeClass:", strikeClass);
 
 	const rowStyle = (c) => ({
 		left: `${c*12}%`
@@ -9,24 +8,33 @@ function Strike({ level, strikeClass, strikeStyle }) {
 	const colStyle = (r) => ({
 		top: `${r*12}%`
 	})
+	const fwddiagStyle = (d) => ({
+		top: `${(d==0)?25:(d*10 + 28)}%`,
+		left: `${(d==0)?4:(d*10 + 7)}%`
 
-	function getStrikeStyle(r, c, combo) {
+	})
+	const bckwddiagStyle = (d) => ({
+		top: `${(d==0)?25:(d*11 + 25)}%`,
+		left: `${(d==0)?58:(58 - d*11)}%`
+	})		
+
+	function getStrikeStyle(r, c, d, combo) {
 
 		switch (combo) {
-			case "winnerInRow": {
+			case "row": {
 				return rowStyle(c);
 			}
 			break;
-			case "winnerInCol": {
+			case "col": {
 				return colStyle(r);
 			}
 			break;
-			case "winnerInFwdDiag": {
-				return colStyle(c);
+			case "fwddiag": {
+				return fwddiagStyle(d);
 			}
 			break;
-			case "winnerInBckwdDiag": {
-				return colStyle(c);
+			case "bckwddiag": {
+				return bckwddiagStyle(d);
 			}
 			break;			
 		}
@@ -35,7 +43,7 @@ function Strike({ level, strikeClass, strikeStyle }) {
 	return(
 		<div className={`strike ${strikeClass}`} 
 			 style={(level == 2) ? getStrikeStyle(strikeStyle.row,
-			 	strikeStyle.col, strikeStyle.combo) : {}} ></div>
+			 	strikeStyle.col, strikeStyle.diag, strikeStyle.combo) : {}} ></div>
 	);
 
 }
