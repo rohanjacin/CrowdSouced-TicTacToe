@@ -1,6 +1,9 @@
 import React from "react";
 import Board from "./Board.jsx";
 import Strike from "./Strike.jsx";
+import { GameState, JoinGame } from "./GameState.jsx";
+import Connect from "./Connect.jsx";
+import Gstate from "./GameState.js";
 import { useState } from "react";
 
 const PLAYER_X = "❌";
@@ -11,7 +14,7 @@ const PLAYER_O = "⭕";
 // for level 1 and level 2
 function Game() {
 	// Level
-	const [level, setLevel] = useState(2);
+	const [level, setLevel] = useState(1);
 	// Level cell count
 	const numCells = (level == 2)? 81 : 9;
 	const marker = (level == 2)? 9 : 3;
@@ -27,6 +30,9 @@ function Game() {
 
 	// Player turn
 	const [playerTurn, setPlayer] = useState(PLAYER_O);
+
+	// Game state
+	const [gameState, setGameState] = useState(Gstate.levelInProgress);
 
 	const row = "2";
 	const col = "2";
@@ -125,6 +131,9 @@ function Game() {
 			</h1>
 		{(level == 2)? <Strike level={level} strikeClass={strikeClass}
 		strikeStyle={{row: rowS, col: colS, diag: diagS, combo: winningPattern}}/> :  <div> </div>}
+		<GameState  className='game-state' gameState={{level: level, state: gameState}}/>
+		<JoinGame />
+		<Connect />
 		</div>
 	);
 }

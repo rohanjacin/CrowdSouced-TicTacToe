@@ -228,3 +228,37 @@ h1 {
   left: 0%;
   transform: skewY(-45deg);
 }
+
+.game-state {
+  text-align: center;
+  padding: 10px;
+  margin-top: 50px;
+  font-size: 2em;
+  position: absolute;
+  left: 45%;
+  top: 100%;
+}
+
+.join-button {
+  margin-top: 50px;
+  padding: 20px;
+  background-color: solid #ffffff;
+  color: black;
+  width: 30%;
+  font-size: 1.5em;
+  position: absolute;
+  left: 0%;
+  top: 100%;
+}
+
+.connect-button {
+  margin-top: 50px;
+  padding: 20px;
+  background-color: solid #ffffff;
+  color: black;
+  width: 30%;
+  font-size: 1.5em;
+  position: absolute;
+  left: 70%;
+  top: 100%;
+}
