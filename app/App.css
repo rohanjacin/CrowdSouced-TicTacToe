@@ -41,3 +41,173 @@ h1 {
 .bottom-border {
   border-bottom: 0.1em solid #ffffff;
 }
+
+.❌-hover:hover::after {
+  content: "❌";
+  opacity: 0.4;
+}
+
+.⭕-hover:hover::after {
+  content: "⭕";
+  opacity: 0.4;
+}
+
+.strike {
+  position: absolute;
+  background-color: darkorange;
+}
+
+.strike-row-1-0 {
+  width: 100%;
+  height: 4px;
+  top: 15%;
+}
+.strike-row-1-1 {
+  width: 100%;
+  height: 4px;
+  top: 48%;
+}
+.strike-row-1-2 {
+  width: 100%;
+  height: 4px;
+  top: 83%;
+}
+
+.strike-row-2-0 {
+  width: 41%;
+  height: 4px;
+  top: 8%;
+  left: 0%;
+}
+.strike-row-2-1 {
+  width: 42%;
+  height: 4px;
+  top: 19%;
+}
+.strike-row-2-2 {
+  width: 42%;
+  height: 4px;
+  top: 30%;
+}
+.strike-row-2-3 {
+  width: 42%;
+  height: 4px;
+  top: 41%;
+}
+.strike-row-2-4 {
+  width: 42%;
+  height: 4px;
+  top: 52%;
+}
+.strike-row-2-5 {
+  width: 42%;
+  height: 4px;
+  top: 63%;
+}
+.strike-row-2-6 {
+  width: 42%;
+  height: 4px;
+  top: 74%;
+}
+.strike-row-2-7 {
+  width: 42%;
+  height: 4px;
+  top: 85%;
+}
+.strike-row-2-8 {
+  width: 42%;
+  height: 4px;
+  top: 96%;
+}
+
+.strike-column-1-0 {
+  height: 100%;
+  width: 4px;
+  left: 0%;
+}
+.strike-column-1-1 {
+  height: 100%;
+  width: 4px;
+  left: 18%;
+}
+.strike-column-1-2 {
+  height: 100%;
+  width: 4px;
+  left: 83%;
+}
+
+.strike-column-2-0 {
+  height: 100%;
+  width: 4px;
+  left: 6%;
+}
+.strike-column-2-1 {
+  height: 100%;
+  width: 4px;
+  left: 0%;
+}
+.strike-column-2-2 {
+  height: 100%;
+  width: 4px;
+  left: 28%;
+}
+.strike-column-2-3 {
+  height: 100%;
+  width: 4px;
+  left: 39%;
+}
+.strike-column-2-4 {
+  height: 100%;
+  width: 4px;
+  left: 50%;
+}
+.strike-column-2-5 {
+  height: 100%;
+  width: 4px;
+  left: 61%;
+}
+.strike-column-2-6 {
+  height: 100%;
+  width: 4px;
+  left: 72%;
+}
+.strike-column-2-7 {
+  height: 100%;
+  width: 4px;
+  left: 83%;
+}
+.strike-column-2-8 {
+  height: 100%;
+  width: 4px;
+  left: 94%;
+}
+
+.strike-diagonal-1-0 {
+  width: 90%;
+  height: 4px;
+  top: 50%;
+  left: 5%;
+  transform: skewY(45deg);
+}
+.strike-diagonal-1-1 {
+  width: 90%;
+  height: 4px;
+  top: 50%;
+  left: 5%;
+  transform: skewY(-45deg);
+}
+
+.strike-diagonal-2-0 {
+  width: 90%;
+  height: 4px;
+  top: 50%;
+  left: 3%;
+  transform: skewY(45deg);
+}
+.strike-diagonal-2-1 {
+  width: 90%;
+  height: 4px;
+  top: 50%;
+  left: 7%;
+  transform: skewY(-45deg);
+}

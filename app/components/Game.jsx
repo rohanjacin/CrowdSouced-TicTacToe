@@ -1,7 +1,14 @@
 import React from "react";
 import Board from "./Board.jsx";
+import Strike from "./Strike.jsx";
 import { useState } from "react";
 
+const PLAYER_X = "❌";
+const PLAYER_O = "⭕";
+
+// Main Tictactoe game component
+// contains dynamic board and cells
+// for level 1 and level 2
 function Game() {
 	// Level
 	const [level, setLevel] = useState(2);
@@ -15,7 +22,19 @@ function Game() {
 							  () => new Array(9).fill(null))) :
 							  (Array.from({ length: 3 }, 
 							  () => new Array(3).fill(null))));
+	// Linearized cells in order to fill board quadrants
 	const [quadCells, setQuadCells] = useState(Array(numCells).fill(null));
+
+	// Player turn
+	const [playerTurn, setPlayer] = useState(PLAYER_O);
+
+	// Strike
+	const row = "0";
+	const col = "1";
+	const colS = 0;
+	const rowS = 0;
+
+	const [strikeClass, setStrikeClass] = useState(`strike-row-${level}-${row}`); 
 
 	// On move send row and col of cell to Game.sol
 	const handleCellClick = (index) => {
@@ -24,12 +43,12 @@ function Game() {
 		let col = index%numCells;
 		
 		const newCells = [...cells];
-		newCells[row, col] = index;
+		newCells[row, col] = playerTurn;
 		setCells(newCells);
 
 		let idx = row*marker+col;
 		const newQuadCells = [...quadCells];
-		newQuadCells[idx] = index;
+		newQuadCells[idx] = playerTurn;
 		setQuadCells(newQuadCells);
 	}
 
@@ -37,62 +56,74 @@ function Game() {
 		<div className="game">
 			<h1>
 				<div>
-				{(level == 2)? <div> <Board level={level} quad={0} off={0*marker+3*0} cells={quadCells} 
+				{(level == 2)? <div> <Board level={level} playerTurn={playerTurn}
+				quad={0} off={0*marker+3*0} cells={quadCells} 
 				onCellClick={handleCellClick}/></div> : <div> </div>}	
 				</div>
 			</h1>
 			<h1>
 				<div>
-				{(level == 2)? <div> <Board level={level} quad={1} off={0*marker+3*1} cells={quadCells} 
+				{(level == 2)? <div> <Board level={level} playerTurn={playerTurn}
+				quad={1} off={0*marker+3*1} cells={quadCells} 
 				onCellClick={handleCellClick}/></div> : <div> </div>}	
 				</div>
 			</h1>
 			<h1>
 				<div>
-				{(level == 2)? <div> <Board level={level} quad={2} off={0*marker+3*2} cells={quadCells} 
+				{(level == 2)? <div> <Board level={level} playerTurn={playerTurn}
+				quad={2} off={0*marker+3*2} cells={quadCells} 
 				onCellClick={handleCellClick}/></div> : <div> </div>}	
 				</div>
 			</h1>
 			<h1>
 				<div>
-				{(level == 2)? <div> <Board level={level} quad={3} off={3*marker+3*0} cells={quadCells} 
+				{(level == 2)? <div> <Board level={level} playerTurn={playerTurn}
+				quad={3} off={3*marker+3*0} cells={quadCells} 
 				onCellClick={handleCellClick}/></div> : <div> </div>}	
 				</div>
 			</h1>
 			<h1>
 				<div>
-				{(level == 2)? <div> <Board level={level} quad={4} off={3*marker+3*1} cells={quadCells} 
+				{(level == 2)? <div> <Board level={level} playerTurn={playerTurn}
+				quad={4} off={3*marker+3*1} cells={quadCells}
 				onCellClick={handleCellClick}/></div> 
-				: <div> <Board quad={0} cells={quadCells} 
+				: <div> <Board level={level} playerTurn={playerTurn}
+				quad={0} off={0*marker+3*0} cells={quadCells}
+				strikeClass={strikeClass} 
 				onCellClick={handleCellClick}/> </div>}	
 				</div>
 			</h1>
 			<h1>
 				<div>
-				{(level == 2)? <div> <Board level={level} quad={5} off={3*marker+3*2} cells={quadCells} 
+				{(level == 2)? <div> <Board level={level} playerTurn={playerTurn}
+				quad={5} off={3*marker+3*2} cells={quadCells} 
 				onCellClick={handleCellClick}/></div> : <div> </div>}	
 				</div>
 			</h1>
 			<h1>
 				<div>
-				{(level == 2)? <div> <Board level={level} quad={6} off={6*marker+3*0} cells={quadCells} 
+				{(level == 2)? <div> <Board level={level} playerTurn={playerTurn}
+				quad={6} off={6*marker+3*0} cells={quadCells} 
 				onCellClick={handleCellClick}/></div> : <div> </div>}	
 				</div>
 			</h1>
 			<h1>
 				<div>
-				{(level == 2)? <div> <Board level={level} quad={7} off={6*marker+3*1} cells={quadCells} 
+				{(level == 2)? <div> <Board level={level} playerTurn={playerTurn}
+				quad={7} off={6*marker+3*1} cells={quadCells} 
 				onCellClick={handleCellClick}/></div> : <div> </div>}	
 				</div>
 			</h1>
 			<h1>
 				<div>
-				{(level == 2)? <div> <Board level={level} quad={8} off={6*marker+3*2} cells={quadCells} 
+				{(level == 2)? <div> <Board level={level} playerTurn={playerTurn}
+				quad={8} off={6*marker+3*2} cells={quadCells} 
 				onCellClick={handleCellClick}/></div> : <div> </div>}	
 				</div>
 			</h1>
+		{(level == 2)? <Strike level={level} strikeClass={strikeClass}
+		strikeStyle={{row: 0, col: 1, combo: "winnerInCol"}}/> :  <div> </div>}
 		</div>
-
 	);
 }
 

@@ -2,51 +2,61 @@ import React from "react";
 import Cell from "./Cell.jsx";
 import Strike from "./Strike.jsx";
 
-function Board({ level, quad, off, cells, onCellClick }) {
+function Board({ level, playerTurn, quad, off, cells,
+				 onCellClick, strikeClass, strikeStyle }) {
 	let marker = (level == 2)? 9 : 3;
 	
 	return(
 		<div className="board">
 			<Cell 
 				onClick={()=> onCellClick(off+marker*0+0)}
+				playerTurn={playerTurn}
 				value={cells[off+0]}
 				className={getBorder(level, quad, 0)}/>
 			<Cell 
 				onClick={()=> onCellClick(off+marker*0+1)}
+				playerTurn={playerTurn}
 				value={cells[off+1]}
 				className={getBorder(level, quad, 1)}/>
 			<Cell 
 				onClick={()=> onCellClick(off+marker*0+2)}
+				playerTurn={playerTurn}
 				value={cells[off+2]}
 				className={getBorder(level, quad, 2)}/>
 			
 			<Cell 
 				onClick={()=> onCellClick(off+marker*1+0)}
+				playerTurn={playerTurn}
 				value={cells[off+marker+0]}
 				className={getBorder(level, quad, 3)}/>
 			<Cell 
 				onClick={()=> onCellClick(off+marker*1+1)}
+				playerTurn={playerTurn}
 				value={cells[off+marker+1]}
 				className={getBorder(level, quad, 4)}/>
 			<Cell 
 				onClick={()=> onCellClick(off+marker*1+2)}
+				playerTurn={playerTurn}
 				value={cells[off+marker+2]}
 				className={getBorder(level, quad, 5)}/>
 
 			<Cell 
 				onClick={()=> onCellClick(off+marker*2+0)}
+				playerTurn={playerTurn}
 				value={cells[off+2*marker+0]}
 				className={getBorder(level, quad, 6)}/>
 			<Cell 
 				onClick={()=> onCellClick(off+marker*2+1)}
+				playerTurn={playerTurn}
 				value={cells[off+2*marker+1]}
 				className={getBorder(level, quad, 7)}/>
 			<Cell 
 				onClick={()=> onCellClick(off+marker*2+2)}
+				playerTurn={playerTurn}
 				value={cells[off+2*marker+2]}
 				className={getBorder(level, quad, 8)}/>
-
-			<Strike />
+			{(level == 2)? <div> </div> :  
+			<Strike level={level} strikeClass={strikeClass}/>}		
 		</div>
 	);
 }
