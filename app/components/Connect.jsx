@@ -1,10 +1,12 @@
 import React from "react";
 import Web3  from 'web3';
 import { useState, useEffect } from "react";
+import GameD from "../../out/Game.d.sol/GameD.json";
 
 var web3;
 var signer;
 var Connected;
+var GameContract;
 
 async function createProvider() {
   if (window.ethereum) {
@@ -24,12 +26,17 @@ async function createProvider() {
   return false;
 }
 
+async function getGameContract() {
+  GameContract = new web3.eth.Contract(GameD.abi, 
+    "0x8464135c8F25Da09e49BC8782676a84730C318bC");
+}
+
 async function getBalance() {
   if (window.ethereum) {
     return null;
   } else {
     let wei = await web3.eth.getBalance(signer);
-    return web3.utils.fromWei(wei, 'ether');
+    return Math.floor(web3.utils.fromWei(wei, 'ether'));
   }  
 }
 
@@ -45,15 +52,17 @@ function Connect({ onConnected }) {
 
   return <button className='connect-button' disabled={connected}
           onClick={ async () => { setConnected(await createProvider());
-                                  setBalance(await getBalance())}}
+                                  setBalance(await getBalance())
+                                  getGameContract()}}
          >{(connected == true)?
-         `${signer.slice(0, 6)}::${signer.slice(36, 40)} bal:${balance}`
-         :"Connect"}</button>
+           `${signer.slice(0, 6)}::${signer.slice(36, 40)} bal:${balance}`
+            :"Connect"}</button>         
 }
 
 export {
   web3,
   signer,
+  GameContract,
   Connected,
   Connect
 }
