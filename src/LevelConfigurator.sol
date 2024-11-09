@@ -6,7 +6,7 @@ import "openzeppelin-contracts/contracts/utils/cryptography/MessageHashUtils.sol
 import "./BaseState.sol";
 import "./IGoV.sol";
 import "./ILevelConfigurator.sol";
-import "@semaphore-protocol/contracts/interfaces/ISemaphore.sol";
+import "semaphore/packages/contracts/contracts/interfaces/ISemaphore.sol";
 
 error ContractAddressesInvalid();
 error BiddersAddressInvalid();
@@ -51,6 +51,7 @@ contract LevelConfigurator {
     // Input arguments: admin address, semaphore deployed contract address 0x1e0d7FF1610e480fC93BdEC510811ea2Ba6d7c2f for Sepolia
     constructor(address _admin, ISemaphore _semaphore) {
         admin = _admin;
+        semaphore = _semaphore;
         groupId_Bomb = semaphore.createGroup(address(this));
         groupId_Star = semaphore.createGroup(address(this));
     }
@@ -414,7 +415,7 @@ contract LevelConfigurator {
     function addMember(
         uint256 groupId,
         uint256 identityCommitment
-    ) external onlyOwner {
+    ) external onlyAdmin {
         require(
             groupId == groupId_Bomb || groupId == groupId_Star,
             "Invalid groupId"
@@ -425,7 +426,7 @@ contract LevelConfigurator {
     function addMembers(
         uint256 groupId,
         uint256[] calldata identityCommitments
-    ) external onlyOwner {
+    ) external onlyAdmin {
         require(
             groupId == groupId_Bomb || groupId == groupId_Star,
             "Invalid groupId"
@@ -438,7 +439,7 @@ contract LevelConfigurator {
         uint256 identityCommitment,
         uint256 newIdentityCommitment,
         uint256[] calldata merkleProofSiblings
-    ) external onlyOwner {
+    ) external onlyAdmin {
         require(
             groupId == groupId_Bomb || groupId == groupId_Star,
             "Invalid groupId"
@@ -455,7 +456,7 @@ contract LevelConfigurator {
         uint256 groupId,
         uint256 identityCommitment,
         uint256[] calldata merkleProofSiblings
-    ) external onlyOwner {
+    ) external onlyAdmin {
         require(
             groupId == groupId_Bomb || groupId == groupId_Star,
             "Invalid groupId"
