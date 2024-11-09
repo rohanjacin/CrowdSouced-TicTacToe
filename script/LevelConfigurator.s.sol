@@ -11,6 +11,7 @@ import {LevelConfigurator} from "../src/LevelConfigurator.sol";
 import {Level1D} from "../src/Level1.d.sol";
 import { ECDSA } from "openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import "openzeppelin-contracts/contracts/utils/cryptography/MessageHashUtils.sol";
+import "semaphore/packages/contracts/contracts/interfaces/ISemaphore.sol";
 
 enum CellValue { Empty , X, O}
 
@@ -26,7 +27,8 @@ contract DeployLevelConfigurator is Script {
         address signer = vm.addr(privKey);
 		vm.startBroadcast(signer);
 
-		LevelConfigurator levelConfigurator = new LevelConfigurator(signer);
+		LevelConfigurator levelConfigurator = new LevelConfigurator(
+                                signer, ISemaphore(address(0x02)));
 
 		levelConfigurator.initLevel(type(Level1D).creationCode, _levelNum, _state, _symbols);
 

@@ -2,8 +2,6 @@
 pragma solidity 0.8.27;
 import "forge-std/console.sol";
 
-error InvalidLevelNumber();
-
 // Basic level layout
 contract BaseLevelD {
 

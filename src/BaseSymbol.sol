@@ -56,12 +56,12 @@ contract BaseSymbol {
 	// Updates the base symbol data to the callers
 	// context when delegated
 	function copySymbol(Symbols memory _symbols) public virtual returns(bool success) {
-		//symbols = symbols; 
-		success=success;
+
 		assembly {
 			// Fetch dimension
 			let ptr := mload(_symbols)
 			let len := mload(ptr)
+			ptr := add(ptr, 0x20)
 
 			// Revert if length is greater than 255 or is 0
 			if iszero(len) {
@@ -72,13 +72,7 @@ contract BaseSymbol {
 				revert (0, 0)
 			}
 
-			// Check if all symbols are present in memory
-			let end := add(ptr, mul(len, 0x20))
-			if lt(mload(0x40), end) {
-				revert (0, 0)
-			}
-
-			ptr := add(ptr, 0x20)
+			// TODO: Check if all symbols are present in memory
 
 			for { let i := 0 let v := 0 let s := 0 let p := 0 } 
 				lt(i, len) { i := add(i, 1) } {
@@ -87,9 +81,23 @@ contract BaseSymbol {
 				 v := mload(add(ptr, mul(i, 0x20)))
 				 p := mload(0x40)
 				 mstore(p, symbols.slot)
-				 s := add(keccak256(p, add(p, 0x20)), i)
+				 mstore(0x40, add(p, 0x20))
+				 s := add(keccak256(p, 0x20), i)
 				 sstore(s, v)
 			}
 		}
+
+		success = true;
 	}
+
+    function getSymbol(uint8 id) internal view returns (bytes4 val) {
+
+        assembly {
+            let ptr := mload(0x40)
+            mstore(ptr, symbols.slot)
+            mstore(0x40, add(ptr, 0x20))
+            let s := add(keccak256(ptr, 0x20), id)
+			val := sload(s)
+        }
+    }
 }

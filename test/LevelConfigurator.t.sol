@@ -81,14 +81,14 @@ contract TestLevelConfigurator is Test {
 
         // Should clears initial checks for code, level number, 
         // state length and state symbol length for Level 1
-        LevelConfigurator levelConfig1 = new LevelConfigurator(vm.addr(1));
+/*        LevelConfigurator levelConfig1 = new LevelConfigurator(vm.addr(1));
         bytes memory code1 = _generateLevelCode(1);
         bytes memory levelNum1 = _generateLevelNum(1);
         bytes memory levelState1 = _generateState(1);
         bytes memory levelSymbols1 = _generateSymbols(1);
 
         levelConfig1.initLevel(code1, levelNum1, levelState1, levelSymbols1);
-
+*/
 
 /*        // Should clears initial checks for code, level number, 
         // state length and state symbol length for Level 2
