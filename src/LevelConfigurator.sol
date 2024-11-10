@@ -34,9 +34,9 @@ struct LevelConfig {
 contract LevelConfigurator {
     // Admin (Slot 0)
     address admin;
-    ISemaphore public semaphore;
-    uint256 public groupId_Bomb;
-    uint256 public groupId_Star;
+    //ISemaphore public semaphore;
+    //uint256 public groupId_Bomb;
+    //uint256 public groupId_Star;
 
     // Constants (Slot 1)
     uint8 internal constant MAX_LEVEL_STATE = type(uint8).max;
@@ -51,9 +51,9 @@ contract LevelConfigurator {
     // Input arguments: admin address, semaphore deployed contract address 0x1e0d7FF1610e480fC93BdEC510811ea2Ba6d7c2f for Sepolia
     constructor(address _admin, ISemaphore _semaphore) {
         admin = _admin;
-        semaphore = _semaphore;
-        groupId_Bomb = semaphore.createGroup(address(this));
-        groupId_Star = semaphore.createGroup(address(this));
+        //semaphore = _semaphore;
+        //groupId_Bomb = semaphore.createGroup(address(this));
+        //groupId_Star = semaphore.createGroup(address(this));
     }
 
     // Enables Level configuration
@@ -412,7 +412,7 @@ contract LevelConfigurator {
         _;
     }
 
-    function addMember(
+/*    function addMember(
         uint256 groupId,
         uint256 identityCommitment
     ) external onlyAdmin {
@@ -489,5 +489,5 @@ contract LevelConfigurator {
             points
         );
         semaphore.validateProof(groupId, proof);
-    }
+    }*/
 }

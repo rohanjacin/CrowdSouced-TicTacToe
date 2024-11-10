@@ -7,6 +7,7 @@ import "./BaseSymbol.sol";
 import "./LevelConfigurator.sol";
 import "./ILevelConfigurator.sol";
 import "./RuleEngine.d.sol";
+import "semaphore/packages/contracts/contracts/interfaces/ISemaphore.sol";
 
 // Players
 enum Player { None, Player1, Player2 }
@@ -24,9 +25,11 @@ contract GameHouse {
 	address public levelConfigurator;
 	address public ruleEngine;
 
-	constructor() {
+	constructor(address _admin) {
 		//goV = new goV();
-		//levelConfigurator = new LevelConfigurator();
+		levelConfigurator = address(new LevelConfigurator(_admin, 
+								ISemaphore(address(0x02))));
+		console.log("levelConfigurator:", levelConfigurator);
 		//ruleEngine = new RuleEngine();
 	}
 }
@@ -89,7 +92,23 @@ contract GameD is BaseLevel, BaseState, BaseSymbol, RuleEngineD {
 
 		admin = _admin;
 		// Game House components
-		games[1].house = new GameHouse();
+		games[1].house = new GameHouse(admin);
+	}
+
+	// Direct calls to valid Level Contract
+	function callLevel(bytes calldata levelCall)
+		external payable returns(bool success, bytes memory data) {
+
+		console.log("In callLevel");
+		// Level Address + encoded Function Data (i.e sel, params)
+        (address target, bytes memory callData) = abi.decode(levelCall,
+													(address, bytes));
+		console.log("target:", target);
+
+		if (target ==  games[1].levelAddress) {
+			(success, data) = target.call{value: msg.value}(callData);
+			console.log("success:", success);
+		}
 	}
 
 	// Loads the level

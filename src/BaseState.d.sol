@@ -91,7 +91,7 @@ contract BaseStateD {
 			val := sload(s)
         }
     }
-
+    
 	// To be overriden by level
     function supportedStates() public pure virtual returns (bytes memory) {
 	}

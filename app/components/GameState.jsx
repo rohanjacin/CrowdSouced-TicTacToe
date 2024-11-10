@@ -49,19 +49,42 @@ function JoinGame() {
 		await GameContract.methods.joinGame()
 			.call({from: signer, gas: 100000})
 			.then((result) => {
-			console.log("success:", result.success);
-			console.log("message:", result.message);
-			let player = ((result.message == "You are Player1 - X")? Player.PLAYER_1 :
-				((result.message == "You are Player1 - O")?
-					Player.PLAYER_2 : Player.PLAYER_NONE));
-			ret = {joined : result.success, asPlayer: player};
-			setJoined({...joinState, joined: true, asPlayer: player });
+				console.log("success:", result.success);
+				console.log("message:", result.message);
+				let player = ((result.message == "You are Player1 - X")? Player.PLAYER_1 :
+					((result.message == "You are Player1 - O")?
+						Player.PLAYER_2 : Player.PLAYER_NONE));
+				ret = {joined : result.success, asPlayer: player};
+				setJoined({...joinState, joined: true, asPlayer: player });
+			});
+	}
+
+	async function requestLevelData() {
+		// Call "copyLevelData()returns(bytes memory)" in Level 1
+		const copyLevelData = web3.eth.abi.encodeFunctionCall({
+		    name: 'copyLevelData',
+		    type: 'function',
+		    inputs: [],
+			outputs:[{"name":"_data","type":"bytes"}]    
+		}, []);
+
+		console.log("requestLevelData:", copyLevelData);
+		// Level Contract address + Encoded Function
+		const callData = web3.eth.abi.encodeParameters(['address','bytes'], 
+			["0x356bc565e99C763a1Ad74819D413A6D58E565Cf2", copyLevelData]);
+
+		console.log("callData:", callData);
+		
+		await GameContract.methods.callLevel(callData)
+			.call({from: signer, gas: 100000})
+			.then((data) => {
+				console.log("data:", data);
 			});
 	}
 
 	return <button className='join-button'
 			disabled={joinState.joined}
-			onClick={async () => { await requestToJoin() }}
+			onClick={async () => { await requestToJoin(); await requestLevelData(); }}
 			>{(joinState.joined == true)?`Joined as: Player${joinState.asPlayer}`:"Join"}</button>
 }
 

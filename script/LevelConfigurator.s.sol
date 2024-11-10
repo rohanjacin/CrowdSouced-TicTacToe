@@ -23,7 +23,7 @@ contract DeployLevelConfigurator is Script {
 		bytes memory _state = _generateState(1);
 		bytes memory _symbols = _generateSymbols(1);
 
-        uint256 privKey = vm.envUint("PRIVATE_KEY");
+        uint256 privKey = vm.envUint("PRIVATE_KEY_BIDDER");
         address signer = vm.addr(privKey);
 		vm.startBroadcast(signer);
 

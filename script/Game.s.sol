@@ -25,6 +25,7 @@ contract DeployGame is Script {
 
 		GameD game1 = new GameD(signer, _levelNum, _state, _symbols);
 
+        //game1.loadlevel();
 		vm.stopBroadcast();
 	}
 
