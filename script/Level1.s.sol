@@ -16,16 +16,61 @@ contract DeployLevel1 is Script {
 		bytes memory _levelNum = _setLevelNum(1);
 		bytes memory _state = _setState(1);
 		bytes memory _symbols = _setSymbol(1);
+        //Level1D level1 = new Level1D(_levelNum, _state, _symbols);
+        bytes memory _levelCode = abi.encodePacked(vm.getCode("Level1.d.sol:Level1D"), 
+            abi.encode(_levelNum, _state, _symbols));
+
+        uint256 len1;
+        uint256 len2;
+        bytes memory coode = type(Level1D).creationCode;
+        assembly {
+            len1 := mload(add(_levelCode, 0x00))
+            len2 := mload(add(coode, 0x00))            
+        }
+        console.log("len1:", len1);
+        console.log("len2:", len2);
 
 		vm.startBroadcast();
 
-		Level1D level1 = new Level1D(_levelNum, _state, _symbols);
 
-		level1.copyLevelData();
+        // Deploy using create2
+/*        bytes memory code = abi.encodePacked(
+            abi.encode(_levelCode),
+            abi.encode(_levelNum),
+            abi.encode(_state),
+            abi.encode(_symbols)
+        );
+*/
+        address target;
+        uint256 len;
+        assembly {
+            len := mload(_levelCode)
+            target := create2(0, add(_levelCode, 0x20), mload(_levelCode), 0x18)
+        }
+        console.log("len:", len);
+        console.log("target:", target);
+        if (target != address(0)) {
+            (bool ret, bytes memory addr) = target.call{value: 0}(
+                abi.encodeWithSignature("getState1()")
+            );
 
-        uint256 cell = level1.getState(0, 1);
+            if (ret == true) {
+                console.log("(ret == true)");
+                uint256 test;
+                assembly {
+                    test := mload(add(addr, 0x20))
+                }
+                console.log("test:", test);
+            }
+        }
+
+		//Level1D level1 = new Level1D(_levelNum, _state, _symbols);
+
+		//level1.copyLevelData();
+
+        //uint256 cell = level1.getState(0, 1);
 		vm.stopBroadcast();
-        console.log("cell state:", cell);
+        //console.log("cell state:", cell);
 	}
 
     // Internal function to set levelnum

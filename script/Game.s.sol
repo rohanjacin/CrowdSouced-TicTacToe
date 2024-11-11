@@ -8,6 +8,7 @@ import {BaseState} from "../src/BaseState.sol";
 import {BaseSymbol} from "../src/BaseSymbol.sol";
 import {BaseData} from "../src/BaseData.sol";
 import {GameD} from "../src/Game.d.sol";
+import {IGame} from "../src/IGame.sol";
 
 enum CellValue { Empty , X, O}
 
@@ -23,9 +24,10 @@ contract DeployGame is Script {
         address signer = vm.addr(privKey);
         vm.startBroadcast(signer);
 
-		GameD game1 = new GameD(signer, _levelNum, _state, _symbols);
+		//GameD game1 = new GameD(signer);
 
-        //game1.loadlevel();
+        IGame(address(0x8464135c8F25Da09e49BC8782676a84730C318bC))
+            .loadLevel(address(0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC));
 		vm.stopBroadcast();
 	}
 

@@ -49,10 +49,42 @@ contract BaseData {
 		}
 	}
 
+	// Retrieve level number, state and symbols as data  
+	function _retrieveLevel(address loc) 
+		internal view returns (bytes memory _data) {
+
+		uint256 size;
+
+		if (loc == address(0)) {
+			console.log("Address is zero");
+			revert();
+		}
+
+		assembly {
+			size := extcodesize(loc)
+
+			if iszero(size) {
+				revert(0, 0)
+			}
+
+			// Allocate space for data starting from the free location
+			_data := mload(0x40)
+
+			// Reserve new memory to fit data size
+			mstore(0x40, add(_data, and(add(add(size, 0x20), 0x1f), not(0x1f))))
+
+			// Store length
+			mstore(_data, size)
+
+			// retrieve the code from location
+			extcodecopy(loc, add(_data, 0x20), 1, sub(size, 1))
+		}
+	}
+
 	// Updates the data to the callers
 	// context when delegated
-	function copyLevelData() public virtual returns(bool success){
-	
-
+	function copyLevelData(address loc) public virtual returns(bytes memory){	
+		console.log("Parent copyLevelData:", loc);
+		return _retrieveLevel(loc);
 	}
 }

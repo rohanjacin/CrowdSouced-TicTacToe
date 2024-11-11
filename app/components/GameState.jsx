@@ -64,8 +64,7 @@ function JoinGame() {
 		const copyLevelData = web3.eth.abi.encodeFunctionCall({
 		    name: 'copyLevelData',
 		    type: 'function',
-		    inputs: [],
-			outputs:[{"name":"_data","type":"bytes"}]    
+		    inputs: []    
 		}, []);
 
 		console.log("requestLevelData:", copyLevelData);

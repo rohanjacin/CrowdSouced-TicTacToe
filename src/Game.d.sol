@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.27;
 
-import "./BaseLevel.sol";
-import "./BaseState.sol";
-import "./BaseSymbol.sol";
+import "./BaseLevel.d.sol";
+import "./BaseState.d.sol";
+import "./BaseSymbol.d.sol";
+import "./BaseData.sol";
 import "./LevelConfigurator.sol";
 import "./ILevelConfigurator.sol";
-import "./RuleEngine.d.sol";
+import "./RuleEngine.sol";
 import "semaphore/packages/contracts/contracts/interfaces/ISemaphore.sol";
 
 // Players
@@ -51,7 +52,7 @@ struct Move {
 }
 
 // Game
-contract GameD is BaseLevel, BaseState, BaseSymbol, RuleEngineD {
+contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 
 	// SLOT 0 is from BaseLevel (Do NOT use SLOT 0)
 	//uint8 level;
@@ -78,13 +79,7 @@ contract GameD is BaseLevel, BaseState, BaseSymbol, RuleEngineD {
 	mapping(uint8 => GameInfo) public games;
 
 	// Load the default state in Base State
-	constructor(address _admin,
-				 bytes memory levelNum,
-				 State memory state,
-		         Symbols memory symbols) 
-		BaseLevel(levelNum)
-		BaseState(state)
-		BaseSymbol(symbols) {
+	constructor(address _admin) {
 
 		console.log("Game contract created");
 		console.log("Level:", level);
@@ -111,6 +106,42 @@ contract GameD is BaseLevel, BaseState, BaseSymbol, RuleEngineD {
 		}
 	}
 
+	function retrieveLevel(address data)
+		internal returns (bytes memory _num,
+		bytes memory _state, bytes memory _symbol) {
+
+		bytes memory _data = BaseData.copyLevelData(data);
+		uint8 _numlen = 1;
+		uint8 _statelen = 9;
+		uint8 _symbollen = 2;
+		bytes calldata testt;
+
+		assembly {
+			// Total length and start
+			let len := mload(_data)
+			let ptr := add(_data, 0x20)
+
+			// Reserve and copy level num 
+			_num := mload(0x40)
+			mcopy(add(_num, 0x20), ptr, _numlen)
+			mstore(_num, _numlen)
+			mstore(0x40, add(_num, 0x40))
+
+			// Reserve and copy level state 
+			_state := mload(0x40)
+			mcopy(add(_state, 0x20), add(ptr, _numlen), _statelen)
+			mstore(_state, _statelen)
+			mstore(0x40, add(_state, 0x40))
+
+			// Reserve and copy level state 
+			_symbol := mload(0x40)
+			mcopy(add(_symbol, 0x20), add(ptr, add(_numlen, _statelen)), mul(_symbollen, 4))
+			mstore(_symbol, mul(_symbollen, 4))
+			mstore(0x40, add(_symbol, 0x40))
+		}
+
+	}
+
 	// Loads the level
 	function loadLevel(address bidder) external onlyAdmin
 		returns(bool success, string memory message) {
@@ -121,14 +152,24 @@ contract GameD is BaseLevel, BaseState, BaseSymbol, RuleEngineD {
 		 config.symbolLen, config.hash, config.codeAddress, config.dataAddress)
 		 = ILevelConfigurator(games[1].house.levelConfigurator()).proposals(bidder);
 
+		 console.log("config.num:", config.num);
+		 console.log("config.symbolLen:", config.symbolLen);
+		 console.log("level:", level);
+
 		// Level check for L1 or L2
-		if (!(config.num == level+1)) {
+/*		if (!(config.num == level)) {
 			revert LevelInvalid();
 		}
+*/
+		(bytes memory _levelnum, 
+		 bytes memory _levelstate,
+		 bytes memory _levelsymbol) = retrieveLevel(config.dataAddress);
 
+		console.log("Copy level data from:", config.codeAddress);
 		// Copy Level via delegatecall
 		(success, ) = config.codeAddress
-			.delegatecall(abi.encodeWithSignature("copyLevelData()returns(bool)"));
+			.delegatecall(abi.encodeWithSignature("copyLevel1Data(bytes,bytes,bytes)",
+			 _levelnum, _levelstate, _levelsymbol));
 
 		if (success == false) {
 			revert LevelCopyFailed();
@@ -137,12 +178,25 @@ contract GameD is BaseLevel, BaseState, BaseSymbol, RuleEngineD {
 		// Store level address
 		games[1].levelAddress = config.codeAddress;
 
+		console.log("board[2][2]:", getState(2, 2));
+		console.log("board[0][0]:", getState(0, 0));
+
 		// Add level rules
-		Symbols memory _symbols = Symbols({v: new bytes4[](config.symbolLen)});
-		for (uint8 i = 0; i < config.symbolLen; i++) {
-			_symbols.v[i] = bytes4(symbols.v[i]);
+		uint8 _symbolLen = uint8(config.symbolLen/4);
+		console.log("Adding rules:", _symbolLen);
+		
+		BaseSymbolD.Symbols memory _symbols = BaseSymbolD.Symbols(
+			{v: new bytes4[](_symbolLen)});
+		
+		for (uint8 i = 0; i < _symbolLen; i++) {
+			_symbols.v[i] = getSymbol(i);
+			console.log("_symbols.v[i]:", uint32(_symbols.v[i]));
 		}
+
 		addRules(games[1].levelAddress, _symbols);
+
+		console.log("rules[1]:", uint32(rules[1]));
+		console.log("rules[2]:", uint32(rules[2]));
 
 		return (true, "Level loaded");
 	}

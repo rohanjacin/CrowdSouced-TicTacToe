@@ -8,6 +8,7 @@ import {BaseStateD} from "../src/BaseState.d.sol";
 import {BaseSymbolD} from "../src/BaseSymbol.d.sol";
 import {BaseDataD} from "../src/BaseData.d.sol";
 import {LevelConfigurator} from "../src/LevelConfigurator.sol";
+import {ILevelConfigurator} from "../src/ILevelConfigurator.sol";
 import {Level1D} from "../src/Level1.d.sol";
 import { ECDSA } from "openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import "openzeppelin-contracts/contracts/utils/cryptography/MessageHashUtils.sol";
@@ -27,10 +28,12 @@ contract DeployLevelConfigurator is Script {
         address signer = vm.addr(privKey);
 		vm.startBroadcast(signer);
 
-		LevelConfigurator levelConfigurator = new LevelConfigurator(
+/*		LevelConfigurator levelConfigurator = new LevelConfigurator(
                                 signer, ISemaphore(address(0x02)));
-
-		levelConfigurator.initLevel(type(Level1D).creationCode, _levelNum, _state, _symbols);
+*/
+        address levelConfigurator = address(0x356bc565e99C763a1Ad74819D413A6D58E565Cf2);
+        ILevelConfigurator(levelConfigurator)
+		  .initLevel(type(Level1D).creationCode, _levelNum, _state, _symbols);
 
         bytes32 _msghash = keccak256(abi.encodePacked(type(Level1D).creationCode,
                             _levelNum, _state, _symbols));
@@ -38,8 +41,9 @@ contract DeployLevelConfigurator is Script {
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privKey,
             MessageHashUtils.toEthSignedMessageHash(_msghash));
 
-        levelConfigurator.deployLevel(type(Level1D).creationCode,
-                          _levelNum, _state, _symbols, _msghash, 0x16, 
+        ILevelConfigurator(levelConfigurator)
+            .deployLevel(type(Level1D).creationCode,
+                          _levelNum, _state, _symbols, _msghash, 0x19, 
                           abi.encodePacked(r, s, v));
 		vm.stopBroadcast();
 	}

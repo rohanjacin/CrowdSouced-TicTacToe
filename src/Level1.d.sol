@@ -15,53 +15,29 @@ contract Level1D is BaseLevelD, BaseStateD, BaseSymbolD, BaseDataD {
 		BaseDataD(levelNum, state, symbols) {
 	}
 
-	// Inhertied from BaseDataD loads Level 1
-	function copyLevelData() public override returns(bytes memory _data){
+	fallback() external {
+		console.log("in fallback");
+	}
 
-		// Fetches data from snapshot
-		_data = BaseDataD.copyLevelData();
-		bytes memory _num;
-		bytes memory _state;
-		bytes memory _symbol;
-		uint8 _numlen = 1;
-		uint8 _statelen = 9;
-		uint8 _symbollen = 2;
+	// Loads Level 1 with pre-filled data
+	function copyLevel1Data(bytes calldata _levelNumData,
+		bytes calldata _stateData, bytes calldata _symbolsData)
+		public returns(bool success){
 
-		assembly {
-			// Total length and start
-			let len := mload(_data)
-			let ptr := add(_data, 0x20)
-
-			// Reserve and copy level num 
-			_num := mload(0x40)
-			mcopy(add(_num, 0x20), ptr, _numlen)
-			mstore(_num, _numlen)
-			mstore(0x40, add(_num, 0x40))
-
-			// Reserve and copy level state 
-			_state := mload(0x40)
-			mcopy(add(_state, 0x20), add(ptr, _numlen), _statelen)
-			mstore(_state, _statelen)
-			mstore(0x40, add(_state, 0x40))
-
-			// Reserve and copy level state 
-			_symbol := mload(0x40)
-			mcopy(add(_symbol, 0x20), add(ptr, add(_numlen, _statelen)), mul(_symbollen, 4))
-			mstore(_symbol, mul(_symbollen, 4))
-			mstore(0x40, add(_symbol, 0x40))
-		}
+		console.log("in copyLevelData");
 
 		// Copy level num
-		BaseLevelD.copyLevel(_num);
+		BaseLevelD.copyLevel(_levelNumData);
 		// Copy level state as per schema
-		this._copyState1(_state);
+		_copyState1(_stateData);
 		// Copy level symbols as per schema
-		this._copySymbol1(_symbol);
+		_copySymbol1(_symbolsData);
 	}
 
 	// Copies state into game storage as per schema
-	function _copyState1(bytes calldata cell) public returns (bool success){
+	function _copyState1(bytes calldata cell) internal returns (bool success){
 
+		console.log("_copyState1: ", msg.sender);
 		State memory _state = State({v: new uint256[][](3)});
         _state.v[0] = new uint256[](3);
         _state.v[1] = new uint256[](3);
@@ -87,11 +63,14 @@ contract Level1D is BaseLevelD, BaseStateD, BaseSymbolD, BaseDataD {
         // [cell[3], cell[4], cell[5]] R1
         // [cell[6], cell[7], cell[8]] R2
 	
+		console.log("Calling BaseStateD.copyState");
 		success = BaseStateD.copyState(_state);
 	}	
 
 	// Copies symbols into game storage as per schema
 	function _copySymbol1(bytes calldata _symbols) public returns (bool success){
+
+		console.log("_copySymbol1: ", msg.sender);
 
         Symbols memory s = Symbols({v: new bytes4[](2)});
         s.v[0] = bytes4(_symbols[0:4]); //hex"e29d8c00"

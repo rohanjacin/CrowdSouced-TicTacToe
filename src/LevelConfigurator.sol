@@ -166,16 +166,15 @@ contract LevelConfigurator {
         // Verify signature
         bytes32 sigHash = MessageHashUtils.toEthSignedMessageHash(msgHash);
 
+        // No precompiles on anvil local chain, uncomment when testing
+        // on testnet.
         if (ECDSA.recover(sigHash, signature) != msg.sender) {
             revert FailedToDeployLevel();
         }
 
         // Deploy using create2
-        bytes memory code = abi.encodePacked(
-            abi.encode(_levelCode),
-            abi.encode(_levelNumber),
-            abi.encode(_levelState),
-            abi.encode(_levelSymbols)
+        bytes memory code = abi.encodePacked(_levelCode,
+           abi.encode(_levelNumber, _levelState, _levelSymbols)
         );
 
         assembly {
@@ -184,16 +183,18 @@ contract LevelConfigurator {
         }
 
         // Register data address
-        (bool ret, bytes memory addr) = config.codeAddress.call{value: 0}(
-            abi.encodeWithSignature("data()returns(address)")
-        );
+        if (config.codeAddress != address(0)) {
+            (bool ret, bytes memory addr) = config.codeAddress.call{value: 0}(
+                abi.encodeWithSignature("data()")
+            );
 
-        if (ret == true) {
-            config.dataAddress = abi.decode(addr, (address));
-            proposals[msg.sender] = config;
+            if (ret == true) {
+                config.dataAddress = abi.decode(addr, (address));
+                proposals[msg.sender] = config;
+            }
+
+            success = true;            
         }
-
-        success = true;
     }
 
     // Cache the hash of proposal
@@ -219,7 +220,7 @@ contract LevelConfigurator {
         assembly {
             // num
             let ptr := config
-            mstore(ptr, mload(add(_levelNum, 0x20)))
+            mstore(ptr, byte(0, mload(add(_levelNum, 0x20))))
 
             // codeLen
             ptr := add(config, 0x20)

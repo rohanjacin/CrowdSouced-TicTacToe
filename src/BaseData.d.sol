@@ -13,6 +13,7 @@ contract BaseDataD {
 		         bytes memory symbols) {
 		// Store data
 		data = _storeLevel(levelNum, state, symbols);
+		console.log("In Constructor of BaseDataD:", data);
 	}
 
 	// Store level number, state and symbols as code  
@@ -90,7 +91,8 @@ contract BaseDataD {
 
 	// Updates the data to the callers
 	// context when delegated
-	function copyLevelData() public virtual returns(bytes memory){	
-		return _retrieveLevel(data);
+	function copyLevelData(address loc) public virtual returns(bytes memory){	
+		console.log("Parent copyLevelData:", loc);
+		return _retrieveLevel(loc);
 	}
 }
