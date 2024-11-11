@@ -104,7 +104,7 @@ contract Game is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 
 		// Copy Level via delegatecall
 		(success, ) = config.codeAddress
-			.delegatecall(abi.encodeWithSignature("copyLevelData()returns(bool)"));
+			.delegatecall(abi.encodeWithSignature("copyData()returns(bool)"));
 
 		if (success == false) {
 			revert LevelCopyFailed();

@@ -99,6 +99,7 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
         (address target, bytes memory callData) = abi.decode(levelCall,
 													(address, bytes));
 		console.log("target:", target);
+		console.log("games[1].levelAddress:", games[1].levelAddress);
 
 		if (target ==  games[1].levelAddress) {
 			(success, data) = target.call{value: msg.value}(callData);
@@ -110,7 +111,7 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 		internal returns (bytes memory _num,
 		bytes memory _state, bytes memory _symbol) {
 
-		bytes memory _data = BaseData.copyLevelData(data);
+		bytes memory _data = BaseData.copyData(data);
 		uint8 _numlen = 1;
 		uint8 _statelen = 9;
 		uint8 _symbollen = 2;
@@ -168,7 +169,7 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 		console.log("Copy level data from:", config.codeAddress);
 		// Copy Level via delegatecall
 		(success, ) = config.codeAddress
-			.delegatecall(abi.encodeWithSignature("copyLevel1Data(bytes,bytes,bytes)",
+			.delegatecall(abi.encodeWithSignature("copyLevelData(bytes,bytes,bytes)",
 			 _levelnum, _levelstate, _levelsymbol));
 
 		if (success == false) {

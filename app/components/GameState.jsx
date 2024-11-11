@@ -1,6 +1,7 @@
 import React from "react";
 import { useState, useEffect } from "react";
 import { web3, signer, GameContract, Connected, Connect } from "./Connect.jsx";
+import BN from "bn.js";
 
 const GState = {
 	levelInProgress: 0,
@@ -35,7 +36,7 @@ function GameState({ gameState }) {
 	}
 }
 
-function JoinGame() {
+function JoinGame({ onData }) {
 
 	//console.log("Gstate.levelInProgress:", Gstate.levelInProgress);
 	const defaultJoinState = {joined: false, asPlayer :Player.PLAYER_NONE};
@@ -60,24 +61,29 @@ function JoinGame() {
 	}
 
 	async function requestLevelData() {
-		// Call "copyLevelData()returns(bytes memory)" in Level 1
-		const copyLevelData = web3.eth.abi.encodeFunctionCall({
-		    name: 'copyLevelData',
+		// Call "fetchLevelData()returns(bytes memory)" in Level 1
+		const fetchLevelData = web3.eth.abi.encodeFunctionCall({
+		    name: 'fetchLevelData',
 		    type: 'function',
 		    inputs: []    
 		}, []);
 
-		console.log("requestLevelData:", copyLevelData);
 		// Level Contract address + Encoded Function
 		const callData = web3.eth.abi.encodeParameters(['address','bytes'], 
-			["0x356bc565e99C763a1Ad74819D413A6D58E565Cf2", copyLevelData]);
-
-		console.log("callData:", callData);
+			["0x16A2445001a4ebE7E2a92b76dc5d5322590c58dE", fetchLevelData]);
 		
 		await GameContract.methods.callLevel(callData)
 			.call({from: signer, gas: 100000})
 			.then((data) => {
-				console.log("data:", data);
+				data.data = data.data.split("0x")[1];
+				let len = parseInt(data.data.slice(126,128), 16);
+				let dataArr = new BN(data.data.slice(128, 128+2*len), 16).toArray();
+				let levelNum = parseInt(dataArr.slice(0, 1), 16);
+				let state = dataArr.slice(1, 10);
+				let symbols = [new BN(dataArr.slice(10, 14), 16).toNumber(),
+								new BN(dataArr.slice(14, 18), 16).toNumber()];
+
+				onData({levelNum, state, symbols});
 			});
 	}
 

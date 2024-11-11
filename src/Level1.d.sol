@@ -19,25 +19,29 @@ contract Level1D is BaseLevelD, BaseStateD, BaseSymbolD, BaseDataD {
 		console.log("in fallback");
 	}
 
+	// Fetched Level 1 pre-filled data
+	function fetchLevelData() public returns(bytes memory) {
+
+		console.log("in fetchLevelData");
+		return BaseDataD.copyData(data);
+	}
+
 	// Loads Level 1 with pre-filled data
-	function copyLevel1Data(bytes calldata _levelNumData,
+	function copyLevelData(bytes calldata _levelNumData,
 		bytes calldata _stateData, bytes calldata _symbolsData)
 		public returns(bool success){
-
-		console.log("in copyLevelData");
 
 		// Copy level num
 		BaseLevelD.copyLevel(_levelNumData);
 		// Copy level state as per schema
-		_copyState1(_stateData);
+		_copyState(_stateData);
 		// Copy level symbols as per schema
-		_copySymbol1(_symbolsData);
+		_copySymbol(_symbolsData);
 	}
 
 	// Copies state into game storage as per schema
-	function _copyState1(bytes calldata cell) internal returns (bool success){
+	function _copyState(bytes calldata cell) internal returns (bool success){
 
-		console.log("_copyState1: ", msg.sender);
 		State memory _state = State({v: new uint256[][](3)});
         _state.v[0] = new uint256[](3);
         _state.v[1] = new uint256[](3);
@@ -63,14 +67,11 @@ contract Level1D is BaseLevelD, BaseStateD, BaseSymbolD, BaseDataD {
         // [cell[3], cell[4], cell[5]] R1
         // [cell[6], cell[7], cell[8]] R2
 	
-		console.log("Calling BaseStateD.copyState");
 		success = BaseStateD.copyState(_state);
 	}	
 
 	// Copies symbols into game storage as per schema
-	function _copySymbol1(bytes calldata _symbols) public returns (bool success){
-
-		console.log("_copySymbol1: ", msg.sender);
+	function _copySymbol(bytes calldata _symbols) public returns (bool success){
 
         Symbols memory s = Symbols({v: new bytes4[](2)});
         s.v[0] = bytes4(_symbols[0:4]); //hex"e29d8c00"

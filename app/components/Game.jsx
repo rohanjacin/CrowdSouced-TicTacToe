@@ -66,6 +66,18 @@ function Game() {
 		setQuadCells(newQuadCells);
 	}
 
+	// On getting level data from Game
+	const handleLevelData = (data) => {
+
+		console.log("Level Num:", data.levelNum); 
+		console.log("Level State:", data.state); 
+		console.log("Level Symbols:", data.symbols); 
+		console.log("quadCells:", quadCells);
+		let newQuadCells = data.state.map((id) =>  id == 1 ? id = "❌":
+							(id == 2 ? id = "⭕": null));
+		setQuadCells(newQuadCells);
+	}
+
 	return(
 		<div className="game">
 			<h1>
@@ -139,7 +151,7 @@ function Game() {
 		strikeStyle={{row: rowS, col: colS, diag: diagS, combo: winningPattern}}/> :  <div> </div>}
 		<GameState  className='game-state' gameState={{level: level, state: gameState}}/>
 		<Connect onConnected={handleOnConnected}/>
-		<JoinGame />
+		<JoinGame onData={handleLevelData}/>
 		</div>
 	);
 }
