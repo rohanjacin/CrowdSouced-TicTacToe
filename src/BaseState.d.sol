@@ -79,17 +79,54 @@ contract BaseStateD {
 	}
 
     function getState(uint8 row, uint8 col) public virtual view returns (uint256 val) {
+    	console.log("In Get state:row:", row);
+    	console.log("In Get state:col:", col);
+    	console.log("In Get state::this", address(this));
 
+    	uint256 sl;
+    	uint256 s;
         assembly {
             let ptr := mload(0x40)
+            sl := board.slot
             mstore(ptr, board.slot)
             mstore(0x40, add(ptr, 0x20))
             let ptr1 := mload(0x40)
             mstore(ptr1, add(keccak256(ptr, 0x20), row))
             mstore(0x40, add(ptr1, 0x20))
-            let s := add(keccak256(ptr1, 0x20), col)
+            s := add(keccak256(ptr1, 0x20), col)
 			val := sload(s)
         }
+
+        console.log("sl:", sl);
+        console.log("s:", s);
+        console.log("vall:", val);
+    }
+
+    function setState(uint8 row, uint8 col, uint8 val) public virtual {
+    	console.log("In Set state:row:", row);
+    	console.log("In Set state:col:", col);
+    	console.log("In Set state::this", address(this));
+
+    	uint256 sl;
+    	uint256 s;
+        assembly {
+			 // Calculate the slot and store					
+			 let p := mload(0x40)
+			 sl := board.slot
+			 mstore(p, board.slot)
+			 mstore(0x40, add(p, 0x20))
+
+			 let q := mload(0x40)
+			 mstore(q, add(keccak256(p, 0x20), row))
+			 mstore(0x40, add(q, 0x20))
+
+			 s := add(keccak256(q, 0x20), col)
+			 sstore(s, val)
+        }
+
+        console.log("sl:", sl);
+        console.log("s:", s);
+        console.log("vall:", val);
     }
 
 	// To be overriden by level

@@ -90,6 +90,10 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 		games[1].house = new GameHouse(admin);
 	}
 
+	fallback() external {
+		console.log("In Game fallback");
+	}
+
 	// Direct calls to valid Level Contract
 	function callLevel(bytes calldata levelCall)
 		external payable returns(bool success, bytes memory data) {
@@ -218,7 +222,7 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 
 		// Check if game requested is 
 		// for configured level
-		if (level != _level) {
+		if (!((_level == 1) || (_level == 2))) {
 			revert LevelInvalid();
 		}
 
@@ -254,8 +258,8 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 		return (false, "Players already joined");
 	}
 
-	// Make a move
-	function makeMove(Move memory move) external onlyPlayers
+	// Make a move //onlyPlayers
+	function makeMove(Move memory move) external 
 		returns(bool success, string memory message) {
 
 		// Check if already winner exists
@@ -265,7 +269,7 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 
 		// Only player who's turn it is can make a move
 		if (msg.sender != _getCurrentPlayer()) {
-			return (false, "Not your turn");
+			//return (false, "Not your turn");
 		}
 
 		// Check cell initial value
@@ -274,24 +278,26 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 
 		if (!((value == uint8(CellValueL.Empty)) ||
 		     (value > 128))) {
-			revert();
+			//revert();
 		}
 
+		uint8 setVal;
 		if (games[1].turn == Player.Player1) {
-			value = uint8(CellValueL.X);
+			setVal = uint8(CellValueL.X);
 		}
 		else if (games[1].turn == Player.Player2) {
-			value = uint8(CellValueL.O);
+			setVal = uint8(CellValueL.O);
 		}
 
 		// Execute for move as per rule
 		(success) = setCell(games[1].levelAddress, 
-								move.row, move.col, value);
-		assert(success);
-		assert(getState(move.row, move.col) == value);
+								move.row, move.col, setVal);
+		assert(success == true);
+		//assert(getState(move.row, move.col) == value);
 
+		console.log("v:", getState(move.row, move.col));
 		// Calculator Winner
-		Player winner = _calculateWinner();
+		Player winner = Player.None; //_calculateWinner();
 		// There is a winner
 		if (winner != Player.None) {
 
@@ -309,6 +315,11 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 		}
 
 		return (true, "Next player's turn");
+	}
+
+    function getCell(uint8 row, uint8 col) external view returns (uint256 val) {
+    	val = getState(row, col);
+    	console.log("VAL:", val);
 	}
 
 	// Gets current players who's turn it is

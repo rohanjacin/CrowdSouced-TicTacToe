@@ -2,6 +2,7 @@
 pragma solidity 0.8.27;
 
 import {Script} from "forge-std/Script.sol";
+import {stdStorage, StdStorage} from "forge-std/Test.sol";              
 import {console} from "forge-std/console.sol";
 import {BaseLevel} from "../src/BaseLevel.sol";
 import {BaseState} from "../src/BaseState.sol";
@@ -14,21 +15,39 @@ enum CellValue { Empty , X, O}
 
 contract DeployGame is Script {
 
+    using stdStorage for StdStorage;
+
 	function run() external {
 
-		bytes memory _levelNum = _setLevelNum(2);
-		BaseState.State memory _state = _setState(2);
-		BaseSymbol.Symbols memory _symbols = _setSymbol(2);
+		bytes memory _levelNum = _setLevelNum(1);
+		BaseState.State memory _state = _setState(1);
+		BaseSymbol.Symbols memory _symbols = _setSymbol(1);
 
         uint256 privKey = vm.envUint("PRIVATE_KEY");
         address signer = vm.addr(privKey);
         vm.startBroadcast(signer);
 
-		GameD game1 = new GameD(signer);
-
+		//GameD game1 = new GameD(signer);
+        //game1.newGame(1);
+        
         IGame(address(0x8464135c8F25Da09e49BC8782676a84730C318bC))
             .loadLevel(address(0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC));
-		vm.stopBroadcast();
+
+        //IGame(address(0x8464135c8F25Da09e49BC8782676a84730C318bC)).setState(0, 1, 9);
+        vm.stopBroadcast();
+
+        //vm.startBroadcast(signer);
+        //IGame(address(0x8464135c8F25Da09e49BC8782676a84730C318bC)).getCell(0,1);
+/*        uint256 slot = stdstore
+            .target(address(0x8464135c8F25Da09e49BC8782676a84730C318bC))
+            .sig("getCell(uint8,uint8)")
+            .with_key(0)
+            .with_key(1)
+            .depth(1)
+            .find();
+*/
+		//vm.stopBroadcast();
+
 	}
 
     // Internal function to set levelnum
@@ -266,27 +285,31 @@ contract DeployGame is Script {
         if (num == 1) {
             // Set if length of symbols is 2
             symbols = BaseSymbol.Symbols({v: new bytes4[](2)});
-            symbols.v[0] = bytes4(hex"274C");
-            symbols.v[1] = bytes4(hex"2B55");
-            
-            // C0
-            // [0x274c000000000000000000000000000000000000000000000000000000000000] R0
-            // [0x2b55000000000000000000000000000000000000000000000000000000000000] R1
+            symbols.v[0] = bytes4(hex"e29d8c00");
+            symbols.v[1] = bytes4(hex"e2ad9500");            
         }
         else if (num == 2) {
 
             // Set if length of symbols is 4
             symbols = BaseSymbol.Symbols({v: new bytes4[](4)});
-            symbols.v[0] = bytes4(hex"274C");
-            symbols.v[1] = bytes4(hex"2B55");
-            symbols.v[2] = bytes4(hex"2B50");
-            symbols.v[3] = bytes4(hex"01F4A3");
-
-            // C0
-            // [0x274c000000000000000000000000000000000000000000000000000000000000] R0
-            // [0x2b55000000000000000000000000000000000000000000000000000000000000] R1
-            // [0x2b50000000000000000000000000000000000000000000000000000000000000] R2
-            // [0x01f4a300000000000000000000000000000000000000000000000000000000000] R3
+            symbols.v[0] = bytes4(hex"e29d8c00");
+            symbols.v[1] = bytes4(hex"e2ad9500");
+            symbols.v[2] = bytes4(hex"e2ad9000");
+            symbols.v[3] = bytes4(hex"f09f92a3");
         }
     }    	
+}
+
+contract TestGame is Script {
+
+    function run() external {
+
+        uint256 privKey = vm.envUint("PRIVATE_KEY");
+        address signer = vm.addr(privKey);
+        vm.startBroadcast(signer);
+
+        console.log("CC:", IGame(address(0x8464135c8F25Da09e49BC8782676a84730C318bC)).getState(0,1));
+
+        vm.stopBroadcast();
+    }
 }

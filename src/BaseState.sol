@@ -169,6 +169,22 @@ contract BaseState {
         }
     }
 
+    function setState(uint8 row, uint8 col, uint8 val) public virtual {
+
+        assembly {
+			 // Calculate the slot and store					
+			 let p := mload(0x40)
+			 mstore(p, board.slot)
+			 mstore(0x40, add(p, 0x20))
+
+			 let q := mload(0x40)
+			 mstore(q, add(keccak256(p, 0x20), row))
+			 mstore(0x40, add(q, 0x20))
+
+			 let s := add(keccak256(q, 0x20), col)
+			 sstore(s, val)
+        }
+    }
 	// To be overriden by level
     function supportedStates() public view virtual returns (bytes memory) {
 	}

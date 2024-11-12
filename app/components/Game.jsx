@@ -51,12 +51,19 @@ function Game() {
 	}
 
 	// On move send row and col of cell to Game.sol
-	const handleCellClick = (index) => {
+	const handleCellClick = async (index) => {
 
 		let row = Math.floor(index/numCells);
 		let col = index%numCells;
+
+		console.log("row:", row);
+		console.log("col:", col);
+
+		await makeMove(0, 1);
 		
-		const newCells = [...cells];
+		//setTimeout( async () => await getCell(row, col), 2000);
+
+/*		const newCells = [...cells];
 		newCells[row, col] = playerTurn;
 		setCells(newCells);
 
@@ -64,7 +71,7 @@ function Game() {
 		const newQuadCells = [...quadCells];
 		newQuadCells[idx] = playerTurn;
 		setQuadCells(newQuadCells);
-	}
+*/	}
 
 	// On getting level data from Game
 	const handleLevelData = (data) => {
@@ -72,6 +79,36 @@ function Game() {
 		let newQuadCells = data.state.map((id) =>  id == 1 ? id = "❌":
 							(id == 2 ? id = "⭕": null));
 		setQuadCells(newQuadCells);
+	}
+
+	async function makeMove(row, col) {
+		let ret = { won : false,  player: Player.PLAYER_NONE };
+		await GameContract.methods.makeMove({row, col})
+			.call({from: signer, gas: 100000})
+			.then((result) => {
+				console.log("success:", result.success);
+				console.log("message:", result.message);
+				if (result.success == true) {
+					if (result.message == "Next player's turn") {
+						ret = {won : false, player: Player.PLAYER_NONE};
+						console.log(result.message);
+					}
+					else if (result.message == "You Won!") {
+						ret = {won : true, player: Player.PLAYER_1};
+						console.log(result.message);
+					}
+				}
+		});
+	}
+
+	async function getCell(row, col) {
+		let ret = { joined : false,  asPlayer: Player.PLAYER_NONE };
+		await GameContract.methods.getCell(row, col)
+			.call({from: signer, gas: 100000})
+			.then((value) => {
+				console.log("value:", value);
+				return value;
+		});
 	}
 
 	return(

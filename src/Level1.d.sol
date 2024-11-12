@@ -81,17 +81,21 @@ contract Level1D is BaseLevelD, BaseStateD, BaseSymbolD, BaseDataD {
 	}
 
     function getState(uint8 row, uint8 col) public override view returns (uint256 val) {
+		console.log("in l1 getState");		
 		return BaseStateD.getState(row, col);
 	}
 
 	// ❌
 	function setCellue29d8c00(uint8 row, uint8 col, uint8 value) external {
-		board.v[row][col] = value;
+		console.log("in setCellue29d8c00");
+		BaseStateD.setState(row, col, value);
+		console.log("set the state");
 	}
 	
 	// ⭕   
 	function setCellue2ad9500(uint8 row, uint8 col, uint8 value) external {
-		board.v[row][col] = value;
+		console.log("in setCellue2ad9500");
+		BaseStateD.setState(row, col, value);
 	}
 
 	// Inherited from BaseState - all implemented and supported states in level
