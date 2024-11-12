@@ -84,7 +84,6 @@ contract BaseData {
 	// Updates the data to the callers
 	// context when delegated
 	function copyData(address loc) public virtual returns(bytes memory){	
-		console.log("Parent copyLevelData:", loc);
 		return _retrieveLevel(loc);
 	}
 }

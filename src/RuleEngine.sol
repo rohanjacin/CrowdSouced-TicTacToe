@@ -67,8 +67,6 @@ abstract contract RuleEngine {
 
 			// Add the rule
 			rules[i] = levelSel;
-			console.log("Added rule:", i);
-			console.log("levelSel:", uint32(levelSel));
 		}
 	}
 

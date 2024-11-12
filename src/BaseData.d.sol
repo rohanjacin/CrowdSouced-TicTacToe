@@ -13,7 +13,6 @@ contract BaseDataD {
 		         bytes memory symbols) {
 		// Store data
 		data = _storeLevel(levelNum, state, symbols);
-		console.log("In Constructor of BaseDataD:", data);
 	}
 
 	// Store level number, state and symbols as code  
@@ -64,7 +63,6 @@ contract BaseDataD {
 		uint256 size;
 
 		if (loc == address(0)) {
-			console.log("Address is zero");
 			revert();
 		}
 

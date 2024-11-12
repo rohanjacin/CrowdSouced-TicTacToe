@@ -15,14 +15,8 @@ contract Level2D is BaseLevelD, BaseStateD, BaseSymbolD, BaseDataD {
 		BaseDataD(levelNum, state, symbols) {
 	}
 
-	fallback() external {
-		console.log("in fallback");
-	}
-
 	// Fetched Level 1 pre-filled data
 	function fetchLevelData() public returns(bytes memory) {
-
-		console.log("in fetchLevelData");
 		return BaseDataD.copyData(data);
 	}
 
@@ -167,28 +161,24 @@ contract Level2D is BaseLevelD, BaseStateD, BaseSymbolD, BaseDataD {
 		success = BaseSymbolD.copySymbol(s);
 	}
 
-    function getState(uint8 row, uint8 col) public override view returns (uint256 val) {
-		return BaseStateD.getState(row, col);
-	}
-
 	// ❌
 	function setCellue29d8c00(uint8 row, uint8 col, uint8 value) external {
-		board.v[row][col] = value;
+		BaseStateD.setState(row, col, value);
 	}
 	
 	// ⭕   
 	function setCellue2ad9500(uint8 row, uint8 col, uint8 value) external {
-		board.v[row][col] = value;
+		BaseStateD.setState(row, col, value);
 	}
 
 	// ⭐
 	function setCellue2ad9000(uint8 row, uint8 col, uint8 value) external {
-		board.v[row][col] = value;
+		BaseStateD.setState(row, col, value);
 	}
 	
 	// 💣
 	function setCelluf09f92a3(uint8 row, uint8 col, uint8 value) external {
-		board.v[row][col] = value;
+		BaseStateD.setState(row, col, value);
 	}
 
 	// Inherited from BaseState - all implemented and supported states in level

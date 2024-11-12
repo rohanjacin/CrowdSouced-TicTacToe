@@ -80,11 +80,6 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 
 	// Load the default state in Base State
 	constructor(address _admin) {
-
-		console.log("Game contract created");
-		console.log("Level:", level);
-		console.log("board[2][2]:", getState(2, 2));
-
 		admin = _admin;
 		// Game House components
 		games[1].house = new GameHouse(admin);
@@ -167,10 +162,6 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 		 config.symbolLen, config.hash, config.codeAddress, config.dataAddress)
 		 = ILevelConfigurator(games[1].house.levelConfigurator()).proposals(bidder);
 
-		 console.log("config.num:", config.num);
-		 console.log("config.symbolLen:", config.symbolLen);
-		 console.log("level:", level);
-
 		// Level check for L1 or L2
 /*		if (!(config.num == level)) {
 			revert LevelInvalid();
@@ -181,7 +172,6 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 		 bytes memory _levelsymbol) = retrieveLevel(uint8(config.num),
 		 								config.dataAddress);
 
-		console.log("Copy level data from:", config.codeAddress);
 		// Copy Level via delegatecall
 		(success, ) = config.codeAddress
 			.delegatecall(abi.encodeWithSignature("copyLevelData(bytes,bytes,bytes)",
@@ -194,25 +184,17 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 		// Store level address
 		games[1].levelAddress = config.codeAddress;
 
-		console.log("board[2][2]:", getState(2, 2));
-		console.log("board[0][0]:", getState(0, 0));
-
 		// Add level rules
 		uint8 _symbolLen = uint8(config.symbolLen/4);
-		console.log("Adding rules:", _symbolLen);
 		
 		BaseSymbolD.Symbols memory _symbols = BaseSymbolD.Symbols(
 			{v: new bytes4[](_symbolLen)});
 		
 		for (uint8 i = 0; i < _symbolLen; i++) {
 			_symbols.v[i] = getSymbol(i);
-			console.log("_symbols.v[i]:", uint32(_symbols.v[i]));
 		}
 
 		addRules(games[1].levelAddress, _symbols);
-
-		console.log("rules[1]:", uint32(rules[1]));
-		console.log("rules[2]:", uint32(rules[2]));
 
 		return (true, "Level loaded");
 	}
@@ -274,7 +256,6 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 
 		// Check cell initial value
 		uint8 value = uint8(getState(move.row, move.col));
-		console.log("value:", value);
 
 		if (!((value == uint8(CellValueL.Empty)) ||
 		     (value > 128))) {
@@ -295,7 +276,6 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 		assert(success == true);
 		//assert(getState(move.row, move.col) == value);
 
-		console.log("v:", getState(move.row, move.col));
 		// Calculator Winner
 		Player winner = Player.None; //_calculateWinner();
 		// There is a winner
@@ -315,11 +295,6 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 		}
 
 		return (true, "Next player's turn");
-	}
-
-    function getCell(uint8 row, uint8 col) external view returns (uint256 val) {
-    	val = getState(row, col);
-    	console.log("VAL:", val);
 	}
 
 	// Gets current players who's turn it is

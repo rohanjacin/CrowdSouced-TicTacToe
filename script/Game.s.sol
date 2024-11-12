@@ -2,7 +2,6 @@
 pragma solidity 0.8.27;
 
 import {Script} from "forge-std/Script.sol";
-import {stdStorage, StdStorage} from "forge-std/Test.sol";              
 import {console} from "forge-std/console.sol";
 import {BaseLevel} from "../src/BaseLevel.sol";
 import {BaseState} from "../src/BaseState.sol";
@@ -14,8 +13,6 @@ import {IGame} from "../src/IGame.sol";
 enum CellValue { Empty , X, O}
 
 contract DeployGame is Script {
-
-    using stdStorage for StdStorage;
 
 	function run() external {
 
@@ -33,21 +30,7 @@ contract DeployGame is Script {
         IGame(address(0x8464135c8F25Da09e49BC8782676a84730C318bC))
             .loadLevel(address(0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC));
 
-        //IGame(address(0x8464135c8F25Da09e49BC8782676a84730C318bC)).setState(0, 1, 9);
         vm.stopBroadcast();
-
-        //vm.startBroadcast(signer);
-        //IGame(address(0x8464135c8F25Da09e49BC8782676a84730C318bC)).getCell(0,1);
-/*        uint256 slot = stdstore
-            .target(address(0x8464135c8F25Da09e49BC8782676a84730C318bC))
-            .sig("getCell(uint8,uint8)")
-            .with_key(0)
-            .with_key(1)
-            .depth(1)
-            .find();
-*/
-		//vm.stopBroadcast();
-
 	}
 
     // Internal function to set levelnum
@@ -298,18 +281,4 @@ contract DeployGame is Script {
             symbols.v[3] = bytes4(hex"f09f92a3");
         }
     }    	
-}
-
-contract TestGame is Script {
-
-    function run() external {
-
-        uint256 privKey = vm.envUint("PRIVATE_KEY");
-        address signer = vm.addr(privKey);
-        vm.startBroadcast(signer);
-
-        //console.log("CC:", IGame(address(0x8464135c8F25Da09e49BC8782676a84730C318bC)).getState(0,1));
-
-        vm.stopBroadcast();
-    }
 }

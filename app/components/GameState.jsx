@@ -52,8 +52,6 @@ function JoinGame({ onData }) {
 		await GameContract.methods.joinGame()
 			.call({from: signer, gas: 100000})
 			.then((result) => {
-				console.log("success:", result.success);
-				console.log("message:", result.message);
 				let player = ((result.message == "You are Player1 - X")? Player.PLAYER_1 :
 					((result.message == "You are Player1 - O")?
 						Player.PLAYER_2 : Player.PLAYER_NONE));
@@ -72,7 +70,7 @@ function JoinGame({ onData }) {
 
 		// Level Contract address + Encoded Function
 		const callData = web3.eth.abi.encodeParameters(['address','bytes'], 
-			["0xd71ed303C9F40f733d63590825f2e8226A2EeDD2", fetchLevelData]);
+			["0x78118FEC411b4c6be77EB79C5D78761690e09b19", fetchLevelData]);
 		
 		await GameContract.methods.callLevel(callData)
 			.call({from: signer, gas: 100000})

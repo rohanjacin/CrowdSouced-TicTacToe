@@ -48,13 +48,10 @@ function Game() {
 
 	useEffect(() => {
 		if (Connected == true) {
-			console.log("On game state change:", gameState);
 			if (gameState.state == 1) {
-				console.log("fetch cell state");
 				fetchCellValue(gameState.context);
 			}
 			else if (gameState.state == 2) {
-				console.log("update cell state");
 				handleCellUpdate(gameState.context);
 			}			
 		}
@@ -70,9 +67,6 @@ function Game() {
 		let row = Math.floor(index/marker);
 		let col = index%marker;
 
-		console.log("row:", row);
-		console.log("col:", col);
-
 		await makeMove(row, col)
 		.then(() => {
 			let state = 1;
@@ -84,28 +78,15 @@ function Game() {
 
 	const fetchCellValue = async (ctx) => {
 
-		console.log("fcv index:", ctx.cell);
-		console.log("fcv value:", ctx.value);
-
 		let row = Math.floor(ctx.cell/marker);
 		let col = ctx.cell%marker;
-
-		console.log("row:", row);
-		console.log("col:", col);
-
 		await getCell(row, col)
 	}
 
 	const handleCellUpdate = async (ctx) => {
 
-		console.log("handleCellUpdate:index:", ctx.cell);
-		console.log("handleCellUpdate:value:", ctx.value);
-
 		let row = Math.floor(ctx.cell/marker);
 		let col = ctx.cell%marker;
-
-		console.log("row:", row);
-		console.log("col:", col);
 
 		let state = 0;
 		let context = 0;
@@ -131,25 +112,12 @@ function Game() {
 		await GameContract.methods.makeMove({row, col})
 			.send({from: signer, gas: 100000})
 			.then((result) => {
-				console.log("result:", result);
-/*				console.log("success:", result.success);
-				console.log("message:", result.message);
-				if (result.success == true) {
-					if (result.message == "Next player's turn") {
-						ret = {won : false, player: Player.PLAYER_NONE};
-						console.log(result.message);
-					}
-					else if (result.message == "You Won!") {
-						ret = {won : true, player: Player.PLAYER_1};
-						console.log(result.message);
-					}
-				}
-*/		});
+		});
 	}
 
 	async function getCell(row, col) {
 		let ret = { joined : false,  asPlayer: Player.PLAYER_NONE };
-		await GameContract.methods.getCell(row, col)
+		await GameContract.methods.getState(row, col)
 			.call({from: signer, gas: 100000})
 			.then((value) => {
 				let state = 2;
