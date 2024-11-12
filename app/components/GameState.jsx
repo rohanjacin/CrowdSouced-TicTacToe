@@ -5,9 +5,11 @@ import BN from "bn.js";
 
 const GState = {
 	levelInProgress: 0,
-	player1Wins: 1,
-	player2Wins: 2,
-	draw: 3,
+	playerMoveInProgress: 1,
+	playerMoveDone: 2,
+	player1Wins: 3,
+	player2Wins: 4,
+	draw: 5,
 }
 
 const Player = {
@@ -70,7 +72,7 @@ function JoinGame({ onData }) {
 
 		// Level Contract address + Encoded Function
 		const callData = web3.eth.abi.encodeParameters(['address','bytes'], 
-			["0x980df5E510d65fD44DF61280cb6EDca28E643dfB", fetchLevelData]);
+			["0xd71ed303C9F40f733d63590825f2e8226A2EeDD2", fetchLevelData]);
 		
 		await GameContract.methods.callLevel(callData)
 			.call({from: signer, gas: 100000})

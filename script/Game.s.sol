@@ -19,16 +19,16 @@ contract DeployGame is Script {
 
 	function run() external {
 
-		bytes memory _levelNum = _setLevelNum(1);
-		BaseState.State memory _state = _setState(1);
-		BaseSymbol.Symbols memory _symbols = _setSymbol(1);
+		bytes memory _levelNum = _setLevelNum(2);
+		BaseState.State memory _state = _setState(2);
+		BaseSymbol.Symbols memory _symbols = _setSymbol(2);
 
         uint256 privKey = vm.envUint("PRIVATE_KEY");
         address signer = vm.addr(privKey);
         vm.startBroadcast(signer);
 
 		//GameD game1 = new GameD(signer);
-        //game1.newGame(1);
+        //game1.newGame(2);
         
         IGame(address(0x8464135c8F25Da09e49BC8782676a84730C318bC))
             .loadLevel(address(0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC));
@@ -308,7 +308,7 @@ contract TestGame is Script {
         address signer = vm.addr(privKey);
         vm.startBroadcast(signer);
 
-        console.log("CC:", IGame(address(0x8464135c8F25Da09e49BC8782676a84730C318bC)).getState(0,1));
+        //console.log("CC:", IGame(address(0x8464135c8F25Da09e49BC8782676a84730C318bC)).getState(0,1));
 
         vm.stopBroadcast();
     }

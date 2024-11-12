@@ -10,7 +10,7 @@ import { useState, useEffect } from "react";
 // for level 1 and level 2
 function Game() {
 	// Level
-	const [level, setLevel] = useState(1);
+	const [level, setLevel] = useState(2);
 	// Level cell count
 	const numCells = (level == 2)? 81 : 9;
 	const marker = (level == 2)? 9 : 3;
@@ -28,7 +28,7 @@ function Game() {
 	const [playerTurn, setPlayer] = useState(Player.PLAYER_1);
 
 	// Game state
-	const [gameState, setGameState] = useState(0);
+	const [gameState, setGameState] = useState({state: 0, context: 0});
 
 	const row = "2";
 	const col = "2";
@@ -46,6 +46,20 @@ function Game() {
 		}
 	}, [level]);
 
+	useEffect(() => {
+		if (Connected == true) {
+			console.log("On game state change:", gameState);
+			if (gameState.state == 1) {
+				console.log("fetch cell state");
+				fetchCellValue(gameState.context);
+			}
+			else if (gameState.state == 2) {
+				console.log("update cell state");
+				handleCellUpdate(gameState.context);
+			}			
+		}
+	}, [gameState]);
+
 	const handleOnConnected = () => {
 		console.log("Connected..:", signer);
 	}
@@ -53,25 +67,56 @@ function Game() {
 	// On move send row and col of cell to Game.sol
 	const handleCellClick = async (index) => {
 
-		let row = Math.floor(index/numCells);
-		let col = index%numCells;
+		let row = Math.floor(index/marker);
+		let col = index%marker;
 
 		console.log("row:", row);
 		console.log("col:", col);
 
-		await makeMove(0, 1);
-		
-		//setTimeout( async () => await getCell(row, col), 2000);
+		await makeMove(row, col)
+		.then(() => {
+			let state = 1;
+			let context = {"cell": index, "value": playerTurn};
+			setGameState({...gameState, "state": state, 
+				"context": context});			
+		});
+	}
 
-/*		const newCells = [...cells];
-		newCells[row, col] = playerTurn;
-		setCells(newCells);
+	const fetchCellValue = async (ctx) => {
+
+		console.log("fcv index:", ctx.cell);
+		console.log("fcv value:", ctx.value);
+
+		let row = Math.floor(ctx.cell/marker);
+		let col = ctx.cell%marker;
+
+		console.log("row:", row);
+		console.log("col:", col);
+
+		await getCell(row, col)
+	}
+
+	const handleCellUpdate = async (ctx) => {
+
+		console.log("handleCellUpdate:index:", ctx.cell);
+		console.log("handleCellUpdate:value:", ctx.value);
+
+		let row = Math.floor(ctx.cell/marker);
+		let col = ctx.cell%marker;
+
+		console.log("row:", row);
+		console.log("col:", col);
+
+		let state = 0;
+		let context = 0;
+		setGameState({...gameState, "state": state, 
+			"context": context});
 
 		let idx = row*marker+col;
 		const newQuadCells = [...quadCells];
-		newQuadCells[idx] = playerTurn;
+		newQuadCells[idx] = (ctx.value == 1 ? "❌" : (ctx.value == 2 ? "⭕": null));
 		setQuadCells(newQuadCells);
-*/	}
+	}
 
 	// On getting level data from Game
 	const handleLevelData = (data) => {
@@ -84,9 +129,10 @@ function Game() {
 	async function makeMove(row, col) {
 		let ret = { won : false,  player: Player.PLAYER_NONE };
 		await GameContract.methods.makeMove({row, col})
-			.call({from: signer, gas: 100000})
+			.send({from: signer, gas: 100000})
 			.then((result) => {
-				console.log("success:", result.success);
+				console.log("result:", result);
+/*				console.log("success:", result.success);
 				console.log("message:", result.message);
 				if (result.success == true) {
 					if (result.message == "Next player's turn") {
@@ -98,7 +144,7 @@ function Game() {
 						console.log(result.message);
 					}
 				}
-		});
+*/		});
 	}
 
 	async function getCell(row, col) {
@@ -106,8 +152,11 @@ function Game() {
 		await GameContract.methods.getCell(row, col)
 			.call({from: signer, gas: 100000})
 			.then((value) => {
-				console.log("value:", value);
-				return value;
+				let state = 2;
+				let idx = row*marker+col;
+				let context = {"cell": idx, "value": parseInt(value)};
+				setGameState({...gameState, "state": state, 
+					"context": context});
 		});
 	}
 
