@@ -70,7 +70,7 @@ function JoinGame({ onData }) {
 
 		// Level Contract address + Encoded Function
 		const callData = web3.eth.abi.encodeParameters(['address','bytes'], 
-			["0x16A2445001a4ebE7E2a92b76dc5d5322590c58dE", fetchLevelData]);
+			["0x2C271d9Eb70bFa0373E342535aE5DB9C95e05669", fetchLevelData]);
 		
 		await GameContract.methods.callLevel(callData)
 			.call({from: signer, gas: 100000})
@@ -79,9 +79,18 @@ function JoinGame({ onData }) {
 				let len = parseInt(data.data.slice(126,128), 16);
 				let dataArr = new BN(data.data.slice(128, 128+2*len), 16).toArray();
 				let levelNum = parseInt(dataArr.slice(0, 1), 16);
-				let state = dataArr.slice(1, 10);
-				let symbols = [new BN(dataArr.slice(10, 14), 16).toNumber(),
-								new BN(dataArr.slice(14, 18), 16).toNumber()];
+				let state, symbols;
+				if (levelNum == 1) {
+					state = dataArr.slice(1, 10);
+					symbols = [new BN(dataArr.slice(10, 14), 16).toNumber(),
+									new BN(dataArr.slice(14, 18), 16).toNumber()];					
+				} else if (levelNum == 2) {
+					state = dataArr.slice(1, 82);
+					symbols = [new BN(dataArr.slice(82, 86), 16).toNumber(),
+									new BN(dataArr.slice(86, 90), 16).toNumber(),
+									new BN(dataArr.slice(90, 94), 16).toNumber(),
+									new BN(dataArr.slice(94, 100), 16).toNumber()];					
+				}
 
 				onData({levelNum, state, symbols});
 			});

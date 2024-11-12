@@ -10,6 +10,7 @@ import {BaseDataD} from "../src/BaseData.d.sol";
 import {LevelConfigurator} from "../src/LevelConfigurator.sol";
 import {ILevelConfigurator} from "../src/ILevelConfigurator.sol";
 import {Level1D} from "../src/Level1.d.sol";
+import {Level2D} from "../src/Level2.d.sol";
 import { ECDSA } from "openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import "openzeppelin-contracts/contracts/utils/cryptography/MessageHashUtils.sol";
 import "semaphore/packages/contracts/contracts/interfaces/ISemaphore.sol";
@@ -20,9 +21,9 @@ contract DeployLevelConfigurator is Script {
 
 	function run() external {
 
-		bytes memory _levelNum = _generateLevelNum(1);
-		bytes memory _state = _generateState(1);
-		bytes memory _symbols = _generateSymbols(1);
+		bytes memory _levelNum = _generateLevelNum(2);
+		bytes memory _state = _generateState(2);
+		bytes memory _symbols = _generateSymbols(2);
 
         uint256 privKey = vm.envUint("PRIVATE_KEY_BIDDER");
         address signer = vm.addr(privKey);
@@ -33,16 +34,16 @@ contract DeployLevelConfigurator is Script {
 */
         address levelConfigurator = address(0x356bc565e99C763a1Ad74819D413A6D58E565Cf2);
         ILevelConfigurator(levelConfigurator)
-		  .initLevel(type(Level1D).creationCode, _levelNum, _state, _symbols);
+		  .initLevel(type(Level2D).creationCode, _levelNum, _state, _symbols);
 
-        bytes32 _msghash = keccak256(abi.encodePacked(type(Level1D).creationCode,
+        bytes32 _msghash = keccak256(abi.encodePacked(type(Level2D).creationCode,
                             _levelNum, _state, _symbols));
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privKey,
             MessageHashUtils.toEthSignedMessageHash(_msghash));
 
         ILevelConfigurator(levelConfigurator)
-            .deployLevel(type(Level1D).creationCode,
+            .deployLevel(type(Level2D).creationCode,
                           _levelNum, _state, _symbols, _msghash, 0x19, 
                           abi.encodePacked(r, s, v));
 		vm.stopBroadcast();
@@ -65,8 +66,8 @@ contract DeployLevelConfigurator is Script {
         if (_num == 1)
             _levelState = hex"010000000000000002";
         else if (_num == 2)
-            _levelState = hex"020000000000000003"
-                          hex"000300000000000001"
+            _levelState = hex"020000000000000000"
+                          hex"000000000000000001"
                           hex"010200000000000000"
                           hex"000001000000000200"
                           hex"000000000200010000"            

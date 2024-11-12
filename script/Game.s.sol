@@ -16,15 +16,15 @@ contract DeployGame is Script {
 
 	function run() external {
 
-		bytes memory _levelNum = _setLevelNum(1);
-		BaseState.State memory _state = _setState(1);
-		BaseSymbol.Symbols memory _symbols = _setSymbol(1);
+		bytes memory _levelNum = _setLevelNum(2);
+		BaseState.State memory _state = _setState(2);
+		BaseSymbol.Symbols memory _symbols = _setSymbol(2);
 
         uint256 privKey = vm.envUint("PRIVATE_KEY");
         address signer = vm.addr(privKey);
         vm.startBroadcast(signer);
 
-		//GameD game1 = new GameD(signer);
+		GameD game1 = new GameD(signer);
 
         IGame(address(0x8464135c8F25Da09e49BC8782676a84730C318bC))
             .loadLevel(address(0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC));
@@ -88,7 +88,17 @@ contract DeployGame is Script {
             _symbols[6] = hex"95";
             _symbols[7] = hex"00";
 
-            // [0xe29d8c00e2ad9500]
+            // ⭐ hex"e2ad9000"
+            _symbols[8] = hex"e2";
+            _symbols[9] = hex"ad";
+            _symbols[10] = hex"90";
+            _symbols[11] = hex"00";
+
+            // 💣 hex"f09f92a3"
+            _symbols[8] = hex"f0";
+            _symbols[9] = hex"9f";
+            _symbols[10] = hex"92";
+            _symbols[11] = hex"a3";                        
         }
 	}
 
@@ -138,103 +148,103 @@ contract DeployGame is Script {
             state.v[8] = new uint256[](9);
 
             // [1, 2, 3, 4, 5, 6, 7, 8, 9] R0
-            state.v[0][0] = uint256(1);
-            state.v[0][1] = uint256(2);
-            state.v[0][2] = uint256(3);
-            state.v[0][3] = uint256(4);
-            state.v[0][4] = uint256(5);
-            state.v[0][5] = uint256(6);
-            state.v[0][6] = uint256(7);
-            state.v[0][7] = uint256(8);
-            state.v[0][8] = uint256(9);
+            state.v[0][0] = uint(CellValue.X);
+            state.v[0][1] = uint(CellValue.O);
+            state.v[0][2] = uint(CellValue.X);
+            state.v[0][3] = uint(CellValue.O);
+            state.v[0][4] = uint(CellValue.X);
+            state.v[0][5] = uint(CellValue.X);
+            state.v[0][6] = uint(CellValue.O);
+            state.v[0][7] = uint(CellValue.O);
+            state.v[0][8] = uint(CellValue.X);
 
             // [10, 11, 12, 13, 14, 15, 16, 17, 18] R1
-            state.v[1][0] = uint256(10);
-            state.v[1][1] = uint256(11);
-            state.v[1][2] = uint256(12);
-            state.v[1][3] = uint256(13);
-            state.v[1][4] = uint256(14);
-            state.v[1][5] = uint256(15);
-            state.v[1][6] = uint256(16);
-            state.v[1][7] = uint256(17);
-            state.v[1][8] = uint256(18);
+            state.v[1][0] = uint(CellValue.X);
+            state.v[1][1] = uint(CellValue.O);
+            state.v[1][2] = uint(CellValue.X);
+            state.v[1][3] = uint(CellValue.X);
+            state.v[1][4] = uint(CellValue.X);
+            state.v[1][5] = uint(CellValue.O);
+            state.v[1][6] = uint(CellValue.O);
+            state.v[1][7] = uint(CellValue.X);
+            state.v[1][8] = uint(CellValue.O);
 
             // [19, 20, 21, 22, 23, 24, 25, 26, 27] R2
-            state.v[2][0] = uint256(19);
-            state.v[2][1] = uint256(20);
-            state.v[2][2] = uint256(21);
-            state.v[2][3] = uint256(22);
-            state.v[2][4] = uint256(23);
-            state.v[2][5] = uint256(24);
-            state.v[2][6] = uint256(25);
-            state.v[2][7] = uint256(26);
-            state.v[2][8] = uint256(27);
+            state.v[2][0] = uint(CellValue.X);
+            state.v[2][1] = uint(CellValue.O);
+            state.v[2][2] = uint(CellValue.X);
+            state.v[2][3] = uint(CellValue.O);
+            state.v[2][4] = uint(CellValue.X);
+            state.v[2][5] = uint(CellValue.O);
+            state.v[2][6] = uint(CellValue.O);
+            state.v[2][7] = uint(CellValue.O);
+            state.v[2][8] = uint(CellValue.X);
 
             // [28, 29, 30, 31, 32, 33, 34, 35, 36] R3
-            state.v[3][0] = uint256(28);
-            state.v[3][1] = uint256(29);
-            state.v[3][2] = uint256(30);
-            state.v[3][3] = uint256(31);
-            state.v[3][4] = uint256(32);
-            state.v[3][5] = uint256(33);
-            state.v[3][6] = uint256(34);
-            state.v[3][7] = uint256(35);
-            state.v[3][8] = uint256(36);
+            state.v[3][0] = uint(CellValue.O);
+            state.v[3][1] = uint(CellValue.X);
+            state.v[3][2] = uint(CellValue.O);
+            state.v[3][3] = uint(CellValue.X);
+            state.v[3][4] = uint(CellValue.O);
+            state.v[3][5] = uint(CellValue.X);
+            state.v[3][6] = uint(CellValue.X);
+            state.v[3][7] = uint(CellValue.O);
+            state.v[3][8] = uint(CellValue.X);
 
             // [37, 38, 39, 40, 41, 42, 43, 44, 45] R4
-            state.v[4][0] = uint256(37);
-            state.v[4][1] = uint256(38);
-            state.v[4][2] = uint256(39);
-            state.v[4][3] = uint256(40);
-            state.v[4][4] = uint256(41);
-            state.v[4][5] = uint256(42);
-            state.v[4][6] = uint256(43);
-            state.v[4][7] = uint256(44);
-            state.v[4][8] = uint256(45); 
+            state.v[4][0] = uint(CellValue.O);
+            state.v[4][1] = uint(CellValue.O);
+            state.v[4][2] = uint(CellValue.X);
+            state.v[4][3] = uint(CellValue.O);
+            state.v[4][4] = uint(CellValue.X);
+            state.v[4][5] = uint(CellValue.O);
+            state.v[4][6] = uint(CellValue.X);
+            state.v[4][7] = uint(CellValue.X);
+            state.v[4][8] = uint(CellValue.O); 
 
             // [46, 47, 48, 49, 50, 51, 52, 53, 54] R5
-            state.v[5][0] = uint256(46);
-            state.v[5][1] = uint256(47);
-            state.v[5][2] = uint256(48);
-            state.v[5][3] = uint256(49);
-            state.v[5][4] = uint256(50);
-            state.v[5][5] = uint256(51);
-            state.v[5][6] = uint256(52);
-            state.v[5][7] = uint256(53);
-            state.v[5][8] = uint256(54); 
+            state.v[5][0] = uint(CellValue.O);
+            state.v[5][1] = uint(CellValue.X);
+            state.v[5][2] = uint(CellValue.X);
+            state.v[5][3] = uint(CellValue.O);
+            state.v[5][4] = uint(CellValue.X);
+            state.v[5][5] = uint(CellValue.O);
+            state.v[5][6] = uint(CellValue.O);
+            state.v[5][7] = uint(CellValue.O);
+            state.v[5][8] = uint(CellValue.X);
 
             // [55, 56, 57, 58, 59, 60, 61, 62, 63] R6
-            state.v[6][0] = uint256(55);
-            state.v[6][1] = uint256(56);
-            state.v[6][2] = uint256(57);
-            state.v[6][3] = uint256(58);
-            state.v[6][4] = uint256(59);
-            state.v[6][5] = uint256(60);
-            state.v[6][6] = uint256(61);
-            state.v[6][7] = uint256(62);
-            state.v[6][8] = uint256(63); 
+            state.v[6][0] = uint(CellValue.X);
+            state.v[6][1] = uint(CellValue.O);
+            state.v[6][2] = uint(CellValue.X);
+            state.v[6][3] = uint(CellValue.X);
+            state.v[6][4] = uint(CellValue.O);
+            state.v[6][5] = uint(CellValue.X);
+            state.v[6][6] = uint(CellValue.O);
+            state.v[6][7] = uint(CellValue.O);
+            state.v[6][8] = uint(CellValue.X);
 
             // [64, 65, 66, 67, 68, 69, 70, 71, 72] R7
-            state.v[7][0] = uint256(64);
-            state.v[7][1] = uint256(65);
-            state.v[7][2] = uint256(66);
-            state.v[7][3] = uint256(67);
-            state.v[7][4] = uint256(68);
-            state.v[7][5] = uint256(69);
-            state.v[7][6] = uint256(70);
-            state.v[7][7] = uint256(71);
-            state.v[7][8] = uint256(72); 
+            state.v[7][0] = uint(CellValue.X);
+            state.v[7][1] = uint(CellValue.O);
+            state.v[7][2] = uint(CellValue.O);
+            state.v[7][3] = uint(CellValue.Empty);
+            state.v[7][4] = uint(CellValue.X);
+            state.v[7][5] = uint(CellValue.O);
+            state.v[7][6] = uint(CellValue.X);
+            state.v[7][7] = uint(CellValue.X);
+            state.v[7][8] = uint(CellValue.X);
 
             // [73, 74, 75, 76, 77, 78, 79, 80, 81] R8
-            state.v[8][0] = uint256(73);
-            state.v[8][1] = uint256(74);
-            state.v[8][2] = uint256(75);
-            state.v[8][3] = uint256(76);
-            state.v[8][4] = uint256(77);
-            state.v[8][5] = uint256(78);
-            state.v[8][6] = uint256(79);
-            state.v[8][7] = uint256(80);
-            state.v[8][8] = uint256(81); 
+            state.v[8][0] = uint(CellValue.X);
+            state.v[8][1] = uint(CellValue.O);
+            state.v[8][2] = uint(CellValue.X);
+            state.v[8][3] = uint(CellValue.O);
+            state.v[8][4] = uint(CellValue.X);
+            state.v[8][5] = uint(CellValue.O);
+            state.v[8][6] = uint(CellValue.X);
+            state.v[8][7] = uint(CellValue.O);
+            state.v[8][8] = uint(CellValue.O);
 
             //  C0  C1  C2  C3  C4  C5  C6  C7  C8
             // [01, 02, 03, 04, 05, 06, 07, 08, 09] R0
@@ -246,7 +256,7 @@ contract DeployGame is Script {
             // [55, 56, 57, 58, 59, 60, 61, 62, 63] R6
             // [64, 65, 66, 67, 68, 69, 70, 71, 72] R7
             // [73, 74, 75, 76, 77, 78, 79, 80, 81] R8
-        }
+         }
     }
 
     // Internal function to set symbols

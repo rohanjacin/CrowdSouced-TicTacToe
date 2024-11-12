@@ -107,15 +107,25 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 		}
 	}
 
-	function retrieveLevel(address data)
+	function retrieveLevel(uint8 levelnum, address data)
 		internal returns (bytes memory _num,
 		bytes memory _state, bytes memory _symbol) {
 
 		bytes memory _data = BaseData.copyData(data);
-		uint8 _numlen = 1;
-		uint8 _statelen = 9;
-		uint8 _symbollen = 2;
-		bytes calldata testt;
+		uint8 _numlen;
+		uint8 _statelen;
+		uint8 _symbollen;
+
+		if (levelnum == 1) {
+			_numlen = 1;
+			_statelen = 9;
+			_symbollen = 2;
+		}
+		else if (levelnum == 2) {
+			_numlen = 1;
+			_statelen = 81;
+			_symbollen = 4;
+		}
 
 		assembly {
 			// Total length and start
@@ -164,7 +174,8 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 */
 		(bytes memory _levelnum, 
 		 bytes memory _levelstate,
-		 bytes memory _levelsymbol) = retrieveLevel(config.dataAddress);
+		 bytes memory _levelsymbol) = retrieveLevel(uint8(config.num),
+		 								config.dataAddress);
 
 		console.log("Copy level data from:", config.codeAddress);
 		// Copy Level via delegatecall
