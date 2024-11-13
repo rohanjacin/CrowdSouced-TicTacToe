@@ -64,7 +64,7 @@ contract DeployLevelConfigurator is Script {
         returns (bytes memory _levelState) {
 
         if (_num == 1)
-            _levelState = hex"010000000000000002";
+            _levelState = hex"000000000000000000";
         else if (_num == 2)
             _levelState = hex"020000000000000000"
                           hex"000000000000000001"

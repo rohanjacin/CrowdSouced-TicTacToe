@@ -2,7 +2,7 @@ import React from "react";
 import Cell from "./Cell.jsx";
 import Strike from "./Strike.jsx";
 
-function Board({ level, playerTurn, quad, off, cells,
+function Board({ level, gameState, playerTurn, quad, off, cells,
 				 onCellClick, strikeClass, strikeStyle }) {
 	let marker = (level == 2)? 9 : 3;
 	
@@ -55,8 +55,10 @@ function Board({ level, playerTurn, quad, off, cells,
 				playerTurn={playerTurn}
 				value={cells[off+2*marker+2]}
 				className={getBorder(level, quad, 8)}/>
-			{(level == 2)? <div> </div> :  
-			<Strike level={level} strikeClass={strikeClass}/>}		
+			{(level == 2)? <div> </div> : 
+			(((gameState.state == 3) || (gameState.state == 4)) ? 
+			<Strike level={level} strikeClass={strikeClass}
+			 strikeStyle={strikeStyle}/> : <div> </div>)}
 		</div>
 	);
 }

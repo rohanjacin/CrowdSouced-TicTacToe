@@ -33,10 +33,10 @@ function Game() {
 	const row = "2";
 	const col = "2";
 	// Strike
-	const colS = 2;
-	const rowS = 0;
-	const diagS = 0;
-	const winningPattern = "bckwddiag";
+	var colS;
+	var rowS;
+	var diagS;
+	var winningPattern;
 
 	const [strikeClass, setStrikeClass] = useState(`strike-${winningPattern}-${level}`); 
 
@@ -58,6 +58,8 @@ function Game() {
 				     (gameState.state == 4) ||
 				     (gameState.state == 5)) {
 				console.log("Game Over:", gameState.state);
+				console.log("gameState.context:", gameState.context);
+				handleStrikeData(gameState.context.message);				
 			} 
 		}
 	}, [gameState]);
@@ -93,11 +95,7 @@ function Game() {
 		let row = Math.floor(ctx.cell/marker);
 		let col = ctx.cell%marker;
 
-		let state = 0;
-		let context = 0;
-		setGameState({...gameState, "state": state, 
-			"context": context});
-
+		console.log("in handleCellUpdate");
 		await getGame();
 
 		let idx = row*marker+col;
@@ -112,6 +110,40 @@ function Game() {
 		let newQuadCells = data.state.map((id) =>  id == 1 ? id = "❌":
 							(id == 2 ? id = "⭕": null));
 		setQuadCells(newQuadCells);
+	}
+
+	const handleStrikeData = (message) => {
+
+		console.log("messag:", message);
+		winningPattern = message.split(":")[1];
+		winningPattern = winningPattern.split(",")[0];
+		rowS = message.split(":")[2];
+		rowS = rowS.split(",")[0];
+		colS = message.split(":")[3];
+		colS = colS.split(",")[0];
+		diagS = message.split(":")[4];
+		diagS = diagS.split(",")[0];
+		
+		console.log("winningPattern:", winningPattern);
+		let newStrikeClass;	
+		if (level == 1) {
+			switch (winningPattern) {
+				case "row":
+		 			newStrikeClass = `strike-${winningPattern}-${level}-${rowS}`;
+		 			rowS = parseInt(rowS);
+				break;
+				case "col":
+		 			newStrikeClass = `strike-${winningPattern}-${level}-${colS}`;
+		 			colS = parseInt(colS);
+				break;
+				case "fwddiag":
+				case "bckwddiag":					
+		 			newStrikeClass = `strike-${winningPattern}-${level}`;
+				break;
+			}
+		}
+
+		setStrikeClass(newStrikeClass);
 	}
 
 	async function makeMove(row, col) {
@@ -144,14 +176,17 @@ function Game() {
 			.call({from: signer, gas: 100000})
 			.then((info) => {
 				console.log("info:", info);
-				ret = { winner: info.winner, turn: info.turn, message: info.message };
-				let state = (info.winner == 1 ? 3 : info.winner == 2 ? 4 : gameState.state);
-				let context = { ...gameState.state, turn: info.turn, message: info.message };
-				//setGameState({...gameState, "state": state, 
-				//	"context": context});
 				console.log("info.winner:", info.winner);
 				console.log("info.turn:", info.turn);
 				console.log("info.message:", info.message);
+
+				ret = { winner: info.winner, turn: info.turn, message: info.message };
+				let state = ((parseInt(info.winner) == 1) ? 3 : ((parseInt(info.winner) == 2) ? 4 : gameState.state));
+				let context = { ...gameState.state, turn: info.turn, message: info.message };
+				if (state != gameState.state) {
+					setGameState({...gameState, "state": state, 
+						"context": context});
+				}
 		});
 	}
 
@@ -159,72 +194,80 @@ function Game() {
 		<div className="game">
 			<h1>
 				<div>
-				{(level == 2)? <div> <Board level={level} playerTurn={playerTurn}
-				quad={0} off={0*marker+3*0} cells={quadCells} 
-				onCellClick={handleCellClick}/></div> : <div> </div>}	
+				{(level == 2)? <div> <Board level={level} gameState={gameState} 
+				playerTurn={playerTurn} quad={0} off={0*marker+3*0}
+				cells={quadCells} onCellClick={handleCellClick}/></div> :
+				<div> </div>}	
 				</div>
 			</h1>
 			<h1>
 				<div>
-				{(level == 2)? <div> <Board level={level} playerTurn={playerTurn}
-				quad={1} off={0*marker+3*1} cells={quadCells} 
-				onCellClick={handleCellClick}/></div> : <div> </div>}	
+				{(level == 2)? <div> <Board level={level} gameState={gameState}
+				playerTurn={playerTurn} quad={1} off={0*marker+3*1}
+				cells={quadCells} onCellClick={handleCellClick}/></div> :
+				<div> </div>}	
 				</div>
 			</h1>
 			<h1>
 				<div>
-				{(level == 2)? <div> <Board level={level} playerTurn={playerTurn}
-				quad={2} off={0*marker+3*2} cells={quadCells} 
-				onCellClick={handleCellClick}/></div> : <div> </div>}	
+				{(level == 2)? <div> <Board level={level} gameState={gameState}
+				playerTurn={playerTurn} quad={2} off={0*marker+3*2}
+				cells={quadCells} onCellClick={handleCellClick}/></div> :
+				<div> </div>}	
 				</div>
 			</h1>
 			<h1>
 				<div>
-				{(level == 2)? <div> <Board level={level} playerTurn={playerTurn}
-				quad={3} off={3*marker+3*0} cells={quadCells} 
-				onCellClick={handleCellClick}/></div> : <div> </div>}	
+				{(level == 2)? <div> <Board level={level} gameState={gameState}
+				playerTurn={playerTurn} quad={3} off={3*marker+3*0}
+				cells={quadCells} onCellClick={handleCellClick}/></div> :
+				<div> </div>}	
 				</div>
 			</h1>
 			<h1>
 				<div>
-				{(level == 2)? <div> <Board level={level} playerTurn={playerTurn}
-				quad={4} off={3*marker+3*1} cells={quadCells}
-				onCellClick={handleCellClick}/></div> 
-				: <div> <Board level={level} playerTurn={playerTurn}
-				quad={0} off={0*marker+3*0} cells={quadCells}
-				strikeClass={strikeClass} 
+				{(level == 2)? <div> <Board level={level} gameState={gameState}
+				playerTurn={playerTurn} quad={4} off={3*marker+3*1}
+				cells={quadCells} onCellClick={handleCellClick}/></div> 
+				: <div> <Board level={level} gameState={gameState}
+				playerTurn={playerTurn} quad={0} off={0*marker+3*0}
+				cells={quadCells} strikeClass={strikeClass} 
 				onCellClick={handleCellClick}/> </div>}	
 				</div>
 			</h1>
 			<h1>
 				<div>
-				{(level == 2)? <div> <Board level={level} playerTurn={playerTurn}
-				quad={5} off={3*marker+3*2} cells={quadCells} 
-				onCellClick={handleCellClick}/></div> : <div> </div>}	
+				{(level == 2)? <div> <Board level={level} gameState={gameState}
+				playerTurn={playerTurn} quad={5} off={3*marker+3*2}
+				cells={quadCells} onCellClick={handleCellClick}/></div> :
+				<div> </div>}	
 				</div>
 			</h1>
 			<h1>
 				<div>
-				{(level == 2)? <div> <Board level={level} playerTurn={playerTurn}
-				quad={6} off={6*marker+3*0} cells={quadCells} 
-				onCellClick={handleCellClick}/></div> : <div> </div>}	
+				{(level == 2)? <div> <Board level={level} gameState={gameState}
+				playerTurn={playerTurn} quad={6} off={6*marker+3*0}
+				cells={quadCells} onCellClick={handleCellClick}/></div> :
+				<div> </div>}	
 				</div>
 			</h1>
 			<h1>
 				<div>
-				{(level == 2)? <div> <Board level={level} playerTurn={playerTurn}
-				quad={7} off={6*marker+3*1} cells={quadCells} 
-				onCellClick={handleCellClick}/></div> : <div> </div>}	
+				{(level == 2)? <div> <Board level={level} gameState={gameState}
+				playerTurn={playerTurn} quad={7} off={6*marker+3*1}
+				cells={quadCells} onCellClick={handleCellClick}/></div> :
+				<div> </div>}	
 				</div>
 			</h1>
 			<h1>
 				<div>
-				{(level == 2)? <div> <Board level={level} playerTurn={playerTurn}
-				quad={8} off={6*marker+3*2} cells={quadCells} 
-				onCellClick={handleCellClick}/></div> : <div> </div>}	
+				{(level == 2)? <div> <Board level={level} gameState={gameState}
+				playerTurn={playerTurn} quad={8} off={6*marker+3*2}
+				cells={quadCells} onCellClick={handleCellClick}/></div> :
+				<div> </div>}	
 				</div>
 			</h1>
-		{(level == 2) && ((gameState.state == 3) || (gameState.state == 4))?
+		{((level == 2) && ((gameState.state == 3) || (gameState.state == 4))) ?
 		 <Strike level={level} strikeClass={strikeClass}
 		 strikeStyle={{row: rowS, col: colS, diag: diagS, combo: winningPattern}}/> :  <div> </div>}
 		<GameState  className='game-state' gameState={{level: level, state: gameState}}/>

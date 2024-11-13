@@ -19,9 +19,10 @@ function Strike({ level, strikeClass, strikeStyle }) {
 	})		
 
 	function getStrikeStyle(r, c, d, combo) {
-
+		console.log("getStrikeStyle:", combo)
 		switch (combo) {
 			case "row": {
+				console.log("in rows");
 				return rowStyle(c);
 			}
 			break;

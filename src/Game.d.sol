@@ -335,7 +335,7 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 			return (winner, message);
 
 		// Winers in both diagonals
-		winner = _winnerInDiagonals();
+		(winner, message) = _winnerInDiagonals();
 		if (winner != Player.None)
 			return (winner, message);
 
@@ -529,7 +529,7 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 			}
 			else {
 				col = c;
-				message = string(abi.encodePacked("combo:", "row",
+				message = string(abi.encodePacked("combo:", "col",
 					",r:", Strings.toString(row), ",c:",
 					Strings.toString(col), ",d:", ""));				
 				break;
@@ -540,12 +540,15 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 		console.log("message:", message);
 	}
 
-	function _winnerInDiagonals() internal view returns (Player winner) {
+	function _winnerInDiagonals() internal view
+		returns (Player winner, string memory message) {
 
 		uint8 countX;
 		uint8 countO;
 		uint8 _marker;
 		uint8 _tuples;
+		uint8 combo;
+		uint8 diag;
 
 		if (level == 1) {
 			_marker = 3;
@@ -572,7 +575,8 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 				   	countO = 1;
 					console.log(" countO:", countO);
 				   	winner = Player.Player2;
-			   	}		
+			   	}
+			   	combo = 1;	
 			}
 			else if ((getState(0, 2) == getState(1, 1)) &&
 			    (getState(1, 1) == getState(2, 0))) {
@@ -587,7 +591,8 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 					console.log(" countO:", countO);
 				   	winner = Player.Player2;
 			   	}
-			}	
+			   	combo = 2;
+			}
 		}
 		else if (level == 2) {
 
@@ -595,7 +600,7 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 			uint8 d = 0;
 
 			for (d = 0; d < _tuples; d++) {
-				console.log("backward:");
+				console.log("forward:");
 				console.log(" d:", d);
 			
 				if ((getState(d, d) == getState(d+1, d+1)) &&
@@ -612,13 +617,15 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 						console.log(" countO:", countO);
 					   	winner = Player.Player2;
 				   	}
+			   		combo = 1;
+			   		diag = d;
 				}			
 			}
 
 			if (countX == countO) {
 				d = 0;
 				for ( ; (d < _tuples && e < _tuples); ) {
-					console.log("forward:");
+					console.log("backward:");
 					console.log(" d:", d);
 					console.log(" e:", e);
 				
@@ -636,16 +643,24 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 							console.log(" countO:", countO);
 						   	winner = Player.Player2;
 					   	}
+
+					   	combo = 2;
+					   	diag = d;
 					}
 
 					d++;
-					e++;			
+					e++;
 				}
 			}
 		}
 
 		if (countX == countO) {
 			winner = Player.None;
+		}
+		else {
+			message = string(abi.encodePacked("combo:", ((combo == 1) ? "fwddiag" :
+				combo == 2 ? "bckwddiag" : ""), ",r:", " ", ",c:", " ",
+				",d:", Strings.toString(diag)));
 		}
 
 		console.log("winner:", uint(winner));
