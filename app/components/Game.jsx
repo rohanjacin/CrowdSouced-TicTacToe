@@ -10,7 +10,7 @@ import { useState, useEffect } from "react";
 // for level 1 and level 2
 function Game() {
 	// Level
-	const [level, setLevel] = useState(2);
+	const [level, setLevel] = useState(1);
 	// Level cell count
 	const numCells = (level == 2)? 81 : 9;
 	const marker = (level == 2)? 9 : 3;
@@ -53,7 +53,12 @@ function Game() {
 			}
 			else if (gameState.state == 2) {
 				handleCellUpdate(gameState.context);
-			}			
+			}
+			else if ((gameState.state == 3) ||
+				     (gameState.state == 4) ||
+				     (gameState.state == 5)) {
+				console.log("Game Over:", gameState.state);
+			} 
 		}
 	}, [gameState]);
 
@@ -93,6 +98,8 @@ function Game() {
 		setGameState({...gameState, "state": state, 
 			"context": context});
 
+		await getGame();
+
 		let idx = row*marker+col;
 		const newQuadCells = [...quadCells];
 		newQuadCells[idx] = (ctx.value == 1 ? "❌" : (ctx.value == 2 ? "⭕": null));
@@ -110,8 +117,9 @@ function Game() {
 	async function makeMove(row, col) {
 		let ret = { won : false,  player: Player.PLAYER_NONE };
 		await GameContract.methods.makeMove({row, col})
-			.send({from: signer, gas: 100000})
+			.send({from: signer, gas: 1000000})
 			.then((result) => {
+				console.log("result:", result);
 		});
 	}
 
@@ -125,6 +133,25 @@ function Game() {
 				let context = {"cell": idx, "value": parseInt(value)};
 				setGameState({...gameState, "state": state, 
 					"context": context});
+		});
+	}
+
+	async function getGame() {
+		let ret = { winner: Player.PLAYER_NONE, turn: Player.PLAYER_NONE, 
+					message: ""};
+		console.log("getGame..");
+		await GameContract.methods.getGame()
+			.call({from: signer, gas: 100000})
+			.then((info) => {
+				console.log("info:", info);
+				ret = { winner: info.winner, turn: info.turn, message: info.message };
+				let state = (info.winner == 1 ? 3 : info.winner == 2 ? 4 : gameState.state);
+				let context = { ...gameState.state, turn: info.turn, message: info.message };
+				//setGameState({...gameState, "state": state, 
+				//	"context": context});
+				console.log("info.winner:", info.winner);
+				console.log("info.turn:", info.turn);
+				console.log("info.message:", info.message);
 		});
 	}
 
@@ -197,8 +224,9 @@ function Game() {
 				onCellClick={handleCellClick}/></div> : <div> </div>}	
 				</div>
 			</h1>
-		{(level == 2)? <Strike level={level} strikeClass={strikeClass}
-		strikeStyle={{row: rowS, col: colS, diag: diagS, combo: winningPattern}}/> :  <div> </div>}
+		{(level == 2) && ((gameState.state == 3) || (gameState.state == 4))?
+		 <Strike level={level} strikeClass={strikeClass}
+		 strikeStyle={{row: rowS, col: colS, diag: diagS, combo: winningPattern}}/> :  <div> </div>}
 		<GameState  className='game-state' gameState={{level: level, state: gameState}}/>
 		<Connect onConnected={handleOnConnected}/>
 		<JoinGame onData={handleLevelData}/>

@@ -9,6 +9,7 @@ import "./LevelConfigurator.sol";
 import "./ILevelConfigurator.sol";
 import "./RuleEngine.sol";
 import "semaphore/packages/contracts/contracts/interfaces/ISemaphore.sol";
+import "openzeppelin-contracts/contracts/utils/Strings.sol";
 
 // Players
 enum Player { None, Player1, Player2 }
@@ -43,6 +44,7 @@ struct GameInfo {
 	address levelAddress;
 	Player winner;
 	Player turn;
+	string message;	
 }
 
 // Players move
@@ -183,6 +185,7 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 
 		// Store level address
 		games[1].levelAddress = config.codeAddress;
+		console.log("levelAddress:", games[1].levelAddress);
 
 		// Add level rules
 		uint8 _symbolLen = uint8(config.symbolLen/4);
@@ -212,6 +215,10 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 		// Iinitalize game
 		games[1].winner = Player.None;
 		games[1].turn = Player.Player1;
+	}
+
+	function getGame() external returns(GameInfo memory info){
+		return games[1];
 	}
 
 	// Join the game
@@ -274,16 +281,18 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 		(success) = setCell(games[1].levelAddress, 
 								move.row, move.col, setVal);
 		assert(success == true);
-		//assert(getState(move.row, move.col) == value);
+		assert(uint8(getState(move.row, move.col)) == setVal);
 
 		// Calculator Winner
-		Player winner = Player.None; //_calculateWinner();
+		(Player winner, string memory m) = _calculateWinner();
 		// There is a winner
 		if (winner != Player.None) {
 
 			// Game ended 
 			games[1].winner = winner;
-			return (true, "You Won!"); 
+			message = string(abi.encodePacked("You Won!", "@", m));
+			games[1].message = message;
+			return (true, message); 
 		}
 
 		// Next player's turn
@@ -312,22 +321,23 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 	}
 
 	// Finds the winner 
-	function _calculateWinner() internal view returns (Player winner) {
+	function _calculateWinner() internal view
+		returns (Player winner, string memory message) {
 
 		// Winner in rows
-		winner = _winnerInRows();
+		(winner, message) = _winnerInRows();
 		if (winner != Player.None)
-			return winner;
+			return (winner, message);
 
 		// Winner in columns
-		winner = _winnerInColumns();
+		(winner, message) = _winnerInColumns();
 		if (winner != Player.None)
-			return winner;
+			return (winner, message);
 
 		// Winers in both diagonals
 		winner = _winnerInDiagonals();
 		if (winner != Player.None)
-			return winner;
+			return (winner, message);
 
 
 		if (true == _isBoardFull()) {
@@ -335,6 +345,7 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 		}
 
 		console.log("Final winner:", uint(winner));
+		console.log("Message:", message);
 	}
 
 	// Check if there are no empty cells on the board
@@ -364,12 +375,15 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 	}
 
 	// Check longest X or O sequence in all rows
-	function _winnerInRows() internal view returns (Player winner){
+	function _winnerInRows() internal view 
+		returns (Player winner, string memory message){
 
 		uint8 countX;
 		uint8 countO;
 		uint8 _marker;
 		uint8 _tuples;
+		uint8 row;
+		uint8 col;
 
 		if (level == 1) {
 			_marker = 3;
@@ -396,12 +410,14 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 						if (getState(r, c) == uint8(CellValueL.X)) {
 						   	countX = 1;
 							console.log(" countX:", countX);
-						   	winner = Player.Player1;							
+						   	winner = Player.Player1;
+						   	col = c;							
 						}
 						else if (getState(r, c) == uint8(CellValueL.O)) {
 						   	countO = 1;
 							console.log(" countO:", countO);
-						   	winner = Player.Player2;							
+						   	winner = Player.Player2;
+						   	col = c;							
 						} 
 					}
 				}
@@ -428,21 +444,29 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 				winner = Player.None;
 			}
 			else {
+				row = r;
+				message = string(abi.encodePacked("combo:", "row",
+					",r:", Strings.toString(row), ",c:",
+					Strings.toString(col), ",d:", ""));
 				break;
 			}
 		}
 
 		console.log("winner:", uint(winner));
+		console.log("message:", message);
 	}
 
 	// Check longest X or O sequence in all columns
 	// Check longest X or O sequence in all rows
-	function _winnerInColumns() internal view returns (Player winner){
+	function _winnerInColumns() internal view
+		returns (Player winner, string memory message){
 
 		uint8 countX;
 		uint8 countO;
 		uint8 _marker;
 		uint8 _tuples;
+		uint8 row;
+		uint8 col;
 
 		if (level == 1) {
 			_marker = 3;
@@ -470,12 +494,14 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 						if (getState(r, c) == uint8(CellValueL.X)) {
 						   	countX = 1;
 							console.log(" countX:", countX);
-						   	winner = Player.Player1;							
+						   	winner = Player.Player1;
+						   	row = r;							
 						}
 						else if (getState(r, c) == uint8(CellValueL.O)) {
 						   	countO = 1;
 							console.log(" countO:", countO);
-						   	winner = Player.Player2;							
+						   	winner = Player.Player2;
+						   	row = r;							
 						} 
 					}
 				}
@@ -502,11 +528,16 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 				winner = Player.None;
 			}
 			else {
+				col = c;
+				message = string(abi.encodePacked("combo:", "row",
+					",r:", Strings.toString(row), ",c:",
+					Strings.toString(col), ",d:", ""));				
 				break;
 			}
 		}
 
 		console.log("winner:", uint(winner));
+		console.log("message:", message);
 	}
 
 	function _winnerInDiagonals() internal view returns (Player winner) {

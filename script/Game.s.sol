@@ -16,20 +16,17 @@ contract DeployGame is Script {
 
 	function run() external {
 
-		bytes memory _levelNum = _setLevelNum(2);
-		BaseState.State memory _state = _setState(2);
-		BaseSymbol.Symbols memory _symbols = _setSymbol(2);
+		bytes memory _levelNum = _setLevelNum(1);
+		BaseState.State memory _state = _setState(1);
+		BaseSymbol.Symbols memory _symbols = _setSymbol(1);
 
         uint256 privKey = vm.envUint("PRIVATE_KEY");
         address signer = vm.addr(privKey);
         vm.startBroadcast(signer);
 
-		//GameD game1 = new GameD(signer);
-        //game1.newGame(2);
+		GameD game1 = new GameD(signer);
+        game1.newGame(1);
         
-        IGame(address(0x8464135c8F25Da09e49BC8782676a84730C318bC))
-            .loadLevel(address(0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC));
-
         vm.stopBroadcast();
 	}
 
@@ -281,4 +278,19 @@ contract DeployGame is Script {
             symbols.v[3] = bytes4(hex"f09f92a3");
         }
     }    	
+}
+
+contract LoadLevel is Script {
+
+    function run() external {
+
+        uint256 privKey = vm.envUint("PRIVATE_KEY");
+        address signer = vm.addr(privKey);
+        vm.startBroadcast(signer);
+        
+        IGame(address(0x8464135c8F25Da09e49BC8782676a84730C318bC))
+            .loadLevel(address(0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC));
+
+        vm.stopBroadcast();
+    }
 }
