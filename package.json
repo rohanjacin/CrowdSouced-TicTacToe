@@ -10,7 +10,8 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "webpack-dev-server .",
+    "start-admin": "webpack-dev-server --env admin",
+    "start-player": "webpack-dev-server --env player",
     "build": "webpack ."
   },
   "repository": {
@@ -39,10 +40,12 @@
     "style-loader": "^4.0.0",
     "webpack": "^5.96.1",
     "webpack-cli": "^5.1.4",
-    "webpack-dev-server": "^5.1.0"
+    "webpack-dev-server": "^5.1.0",
+    "react-error-overlay": "6.0.9"
   },
   "dependencies": {
     "bn.js": "^5.2.1",
+    "dotenv": "^16.4.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "web3": "^4.15.0"

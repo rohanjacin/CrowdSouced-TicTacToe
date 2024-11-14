@@ -2,16 +2,17 @@ import React from "react";
 import Board from "./Board.jsx";
 import Strike from "./Strike.jsx";
 import { web3, signer, GameContract, Connected, Connect } from "./Connect.jsx";
-import JoinGame from "./Join.jsx";
+import NewGame from "./NewGame.jsx";
 import { useState, useEffect } from "react";
 
 const GState = {
-	levelInProgress: 0,
-	playerMoveInProgress: 1,
-	playerMoveDone: 2,
-	player1Wins: 3,
-	player2Wins: 4,
-	draw: 5,
+	idle: 0,
+	playerJoined: 1,
+	gameStarted: 2,
+	playerMove: 3,
+	player1Wins: 4,
+	player2Wins: 5,
+	draw: 6,
 }
 
 const Player = {
@@ -39,8 +40,11 @@ function Game() {
 	// Linearized cells in order to fill board quadrants
 	const [quadCells, setQuadCells] = useState(Array(numCells).fill(null));
 
+	// Players Joined
+	const [playersJoined, setPlayerJoined] = useState(Array(2).fill(null));
+
 	// Player turn
-	const [playerVal, setPlayerVal] = useState("❌");
+	const [playerTurn, setPlayerTurn] = useState(Player.PLAYER_1);
 
 	// Game state
 	const [gameState, setGameState] = useState({state: GState.levelInProgress,
@@ -58,11 +62,14 @@ function Game() {
 
 	useEffect(() => {
 		if (Connected == true) {
-			if (gameState.state == GState.playerMoveInProgress) {
-				fetchCellValue(gameState.context);
+			if (gameState.state == GState.gameStarted) {
+				handleGameStarted(gameState.context);
+			}
+			else if (gameState.state == GState.playerJoined) {
+				handlePlayerJoined(gameState.context);
 			}
 			else if (gameState.state == GState.playerMoveDone) {
-				handleCellUpdate(gameState.context);
+				handlePlayerMove(gameState.context);
 			}
 			else if ((gameState.state == GState.player1Wins) ||
 				     (gameState.state == GState.player2Wins) ||
@@ -83,24 +90,31 @@ function Game() {
 
 		let row = Math.floor(index/marker);
 		let col = index%marker;
-
-		await makeMove(row, col)
-		.then(() => {
-			let state = GState.playerMoveInProgress;
-			let context = {"cell": index, "value": playerVal};
-			setGameState({...gameState, "state": state, 
-				"context": context});			
-		});
 	}
 
-	const fetchCellValue = async (ctx) => {
+	const handleGameStarted = async (ctx) => {
 
-		let row = Math.floor(ctx.cell/marker);
-		let col = ctx.cell%marker;
-		await getCell(row, col)
+		if (playersJoined.length == 2) {
+			console.log("Player 1:", playersJoined[0]);
+			console.log("Player 2:", playersJoined[1]);
+			let state = GState.gameStarted;
+			let context = {};
+			setGameState({...gameState, "state": state, "context": context});
+		}
 	}
 
-	const handleCellUpdate = async (ctx) => {
+	const handlePlayerJoined = async (ctx) => {
+
+		if (playersJoined.length == 2) {
+			console.log("Player 1:", playersJoined[0]);
+			console.log("Player 2:", playersJoined[1]);
+			let state = GState.gameStarted;
+			let context = {};
+			setGameState({...gameState, "state": state, "context": context});
+		}
+	}
+
+	const handlePlayerMove = async (ctx) => {
 
 		let row = Math.floor(ctx.cell/marker);
 		let col = ctx.cell%marker;
@@ -158,15 +172,6 @@ function Game() {
 		setStrikeSyle(newStrikeSyle)
 	}
 
-	async function makeMove(row, col) {
-		let ret = { won : false,  player: Player.PLAYER_NONE };
-		await GameContract.methods.makeMove({row, col})
-			.send({from: signer, gas: 1000000})
-			.then((result) => {
-				//console.log("result:", result);
-		});
-	}
-
 	async function getCell(row, col) {
 		let ret = { joined : false,  asPlayer: Player.PLAYER_NONE };
 		await GameContract.methods.getState(row, col)
@@ -196,9 +201,61 @@ function Game() {
 					setGameState({...gameState, "state": state, 
 						"context": context});
 				}
-				setPlayerVal(parseInt(info.turn) == Player.PLAYER_1 ? "❌" : 
-					(parseInt(info.turn) == Player.PLAYER_2) ? "⭕" : null);
 		});
+	}
+
+	// Register for messages/events from the Game contract
+	function listen () {
+
+		// A new game has started
+		const eventNewGameStarted = GameContract.events.NewGame();
+		eventNewGameStarted.on("data", async (event) => {
+			let data = event.returnValues;
+			console.log("New Game started..");
+			console.log("level:" + data.level);
+			console.log("levelCode:" + data.levelCode);
+			console.log("levelData:" + data.levelData);
+
+			let state = GState.gameStarted;
+			let context = {"level": data.level,
+							"levelCode": data.levelCode,
+						    "levelData": data.levelData};
+			setGameState({...gameState, "state": state, "context": context});
+		});
+
+		// A Player has joined the game
+		const eventPlayerJoined = GameContract.events.PlayerJoined();
+		eventPlayerJoined.on("data", async (event) => {
+			let data = event.returnValues;
+			console.log("Player Joined..");
+			console.log("address:" + data.player);
+			console.log("id:" + data.id);
+
+			let state = GState.playerJoined;
+			let context = {"playerid": data.id};
+			playersJoined.push(data.player);
+			setPlayerJoined(playersJoined);
+			setGameState({...gameState, "state": state, "context": context});
+		});
+
+		// A move has been made
+		const eventPlayerMove = GameContract.events.PlayerMove();
+		eventPlayerMove.on("data", async (event) => {
+			let data = event.returnValues;
+			console.log("Player Move..");
+			console.log("player id:" + data.id);
+			console.log("player move:" + data.move);
+			console.log("winner:" + data.winner);
+			console.log("message:" + data.message);
+
+			let state = GState.playerMove;
+			let cell = (data.move.row)*marker+(data.move.col);
+			let context = {"id": data.id, "cell": cell, 
+							"winner": data.winner,
+							"message": data.message};
+			setGameState({...gameState, "state": state, "context": context});
+		});
+
 	}
 
 	return(
@@ -206,7 +263,7 @@ function Game() {
 			<h1>
 				<div>
 				{(level == 2)? <div> <Board level={level} gameState={gameState} 
-				playerVal={playerVal} quad={0} off={0*marker+3*0}
+				quad={0} off={0*marker+3*0}
 				cells={quadCells} onCellClick={handleCellClick}/></div> :
 				<div> </div>}	
 				</div>
@@ -214,7 +271,7 @@ function Game() {
 			<h1>
 				<div>
 				{(level == 2)? <div> <Board level={level} gameState={gameState}
-				playerVal={playerVal} quad={1} off={0*marker+3*1}
+				quad={1} off={0*marker+3*1}
 				cells={quadCells} onCellClick={handleCellClick}/></div> :
 				<div> </div>}	
 				</div>
@@ -222,7 +279,7 @@ function Game() {
 			<h1>
 				<div>
 				{(level == 2)? <div> <Board level={level} gameState={gameState}
-				playerVal={playerVal} quad={2} off={0*marker+3*2}
+				quad={2} off={0*marker+3*2}
 				cells={quadCells} onCellClick={handleCellClick}/></div> :
 				<div> </div>}	
 				</div>
@@ -230,7 +287,7 @@ function Game() {
 			<h1>
 				<div>
 				{(level == 2)? <div> <Board level={level} gameState={gameState}
-				playerVal={playerVal} quad={3} off={3*marker+3*0}
+				quad={3} off={3*marker+3*0}
 				cells={quadCells} onCellClick={handleCellClick}/></div> :
 				<div> </div>}	
 				</div>
@@ -238,10 +295,10 @@ function Game() {
 			<h1>
 				<div>
 				{(level == 2)? <div> <Board level={level} gameState={gameState}
-				playerVal={playerVal} quad={4} off={3*marker+3*1}
+				quad={4} off={3*marker+3*1}
 				cells={quadCells} onCellClick={handleCellClick}/></div> 
 				: <div> <Board level={level} gameState={gameState}
-				playerVal={playerVal} quad={0} off={0*marker+3*0}
+				quad={0} off={0*marker+3*0}
 				cells={quadCells} strikeClass={strikeClass} 
 				onCellClick={handleCellClick}/> </div>}	
 				</div>
@@ -249,7 +306,7 @@ function Game() {
 			<h1>
 				<div>
 				{(level == 2)? <div> <Board level={level} gameState={gameState}
-				playerVal={playerVal} quad={5} off={3*marker+3*2}
+				quad={5} off={3*marker+3*2}
 				cells={quadCells} onCellClick={handleCellClick}/></div> :
 				<div> </div>}	
 				</div>
@@ -257,7 +314,7 @@ function Game() {
 			<h1>
 				<div>
 				{(level == 2)? <div> <Board level={level} gameState={gameState}
-				playerVal={playerVal} quad={6} off={6*marker+3*0}
+				quad={6} off={6*marker+3*0}
 				cells={quadCells} onCellClick={handleCellClick}/></div> :
 				<div> </div>}	
 				</div>
@@ -265,7 +322,7 @@ function Game() {
 			<h1>
 				<div>
 				{(level == 2)? <div> <Board level={level} gameState={gameState}
-				playerVal={playerVal} quad={7} off={6*marker+3*1}
+				quad={7} off={6*marker+3*1}
 				cells={quadCells} onCellClick={handleCellClick}/></div> :
 				<div> </div>}	
 				</div>
@@ -273,34 +330,44 @@ function Game() {
 			<h1>
 				<div>
 				{(level == 2)? <div> <Board level={level} gameState={gameState}
-				playerVal={playerVal} quad={8} off={6*marker+3*2}
+				quad={8} off={6*marker+3*2}
 				cells={quadCells} onCellClick={handleCellClick}/></div> :
 				<div> </div>}	
 				</div>
 			</h1>
-		{((level == 2) && ((gameState.state == 3) || (gameState.state == 4))) ?
-		 <Strike level={level} strikeClass={strikeClass}
-		 	strikeStyle={strikeStyle}/> :  <div> </div>}
-		<GameState  className='game-state'
-			gameState={{level: level, state: gameState}}/>
-		<Connect onConnected={handleOnConnected} account={3}/>
-		<JoinGame onData={handleLevelData} players={Player}/>
+		<Connect onConnected={handleOnConnected} account={1}/>
+		<NewGame onData={handleLevelData} gameState={gameState}/>
 		</div>
 	);
 }
 
+/*		{((level == 2) && ((gameState.state == 3) || (gameState.state == 4))) ?
+		 <Strike level={level} strikeClass={strikeClass}
+		 	strikeStyle={strikeStyle}/> :  <div> </div>}
+		<GameState  className='game-state'
+			gameState={{level: level, state: gameState}}/>
+*/
 function GameState({ gameState }) {
 	switch(gameState.state) {
-		case 0/*Gstate.levelInProgress*/:
+		case Gstate.idle:
 			return <div className='game-state'>Level {gameState.level}</div>;
 		break;
-		case 1/*Gstate.player1Wins*/:
+		case Gstate.playerJoined:
+			return <div className='game-state'>Player joined</div>;
+		break;
+		case Gstate.gameStarted:
+			return <div className='game-state'>Game started</div>;
+		break;
+		case Gstate.playerMove:
+			return <div className='game-state'>Player moved</div>;
+		break;
+		case Gstate.player1Win:
 			return <div className='game-state'>Player 1 wins</div>;
 		break;
-		case 2/*Gstate.player2Win*/:
+		case Gstate.player2Win:
 			return <div className='game-state'>Player 2 wins</div>;
 		break;
-		case 3/*Gstate.draw*/:
+		case Gstate.draw:
 			return <div className='game-state'>Draw</div>;
 		break;
 		default:
@@ -308,5 +375,4 @@ function GameState({ gameState }) {
 		break;					
 	}
 }
-
 export default Game;

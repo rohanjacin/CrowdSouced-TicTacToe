@@ -1,0 +1,254 @@
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #23272f;
+  color: white;
+}
+
+h1 {
+  text-align: center;
+}
+
+.game {
+  display: grid;
+  grid-template-columns: 300px 300px 300px;
+  grid-template-rows: 300px 300px 300px;
+  cursor: pointer;
+  position: relative;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: 100px 100px 100px;
+  grid-template-rows: 100px 100px 100px;
+  cursor: pointer;
+  position: relative;
+}
+
+.cell {
+  color: currentColor;
+  font-size: 1em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.right-border {
+  border-right: 0.1em solid #ffffff;
+}
+
+.bottom-border {
+  border-bottom: 0.1em solid #ffffff;
+}
+
+.strike {
+  position: absolute;
+  background-color: darkorange;
+}
+
+.strike-row-1-0 {
+  width: 100%;
+  height: 4px;
+  top: 15%;
+}
+.strike-row-1-1 {
+  width: 100%;
+  height: 4px;
+  top: 48%;
+}
+.strike-row-1-2 {
+  width: 100%;
+  height: 4px;
+  top: 83%;
+}
+
+.strike-row-2-0 {
+  width: 41%;
+  height: 4px;
+  top: 8%;
+  left: 0%;
+}
+.strike-row-2-1 {
+  width: 41%;
+  height: 4px;
+  top: 19%;
+  left: 0%;
+}
+.strike-row-2-2 {
+  width: 41%;
+  height: 4px;
+  top: 30%;
+  left: 0%;
+}
+.strike-row-2-3 {
+  width: 41%;
+  height: 4px;
+  top: 41%;
+  left: 0%;
+}
+.strike-row-2-4 {
+  width: 41%;
+  height: 4px;
+  top: 52%;
+  left: 0%;
+}
+.strike-row-2-5 {
+  width: 41%;
+  height: 4px;
+  top: 63%;
+  left: 0%;
+}
+.strike-row-2-6 {
+  width: 41%;
+  height: 4px;
+  top: 74%;
+  left: 0%;
+}
+.strike-row-2-7 {
+  width: 41%;
+  height: 4px;
+  top: 85%;
+  left: 0%;
+}
+.strike-row-2-8 {
+  width: 41%;
+  height: 4px;
+  top: 96%;
+  left: 0%;
+}
+
+.strike-col-1-0 {
+  height: 100%;
+  width: 4px;
+  left: 16%;
+}
+.strike-col-1-1 {
+  height: 100%;
+  width: 4px;
+  left: 48%;
+}
+.strike-col-1-2 {
+  height: 100%;
+  width: 4px;
+  left: 83%;
+}
+
+.strike-col-2-0 {
+  height: 40%;
+  width: 4px;
+  left: 6%;
+  top: 0%;
+}
+.strike-col-2-1 {
+  height: 40%;
+  width: 4px;
+  left: 16%;
+  top: 0%;
+}
+.strike-col-2-2 {
+  height: 40%;
+  width: 4px;
+  left: 28%;
+  top: 0%;
+}
+.strike-col-2-3 {
+  height: 40%;
+  width: 4px;
+  left: 39%;
+  top: 0%;
+}
+.strike-col-2-4 {
+  height: 40%;
+  width: 4px;
+  left: 50%;
+  top: 0%;
+}
+.strike-col-2-5 {
+  height: 40%;
+  width: 4px;
+  left: 61%;
+  top: 0%;
+}
+.strike-col-2-6 {
+  height: 40%;
+  width: 4px;
+  left: 72%;
+  top: 0%;
+}
+.strike-col-2-7 {
+  height: 40%;
+  width: 4px;
+  left: 83%;
+  top: 0%;
+}
+.strike-col-2-8 {
+  height: 40%;
+  width: 4px;
+  left: 94%;
+  top: 0%;
+}
+
+.strike-fwddiag-1 {
+  width: 90%;
+  height: 4px;
+  top: 50%;
+  left: 5%;
+  transform: skewY(45deg);
+}
+.strike-bckwddiag-1 {
+  width: 90%;
+  height: 4px;
+  top: 50%;
+  left: 5%;
+  transform: skewY(-45deg);
+}
+
+.strike-fwddiag-2 {
+  width: 38%;
+  height: 4px;
+  top: 0%;
+  left: 0%;
+  transform: skewY(45deg);
+}
+.strike-bckwddiag-2 {
+  width: 38%;
+  height: 4px;
+  top: 0%;
+  left: 0%;
+  transform: skewY(-45deg);
+}
+
+.game-state {
+  text-align: center;
+  padding: 10px;
+  margin-top: 50px;
+  font-size: 2em;
+  position: absolute;
+  left: 42%;
+  top: 100%;
+}
+
+.newgame-button {
+  margin-top: 50px;
+  padding: 20px;
+  background-color: solid #ffffff;
+  color: black;
+  width: 35%;
+  font-size: 1.5em;
+  position: absolute;
+  left: 0%;
+  top: 100%;
+}
+
+.connect-button {
+  margin-top: 50px;
+  padding: 20px;
+  background-color: solid #ffffff;
+  color: black;
+  width: 35%;
+  font-size: 1.5em;
+  position: absolute;
+  left: 65%;
+  top: 100%;
+}

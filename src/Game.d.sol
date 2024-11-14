@@ -92,7 +92,8 @@ struct GameInfo {
 	GameHouse house;
 	address player1;
 	address player2;
-	address levelAddress;
+	address levelCode;
+	address levelData;
 	Player winner;
 	Player turn;
 	string message;	
@@ -131,6 +132,17 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 	// SLOT 7 is Game instance (id = level number)
 	mapping(uint8 => GameInfo) public games;
 
+	// When a new game is started	
+	event NewGame (uint8 level, address levelCode,
+		address levelData);
+
+	// When player joins the game	
+	event PlayerJoined (address player, Player id);
+
+	// When player makes a move	
+	event PlayerMove (Player id, Move move,
+		Player winner, string message);
+
 	// Load the default state in Base State
 	constructor(address _admin) {
 		admin = _admin;
@@ -151,9 +163,9 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
         (address target, bytes memory callData) = abi.decode(levelCall,
 													(address, bytes));
 		console.log("target:", target);
-		console.log("games[1].levelAddress:", games[1].levelAddress);
+		console.log("games[1].levelCode:", games[1].levelCode);
 
-		if (target ==  games[1].levelAddress) {
+		if (target ==  games[1].levelCode) {
 			(success, data) = target.call{value: msg.value}(callData);
 			console.log("success:", success);
 		}
@@ -210,6 +222,7 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 		ILevelConfigurator.LevelConfig memory config)
 		internal returns(bool success, string memory message) {
 
+		console.log("_loadLevel");
 		if (bidder != address(0)) {
 			config = ILevelConfigurator(
 						games[1].house.levelConfigurator())
@@ -236,8 +249,10 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 		}
 
 		// Store level address
-		games[1].levelAddress = config.codeAddress;
-		console.log("levelAddress:", games[1].levelAddress);
+		games[1].levelCode = config.codeAddress;
+		games[1].levelData = config.dataAddress;
+		console.log("levelCode:", games[1].levelCode);
+		console.log("levelData:", games[1].levelData);
 
 		// Add level rules
 		uint8 _symbolLen = uint8(config.symbolLen/4);
@@ -249,7 +264,7 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 			_symbols.v[i] = getSymbol(i);
 		}
 
-		addRules(games[1].levelAddress, _symbols);
+		addRules(games[1].levelCode, _symbols);
 
 		return (true, "Level loaded");
 	}
@@ -258,6 +273,7 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 	function newGame(uint8 _level) external onlyAdmin
 		returns (bool success, string memory message) {
 
+		console.log("newgame:", _level);
 		// Check if game requested is 
 		// for configured level
 		if (!((_level == 1) || (_level == 2))) {
@@ -277,6 +293,8 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 		// Initalize game
 		games[1].winner = Player.None;
 		games[1].turn = Player.Player1;
+
+		emit NewGame(level, games[1].levelCode, games[1].levelData);
 	}
 
 	function getGame() external returns(GameInfo memory info){
@@ -296,6 +314,7 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 			
 			// Store player 1
 			games[1].player1 = msg.sender;
+			emit PlayerJoined (msg.sender, Player.Player1); 
 			return (true, "You are Player1 - X");
 		}
 
@@ -303,6 +322,7 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 			
 			// Store player 2
 			games[1].player2 = msg.sender;
+			emit PlayerJoined (msg.sender, Player.Player2); 
 			return (true, "You are Player2 - O");			
 		}
 
@@ -340,7 +360,7 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 		}
 
 		// Execute for move as per rule
-		(success) = setCell(games[1].levelAddress, 
+		(success) = setCell(games[1].levelCode, 
 								move.row, move.col, setVal);
 		assert(success == true);
 		assert(uint8(getState(move.row, move.col)) == setVal);
@@ -354,7 +374,11 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 			games[1].winner = winner;
 			message = string(abi.encodePacked("You Won!", "@", m));
 			games[1].message = message;
+			emit PlayerMove(games[1].turn, move, winner, message);
 			return (true, message); 
+		}
+		else {
+			emit PlayerMove(games[1].turn, move, winner, message);			
 		}
 
 		// Next player's turn

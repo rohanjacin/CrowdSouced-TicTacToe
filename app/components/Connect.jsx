@@ -8,7 +8,7 @@ var signer;
 var Connected;
 var GameContract;
 
-async function createProvider() {
+async function createProvider(account) {
   if (window.ethereum) {
     await window.ethereum.request({ method: "eth_requestAccounts" });
     web3 = new Web3(window.ethereum);
@@ -19,7 +19,7 @@ async function createProvider() {
     const wsProvider = new Web3.providers.WebsocketProvider('ws://localhost:8545');
     web3 = new Web3(wsProvider);
     let signers = await web3.eth.getAccounts();
-    signer = signers[3];
+    signer = signers[account];
     return true;
   }
 
@@ -40,7 +40,7 @@ async function getBalance() {
   }  
 }
 
-function Connect({ onConnected }) {
+function Connect({ onConnected, account }) {
 
   const [connected, setConnected] = useState(false);
   const [balance, setBalance] = useState(null);
@@ -51,7 +51,7 @@ function Connect({ onConnected }) {
   }, [connected]);
 
   return <button className='connect-button' disabled={connected}
-          onClick={ async () => { setConnected(await createProvider());
+          onClick={ async () => { setConnected(await createProvider(account));
                                   setBalance(await getBalance())
                                   getGameContract()}}
          >{(connected == true)?
