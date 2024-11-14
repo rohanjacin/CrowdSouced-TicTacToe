@@ -430,11 +430,13 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 						   	countX = 1;
 							console.log(" countX:", countX);
 						   	winner = Player.Player1;
+						   	col = c;
 					   	}
 					   	if (getState(r, c) == uint8(CellValueL.O)) {
 						   	countO = 1;
 							console.log(" countO:", countO);
 						   	winner = Player.Player2;
+						   	col = c;
 					   	}
 					}
 				}
@@ -514,11 +516,13 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 						   	countX = 1;
 							console.log(" countX:", countX);
 						   	winner = Player.Player1;
+						   	row = r;
 					   	}
 					   	if (getState(r, c) == uint8(CellValueL.O)) {
 						   	countO = 1;
 							console.log(" countO:", countO);
 						   	winner = Player.Player2;
+						   	row = r;
 					   	}
 					}
 				}

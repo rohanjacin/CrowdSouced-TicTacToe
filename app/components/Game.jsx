@@ -10,7 +10,7 @@ import { useState, useEffect } from "react";
 // for level 1 and level 2
 function Game() {
 	// Level
-	const [level, setLevel] = useState(1);
+	const [level, setLevel] = useState(2);
 	// Level cell count
 	const numCells = (level == 2)? 81 : 9;
 	const marker = (level == 2)? 9 : 3;
@@ -30,15 +30,9 @@ function Game() {
 	// Game state
 	const [gameState, setGameState] = useState({state: 0, context: 0});
 
-	const row = "2";
-	const col = "2";
 	// Strike
-	var colS;
-	var rowS;
-	var diagS;
-	var winningPattern;
-
-	const [strikeClass, setStrikeClass] = useState(`strike-${winningPattern}-${level}`); 
+	const [strikeClass, setStrikeClass] = useState(`strike- - `); 
+	const [strikeStyle, setStrikeSyle] = useState({row: null, col: null, diag: null, combo: null}); 
 
 	useEffect(() => {
 		if (Connected == true) {
@@ -95,7 +89,6 @@ function Game() {
 		let row = Math.floor(ctx.cell/marker);
 		let col = ctx.cell%marker;
 
-		console.log("in handleCellUpdate");
 		await getGame();
 
 		let idx = row*marker+col;
@@ -114,36 +107,39 @@ function Game() {
 
 	const handleStrikeData = (message) => {
 
-		console.log("messag:", message);
-		winningPattern = message.split(":")[1];
-		winningPattern = winningPattern.split(",")[0];
-		rowS = message.split(":")[2];
+		let combo = message.split(":")[1];
+		combo = combo.split(",")[0];
+		let rowS = message.split(":")[2];
 		rowS = rowS.split(",")[0];
-		colS = message.split(":")[3];
+		let colS = message.split(":")[3];
 		colS = colS.split(",")[0];
-		diagS = message.split(":")[4];
+		let diagS = message.split(":")[4];
 		diagS = diagS.split(",")[0];
 		
-		console.log("winningPattern:", winningPattern);
-		let newStrikeClass;	
-		if (level == 1) {
-			switch (winningPattern) {
-				case "row":
-		 			newStrikeClass = `strike-${winningPattern}-${level}-${rowS}`;
+		let newStrikeClass, newStrikeSyle;
+
+		if ((level == 1) || (level == 2)) {
+			switch (combo) {
+				case "row": {
+		 			newStrikeClass = `strike-${combo}-${level}-${rowS}`;
 		 			rowS = parseInt(rowS);
+		 		}
 				break;
 				case "col":
-		 			newStrikeClass = `strike-${winningPattern}-${level}-${colS}`;
+		 			newStrikeClass = `strike-${combo}-${level}-${colS}`;
 		 			colS = parseInt(colS);
 				break;
 				case "fwddiag":
-				case "bckwddiag":					
-		 			newStrikeClass = `strike-${winningPattern}-${level}`;
+				case "bckwddiag":
+		 			newStrikeClass = `strike-${combo}-${level}`;
 				break;
 			}
+
+			newStrikeSyle = {row:rowS, col:colS, diag:diagS, combo:combo};
 		}
 
 		setStrikeClass(newStrikeClass);
+		setStrikeSyle(newStrikeSyle)
 	}
 
 	async function makeMove(row, col) {
@@ -151,7 +147,7 @@ function Game() {
 		await GameContract.methods.makeMove({row, col})
 			.send({from: signer, gas: 1000000})
 			.then((result) => {
-				console.log("result:", result);
+				//console.log("result:", result);
 		});
 	}
 
@@ -171,15 +167,9 @@ function Game() {
 	async function getGame() {
 		let ret = { winner: Player.PLAYER_NONE, turn: Player.PLAYER_NONE, 
 					message: ""};
-		console.log("getGame..");
 		await GameContract.methods.getGame()
 			.call({from: signer, gas: 100000})
 			.then((info) => {
-				console.log("info:", info);
-				console.log("info.winner:", info.winner);
-				console.log("info.turn:", info.turn);
-				console.log("info.message:", info.message);
-
 				ret = { winner: info.winner, turn: info.turn, message: info.message };
 				let state = ((parseInt(info.winner) == 1) ? 3 : ((parseInt(info.winner) == 2) ? 4 : gameState.state));
 				let context = { ...gameState.state, turn: info.turn, message: info.message };
@@ -269,8 +259,9 @@ function Game() {
 			</h1>
 		{((level == 2) && ((gameState.state == 3) || (gameState.state == 4))) ?
 		 <Strike level={level} strikeClass={strikeClass}
-		 strikeStyle={{row: rowS, col: colS, diag: diagS, combo: winningPattern}}/> :  <div> </div>}
-		<GameState  className='game-state' gameState={{level: level, state: gameState}}/>
+		 	strikeStyle={strikeStyle}/> :  <div> </div>}
+		<GameState  className='game-state'
+			gameState={{level: level, state: gameState}}/>
 		<Connect onConnected={handleOnConnected}/>
 		<JoinGame onData={handleLevelData}/>
 		</div>
