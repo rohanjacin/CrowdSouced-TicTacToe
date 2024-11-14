@@ -1,9 +1,9 @@
 import React from "react";
 
-function Cell({ className, playerTurn, value, onClick }) {
+function Cell({ className, playerVal, value, onClick }) {
 	let hoverClass = null;
-	if (value == null && playerTurn != null) {
-		hoverClass = `${playerTurn}-hover`;
+	if (value == null && playerVal != null) {
+		hoverClass = `${playerVal}-hover`;
 	}
 
 	return <div onClick={onClick} 

@@ -7,7 +7,7 @@ import "./BaseSymbol.d.sol";
 import "./BaseData.sol";
 import "./LevelConfigurator.sol";
 import "./ILevelConfigurator.sol";
-import "./RuleEngine.sol";
+import "./RuleEngine.d.sol";
 import { Level1D } from "./Level1.d.sol";
 import "semaphore/packages/contracts/contracts/interfaces/ISemaphore.sol";
 import "openzeppelin-contracts/contracts/utils/Strings.sol";

@@ -2,8 +2,23 @@ import React from "react";
 import Board from "./Board.jsx";
 import Strike from "./Strike.jsx";
 import { web3, signer, GameContract, Connected, Connect } from "./Connect.jsx";
-import { Gstate, Player, GameState, JoinGame } from "./GameState.jsx";
+import JoinGame from "./Join.jsx";
 import { useState, useEffect } from "react";
+
+const GState = {
+	levelInProgress: 0,
+	playerMoveInProgress: 1,
+	playerMoveDone: 2,
+	player1Wins: 3,
+	player2Wins: 4,
+	draw: 5,
+}
+
+const Player = {
+	PLAYER_NONE: 0,
+	PLAYER_1: 1,
+	PLAYER_2: 2,
+}
 
 // Main Tictactoe game component
 // contains dynamic board and cells
@@ -25,7 +40,7 @@ function Game() {
 	const [quadCells, setQuadCells] = useState(Array(numCells).fill(null));
 
 	// Player turn
-	const [playerTurn, setPlayer] = useState("❌");
+	const [playerVal, setPlayerVal] = useState("❌");
 
 	// Game state
 	const [gameState, setGameState] = useState({state: 0, context: 0});
@@ -71,7 +86,7 @@ function Game() {
 		await makeMove(row, col)
 		.then(() => {
 			let state = 1;
-			let context = {"cell": index, "value": playerTurn};
+			let context = {"cell": index, "value": playerVal};
 			setGameState({...gameState, "state": state, 
 				"context": context});			
 		});
@@ -177,8 +192,8 @@ function Game() {
 					setGameState({...gameState, "state": state, 
 						"context": context});
 				}
-				setPlayer(parseInt(info.turn) == 1 ? "❌" : 
-					(parseInt(info.turn) == 2) ? "⭕" : Player.PLAYER_NONE);
+				setPlayerVal(parseInt(info.turn) == 1 ? "❌" : 
+					(parseInt(info.turn) == 2) ? "⭕" : null);
 		});
 	}
 
@@ -187,7 +202,7 @@ function Game() {
 			<h1>
 				<div>
 				{(level == 2)? <div> <Board level={level} gameState={gameState} 
-				playerTurn={playerTurn} quad={0} off={0*marker+3*0}
+				playerVal={playerVal} quad={0} off={0*marker+3*0}
 				cells={quadCells} onCellClick={handleCellClick}/></div> :
 				<div> </div>}	
 				</div>
@@ -195,7 +210,7 @@ function Game() {
 			<h1>
 				<div>
 				{(level == 2)? <div> <Board level={level} gameState={gameState}
-				playerTurn={playerTurn} quad={1} off={0*marker+3*1}
+				playerVal={playerVal} quad={1} off={0*marker+3*1}
 				cells={quadCells} onCellClick={handleCellClick}/></div> :
 				<div> </div>}	
 				</div>
@@ -203,7 +218,7 @@ function Game() {
 			<h1>
 				<div>
 				{(level == 2)? <div> <Board level={level} gameState={gameState}
-				playerTurn={playerTurn} quad={2} off={0*marker+3*2}
+				playerVal={playerVal} quad={2} off={0*marker+3*2}
 				cells={quadCells} onCellClick={handleCellClick}/></div> :
 				<div> </div>}	
 				</div>
@@ -211,7 +226,7 @@ function Game() {
 			<h1>
 				<div>
 				{(level == 2)? <div> <Board level={level} gameState={gameState}
-				playerTurn={playerTurn} quad={3} off={3*marker+3*0}
+				playerVal={playerVal} quad={3} off={3*marker+3*0}
 				cells={quadCells} onCellClick={handleCellClick}/></div> :
 				<div> </div>}	
 				</div>
@@ -219,10 +234,10 @@ function Game() {
 			<h1>
 				<div>
 				{(level == 2)? <div> <Board level={level} gameState={gameState}
-				playerTurn={playerTurn} quad={4} off={3*marker+3*1}
+				playerVal={playerVal} quad={4} off={3*marker+3*1}
 				cells={quadCells} onCellClick={handleCellClick}/></div> 
 				: <div> <Board level={level} gameState={gameState}
-				playerTurn={playerTurn} quad={0} off={0*marker+3*0}
+				playerVal={playerVal} quad={0} off={0*marker+3*0}
 				cells={quadCells} strikeClass={strikeClass} 
 				onCellClick={handleCellClick}/> </div>}	
 				</div>
@@ -230,7 +245,7 @@ function Game() {
 			<h1>
 				<div>
 				{(level == 2)? <div> <Board level={level} gameState={gameState}
-				playerTurn={playerTurn} quad={5} off={3*marker+3*2}
+				playerVal={playerVal} quad={5} off={3*marker+3*2}
 				cells={quadCells} onCellClick={handleCellClick}/></div> :
 				<div> </div>}	
 				</div>
@@ -238,7 +253,7 @@ function Game() {
 			<h1>
 				<div>
 				{(level == 2)? <div> <Board level={level} gameState={gameState}
-				playerTurn={playerTurn} quad={6} off={6*marker+3*0}
+				playerVal={playerVal} quad={6} off={6*marker+3*0}
 				cells={quadCells} onCellClick={handleCellClick}/></div> :
 				<div> </div>}	
 				</div>
@@ -246,7 +261,7 @@ function Game() {
 			<h1>
 				<div>
 				{(level == 2)? <div> <Board level={level} gameState={gameState}
-				playerTurn={playerTurn} quad={7} off={6*marker+3*1}
+				playerVal={playerVal} quad={7} off={6*marker+3*1}
 				cells={quadCells} onCellClick={handleCellClick}/></div> :
 				<div> </div>}	
 				</div>
@@ -254,7 +269,7 @@ function Game() {
 			<h1>
 				<div>
 				{(level == 2)? <div> <Board level={level} gameState={gameState}
-				playerTurn={playerTurn} quad={8} off={6*marker+3*2}
+				playerVal={playerVal} quad={8} off={6*marker+3*2}
 				cells={quadCells} onCellClick={handleCellClick}/></div> :
 				<div> </div>}	
 				</div>
@@ -265,9 +280,29 @@ function Game() {
 		<GameState  className='game-state'
 			gameState={{level: level, state: gameState}}/>
 		<Connect onConnected={handleOnConnected}/>
-		<JoinGame onData={handleLevelData}/>
+		<JoinGame onData={handleLevelData} players={Player}/>
 		</div>
 	);
+}
+
+function GameState({ gameState }) {
+	switch(gameState.state) {
+		case 0/*Gstate.levelInProgress*/:
+			return <div className='game-state'>Level {gameState.level}</div>;
+		break;
+		case 1/*Gstate.player1Wins*/:
+			return <div className='game-state'>Player 1 wins</div>;
+		break;
+		case 2/*Gstate.player2Win*/:
+			return <div className='game-state'>Player 2 wins</div>;
+		break;
+		case 3/*Gstate.draw*/:
+			return <div className='game-state'>Draw</div>;
+		break;
+		default:
+			return <></>;
+		break;					
+	}
 }
 
 export default Game;

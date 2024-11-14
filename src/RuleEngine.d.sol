@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.27;
 import {console} from "forge-std/console.sol";
-import "./BaseLevel.sol";
-import "./BaseState.sol";
-import "./BaseSymbol.sol";
+import "./BaseLevel.d.sol";
+import "./BaseState.d.sol";
+import "./BaseSymbol.d.sol";
 
 error StateCountInvalid();
 error RuleInvalid();
 
 // Applies rules across all levels
-abstract contract RuleEngineD {
+abstract contract RuleEngine {
 
     bytes16 private constant HEX_DIGITS = "0123456789abcdef";
 
@@ -17,7 +17,7 @@ abstract contract RuleEngineD {
 	mapping(uint8 => bytes4) rules;
 
 	// Add a rule
-	function addRules(address codeAddress, BaseSymbol.Symbols memory symbols) internal {
+	function addRules(address codeAddress, BaseSymbolD.Symbols memory symbols) internal {
 
 		(bool ret, bytes memory selectors) = codeAddress.call(
 			abi.encodeWithSignature("supportedStates()"));
@@ -74,27 +74,33 @@ abstract contract RuleEngineD {
 	function setCell(address levelAddress, uint8 row, uint8 col,
 		uint8 input) internal returns(bool success) {
 
+		console.log("In SetCell:", levelAddress);
+		console.log("input:", input);
+
 		// Check for valid address
 		if (levelAddress == address(0)) {
-			revert();
+			//revert();
 		}
 
 		// Check if level contract exists
 		assembly {
 			if iszero(extcodesize(levelAddress)) {
-				revert(0, 0)
+				//revert(0, 0)
 			}
 		}
 
 		// Check for valid input state
 		if ((input == 0) || (input == type(uint8).max)) {
-			revert();
+			//revert();
 		}
 
 		// Call level function to set cell via its selector
 		bytes4 sel = rules[input];
+		console.log("sel:", uint32(sel));
+
 		(success, ) = levelAddress.delegatecall(
-						abi.encodePacked(sel, row, col, input));
+						abi.encodeWithSelector(sel, row, col, input));
+		console.log("success:", success);
 	}
 
 	// 

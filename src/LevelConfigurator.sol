@@ -4,7 +4,6 @@ import {console} from "forge-std/console.sol";
 import "openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import "openzeppelin-contracts/contracts/utils/cryptography/MessageHashUtils.sol";
 import "./BaseState.sol";
-import "./IGoV.sol";
 import "./ILevelConfigurator.sol";
 import "semaphore/packages/contracts/contracts/interfaces/ISemaphore.sol";
 

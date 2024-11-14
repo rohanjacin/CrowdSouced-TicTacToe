@@ -4,7 +4,7 @@ pragma solidity ^0.8.27;
 import "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
 import "src/Level1.sol";
-import "src/Game.sol";
+import "src/Game.d.sol";
 
 enum CellValueL1 { Empty, X, O }
 

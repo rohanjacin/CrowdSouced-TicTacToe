@@ -3,7 +3,7 @@ pragma solidity ^0.8.27;
 
 import "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
-import "src/RuleEngine.sol";
+import "src/RuleEngine.d.sol";
 import "src/Level1.d.sol";
 
 contract TestRuleEngine is Test {
