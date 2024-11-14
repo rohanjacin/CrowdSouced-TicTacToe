@@ -25,7 +25,7 @@ function Game() {
 	const [quadCells, setQuadCells] = useState(Array(numCells).fill(null));
 
 	// Player turn
-	const [playerTurn, setPlayer] = useState(Player.PLAYER_1);
+	const [playerTurn, setPlayer] = useState("❌");
 
 	// Game state
 	const [gameState, setGameState] = useState({state: 0, context: 0});
@@ -177,6 +177,8 @@ function Game() {
 					setGameState({...gameState, "state": state, 
 						"context": context});
 				}
+				setPlayer(parseInt(info.turn) == 1 ? "❌" : 
+					(parseInt(info.turn) == 2) ? "⭕" : Player.PLAYER_NONE);
 		});
 	}
 
