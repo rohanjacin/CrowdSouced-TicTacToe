@@ -8,6 +8,7 @@ import "./BaseData.sol";
 import "./LevelConfigurator.sol";
 import "./ILevelConfigurator.sol";
 import "./RuleEngine.sol";
+import { Level1D } from "./Level1.d.sol";
 import "semaphore/packages/contracts/contracts/interfaces/ISemaphore.sol";
 import "openzeppelin-contracts/contracts/utils/Strings.sol";
 
@@ -26,14 +27,64 @@ contract GameHouse {
 	address public goV;
 	address public levelConfigurator;
 	address public ruleEngine;
+	address public defaultLevel;
+	address public defaultData;
 
 	constructor(address _admin) {
 		//goV = new goV();
 		levelConfigurator = address(new LevelConfigurator(_admin, 
 								ISemaphore(address(0x02))));
 		console.log("levelConfigurator:", levelConfigurator);
+		defaultLevel = address(new Level1D( _setLevelNum(1),
+								_setState(1), _setSymbol(1)));
+		(bool ret, bytes memory d) = defaultLevel.call(
+									 	abi.encodeWithSignature("data()"));
+		defaultData = abi.decode(d, (address));
+		console.log("defaultLevel:", defaultLevel);
+		console.log("defaultData:", defaultData);
+
 		//ruleEngine = new RuleEngine();
 	}
+
+    // Internal function to set levelnum
+    function _setLevelNum(uint8 _num) internal pure 
+        returns (bytes memory _levelNum) {
+
+        _levelNum = abi.encodePacked(_num);
+    }
+
+    // Internal function to set state
+    function _setState(uint8 _num) internal pure 
+        returns (bytes memory _state) {
+
+        // Set state of level 1 i.e 3x3 matrix
+        _state = new bytes(9);
+
+        // C0  C1 C2
+        // [ ,  ,  ] R0
+        // [ ,  ,  ] R1
+        // [ ,  ,  ] R2
+	}
+
+    // Internal function to set symbols
+    function _setSymbol(uint8 num) internal pure 
+        returns (bytes memory _symbols) {
+
+        _symbols = new bytes(8);
+
+        // ❌ hex"e29d8c00"
+        _symbols[0] = hex"e2";
+        _symbols[1] = hex"9d";
+        _symbols[2] = hex"8c";
+        _symbols[3] = hex"00";
+
+        // ⭕ hex"e2ad9500"
+        _symbols[4] = hex"e2";
+        _symbols[5] = hex"ad";
+        _symbols[6] = hex"95";
+        _symbols[7] = hex"00";
+	}	
+
 }
 
 // Game info
@@ -155,14 +206,15 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 	}
 
 	// Loads the level
-	function loadLevel(address bidder) external onlyAdmin
-		returns(bool success, string memory message) {
+	function _loadLevel(address bidder,
+		ILevelConfigurator.LevelConfig memory config)
+		internal returns(bool success, string memory message) {
 
-		LevelConfig memory config = LevelConfig(0, 0, 0, 0, 0, 0,
-									address(0), address(0)); 
-		(config.num, config.codeLen, config.levelNumLen, config.stateLen,
-		 config.symbolLen, config.hash, config.codeAddress, config.dataAddress)
-		 = ILevelConfigurator(games[1].house.levelConfigurator()).proposals(bidder);
+		if (bidder != address(0)) {
+			config = ILevelConfigurator(
+						games[1].house.levelConfigurator())
+						.getProposal(bidder);			
+		}	
 
 		// Level check for L1 or L2
 /*		if (!(config.num == level)) {
@@ -203,7 +255,8 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 	}
 
 	// Starts a new game
-	function newGame(uint8 _level) external onlyAdmin {
+	function newGame(uint8 _level) external onlyAdmin
+		returns (bool success, string memory message) {
 
 		// Check if game requested is 
 		// for configured level
@@ -211,8 +264,17 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 			revert LevelInvalid();
 		}
 
-		// Game instance is 1 for now
-		// Iinitalize game
+		// Default Game Level is 1
+		ILevelConfigurator.LevelConfig memory _config = 
+			ILevelConfigurator.LevelConfig(
+				0, 0, 0, 0, 0, 0, address(0), address(0));
+		_config.num = 1;
+		_config.symbolLen = 8;
+		_config.codeAddress = address(games[1].house.defaultLevel());
+		_config.dataAddress = address(games[1].house.defaultData());
+		(success, message) = _loadLevel(address(0), _config);
+
+		// Initalize game
 		games[1].winner = Player.None;
 		games[1].turn = Player.Player1;
 	}

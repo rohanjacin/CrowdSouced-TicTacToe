@@ -93,10 +93,10 @@ contract Game is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 
 		LevelConfig memory config = LevelConfig(0, 0, 0, 0, 0, 0,
 									address(0), address(0)); 
-		(config.num, config.codeLen, config.levelNumLen, config.stateLen,
+/*		(config.num, config.codeLen, config.levelNumLen, config.stateLen,
 		 config.symbolLen, config.hash, config.codeAddress, config.dataAddress)
 		 = ILevelConfigurator(games[1].house.levelConfigurator()).proposals(bidder);
-
+*/
 		// Level check for L1 or L2
 		if (!(config.num == level+1)) {
 			revert LevelInvalid();

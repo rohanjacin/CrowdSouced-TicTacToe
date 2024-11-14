@@ -10,7 +10,7 @@ import { useState, useEffect } from "react";
 // for level 1 and level 2
 function Game() {
 	// Level
-	const [level, setLevel] = useState(2);
+	const [level, setLevel] = useState(1);
 	// Level cell count
 	const numCells = (level == 2)? 81 : 9;
 	const marker = (level == 2)? 9 : 3;

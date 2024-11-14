@@ -70,7 +70,7 @@ function JoinGame({ onData }) {
 
 		// Level Contract address + Encoded Function
 		const callData = web3.eth.abi.encodeParameters(['address','bytes'], 
-			["0x886Ef73E1e88d77Db022ccD0359118443F91c7Df", fetchLevelData]);
+			["0x597E1a805f392F5B265831401Ee7B2AfF2cb62c0", fetchLevelData]);
 		
 		await GameContract.methods.callLevel(callData)
 			.call({from: signer, gas: 100000})

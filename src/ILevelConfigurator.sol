@@ -3,6 +3,18 @@ pragma solidity 0.8.27;
 
 interface ILevelConfigurator {
 	
+    struct LevelConfig {
+        // packed
+        uint256 num; // 0x00
+        uint256 codeLen; // 0x20
+        uint256 levelNumLen; // 0x40
+        uint256 stateLen; // 0x60
+        uint256 symbolLen; // 0x80
+        bytes32 hash; // 0xA0
+        address codeAddress; // 0xC0
+        address dataAddress; // 0xE0
+    }
+
     // Reads the level proposal
     function initLevel(
         bytes calldata _levelCode,
@@ -22,14 +34,6 @@ interface ILevelConfigurator {
         bytes memory signature
     ) external payable returns (bool success);
 
-	function proposals(address) external returns(
-		uint256 num,
-		uint256 codeLen, 
-		uint256 levelNumLen, 
-		uint256 stateLen,
-		uint256 symbolLen, 
-		bytes32 hash,
-		address codeAddress, 
-		address dataAddress 
-	);
+    function getProposal(address bidder) external
+        returns (LevelConfig memory config);
 }

@@ -46,7 +46,7 @@ contract LevelConfigurator {
     uint32 internal constant MAX_LEVEL_CODESIZE = 24000; // 24kB
 
     // Level Proposals (Slot 2)
-    mapping(address => LevelConfig) public proposals;
+    mapping(address => LevelConfig) proposals;
 
     // Input arguments: admin address, semaphore deployed contract address 0x1e0d7FF1610e480fC93BdEC510811ea2Ba6d7c2f for Sepolia
     constructor(address _admin, ISemaphore _semaphore) {
@@ -58,6 +58,16 @@ contract LevelConfigurator {
 
     // Enables Level configuration
     function start() external view onlyAdmin {}
+
+    function getProposal(address bidder) external
+        returns (LevelConfig memory config) {
+
+        if (bidder == address(0)) {
+            revert BiddersAddressInvalid();
+        }
+
+        config = proposals[bidder];
+    }
 
     // Reads the level proposal
     function initLevel(
@@ -206,14 +216,9 @@ contract LevelConfigurator {
         bytes memory _symbols
     ) internal returns (bool success) {
         LevelConfig memory config = LevelConfig(
-            uint256(0),
-            uint256(0),
-            uint256(0),
-            uint256(0),
-            uint256(0),
-            bytes32(0),
-            address(0),
-            address(0)
+            uint256(0), uint256(0), uint256(0),
+            uint256(0), uint256(0), bytes32(0),
+            address(0), address(0)
         );
 
         // Register the lengths
