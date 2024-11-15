@@ -25,7 +25,7 @@ contract DeployGame is Script {
         vm.startBroadcast(signer);
 
 		GameD game1 = new GameD(signer);
-        game1.newGame(1);
+        //game1.newGame(1, address(0));
         
         vm.stopBroadcast();
 	}
@@ -288,8 +288,8 @@ contract NewGame is Script {
         address signer = vm.addr(privKey);
         vm.startBroadcast(signer);
         
-        //IGame(address(0x8464135c8F25Da09e49BC8782676a84730C318bC))
-        //    .newGame(2)(address(0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC));
+        IGame(address(0x8464135c8F25Da09e49BC8782676a84730C318bC))
+            .newGame(1, address(0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC));
 
         vm.stopBroadcast();
     }

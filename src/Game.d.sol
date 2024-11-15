@@ -60,6 +60,7 @@ contract GameHouse {
         // Set state of level 1 i.e 3x3 matrix
         _state = new bytes(9);
 
+        _state[1] = bytes1(uint8(1));
         // C0  C1 C2
         // [ ,  ,  ] R0
         // [ ,  ,  ] R1
@@ -214,26 +215,36 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 			mstore(_symbol, mul(_symbollen, 4))
 			mstore(0x40, add(_symbol, 0x40))
 		}
-
 	}
 
 	// Loads the level
-	function _loadLevel(address bidder,
-		ILevelConfigurator.LevelConfig memory config)
+	function _loadLevel(uint8 _level, address bidder)
 		internal returns(bool success, string memory message) {
 
-		console.log("_loadLevel");
+		ILevelConfigurator.LevelConfig memory config;
+
+		console.log("_loadLevel:", _level);
 		if (bidder != address(0)) {
 			config = ILevelConfigurator(
 						games[1].house.levelConfigurator())
 						.getProposal(bidder);			
-		}	
+		}
+		else {
+			// Default Game Level is 1
+			config = ILevelConfigurator.LevelConfig(
+					0, 0, 0, 0, 0, 0, address(0), address(0));
+			config.num = 1;
+			config.symbolLen = 8;
+			config.codeAddress = address(games[1].house.defaultLevel());
+			config.dataAddress = address(games[1].house.defaultData());			
+		}
 
 		// Level check for L1 or L2
-/*		if (!(config.num == level)) {
-			revert LevelInvalid();
+		if (!(config.num == _level)) {
+			console.log("invalid level");
+			//revert LevelInvalid();
 		}
-*/
+
 		(bytes memory _levelnum, 
 		 bytes memory _levelstate,
 		 bytes memory _levelsymbol) = retrieveLevel(uint8(config.num),
@@ -270,7 +281,7 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 	}
 
 	// Starts a new game
-	function newGame(uint8 _level) external onlyAdmin
+	function newGame(uint8 _level, address _bidder) external onlyAdmin
 		returns (bool success, string memory message) {
 
 		console.log("newgame:", _level);
@@ -280,21 +291,15 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 			revert LevelInvalid();
 		}
 
-		// Default Game Level is 1
-		ILevelConfigurator.LevelConfig memory _config = 
-			ILevelConfigurator.LevelConfig(
-				0, 0, 0, 0, 0, 0, address(0), address(0));
-		_config.num = 1;
-		_config.symbolLen = 8;
-		_config.codeAddress = address(games[1].house.defaultLevel());
-		_config.dataAddress = address(games[1].house.defaultData());
-		(success, message) = _loadLevel(address(0), _config);
+		(success, message) = _loadLevel(_level, _bidder);
 
-		// Initalize game
-		games[1].winner = Player.None;
-		games[1].turn = Player.Player1;
+		if (success == true) {
+			// Initalize game
+			games[1].winner = Player.None;
+			games[1].turn = Player.Player1;
 
-		emit NewGame(level, games[1].levelCode, games[1].levelData);
+			emit NewGame(level, games[1].levelCode, games[1].levelData);			
+		}
 	}
 
 	function getGame() external returns(GameInfo memory info){
