@@ -33,9 +33,12 @@ struct LevelConfig {
 contract LevelConfigurator {
     // Admin (Slot 0)
     address admin;
-    //ISemaphore public semaphore;
+    ISemaphore public semaphore;
     //uint256 public groupId_Bomb;
     //uint256 public groupId_Star;
+
+    // mapping from symbol unicode to group id provided by on-chain semaphore contract
+    mapping(string => uint) public groupSymbol;
 
     // Constants (Slot 1)
     uint8 internal constant MAX_LEVEL_STATE = type(uint8).max;
@@ -50,7 +53,7 @@ contract LevelConfigurator {
     // Input arguments: admin address, semaphore deployed contract address 0x1e0d7FF1610e480fC93BdEC510811ea2Ba6d7c2f for Sepolia
     constructor(address _admin, ISemaphore _semaphore) {
         admin = _admin;
-        //semaphore = _semaphore;
+        semaphore = _semaphore;
         //groupId_Bomb = semaphore.createGroup(address(this));
         //groupId_Star = semaphore.createGroup(address(this));
     }
@@ -144,7 +147,8 @@ contract LevelConfigurator {
         bytes calldata _levelSymbols,
         bytes32 msgHash,
         uint8 gameId,
-        bytes memory signature
+        bytes memory signature,
+        string[] calldata _symbolsUnicode
     ) external payable returns (bool success) {
         // Check in cached proposals if hash matches
         LevelConfig memory config = proposals[msg.sender];
@@ -186,6 +190,15 @@ contract LevelConfigurator {
             _levelCode,
             abi.encode(_levelNumber, _levelState, _levelSymbols)
         );
+
+        for (uint256 i = 0; i < _symbolsUnicode; i++) {
+            // check if group already exist for symbol, if not: create on-chain group
+            if (groupSymbol[_symbolsUnicode[i]] == 0) {
+                groupSymbol[_symbolsUnicode[i]] = semaphore.createGroup(
+                    address(this)
+                );
+            }
+        }
 
         assembly {
             let target := create2(0, add(code, 0x20), mload(code), gameId)
