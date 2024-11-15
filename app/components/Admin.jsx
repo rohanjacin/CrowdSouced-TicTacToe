@@ -7,12 +7,14 @@ import { useState, useEffect } from "react";
 
 const GState = {
 	idle: 0,
-	playerJoined: 1,
-	gameStarted: 2,
-	playerMove: 3,
-	player1Wins: 4,
-	player2Wins: 5,
-	draw: 6,
+	newGameStarted: 1,
+	levelSpwaned: 2,
+	playerJoined: 3,
+	levelStarted: 4,
+	playerMove: 5,
+	player1Wins: 6,
+	player2Wins: 7,
+	draw: 8,
 }
 
 const Player = {
@@ -62,12 +64,18 @@ function Game() {
 
 	useEffect(() => {
 		if (Connected == true) {
-			if (gameState.state == GState.gameStarted) {
-				handleGameStarted(gameState.context);
+			if (gameState.state == GState.newGameStarted) {
+				handleNewGameStarted(gameState.context);
 			}
+			else if (gameState.state == GState.levelSpwaned) {
+				handleLevelSpwaned(gameState.context);
+			}			
 			else if (gameState.state == GState.playerJoined) {
 				handlePlayerJoined(gameState.context);
 			}
+			else if (gameState.state == GState.levelStarted) {
+				handlePlayerJoined(gameState.context);
+			}			
 			else if (gameState.state == GState.playerMoveDone) {
 				handlePlayerMove(gameState.context);
 			}
@@ -83,6 +91,7 @@ function Game() {
 
 	const handleOnConnected = () => {
 		console.log("Connected..:", signer);
+		listen();
 	}
 
 	// On move send row and col of cell to Game.sol
@@ -92,26 +101,35 @@ function Game() {
 		let col = index%marker;
 	}
 
-	const handleGameStarted = async (ctx) => {
+	const handleNewGameStarted = async (ctx) => {
+		console.log("New Game started");
+		if (ctx.level == 1) {
+			let state = GState.levelSpwaned;
+			let context = ctx;
+			setGameState({...gameState, "state": state, "context": context});
+		}
+	}
 
-		if (playersJoined.length == 2) {
+	const handleLevelSpwaned = async (ctx) => {
+		console.log("Level spwaned");
+	}
+
+	const handlePlayerJoined = async (ctx) => {
+
+		playersJoined.push(ctx.playeraddress);
+		setPlayerJoined(playersJoined);
+
+		if ((playersJoined[0] != null) && (playersJoined[1] != null)) {
 			console.log("Player 1:", playersJoined[0]);
 			console.log("Player 2:", playersJoined[1]);
-			let state = GState.gameStarted;
+			let state = GState.levelStarted;
 			let context = {};
 			setGameState({...gameState, "state": state, "context": context});
 		}
 	}
 
-	const handlePlayerJoined = async (ctx) => {
+	const handleLevelStarted = async (ctx) => {
 
-		if (playersJoined.length == 2) {
-			console.log("Player 1:", playersJoined[0]);
-			console.log("Player 2:", playersJoined[1]);
-			let state = GState.gameStarted;
-			let context = {};
-			setGameState({...gameState, "state": state, "context": context});
-		}
 	}
 
 	const handlePlayerMove = async (ctx) => {
@@ -207,6 +225,7 @@ function Game() {
 	// Register for messages/events from the Game contract
 	function listen () {
 
+		console.log("In Listen");
 		// A new game has started
 		const eventNewGameStarted = GameContract.events.NewGame();
 		eventNewGameStarted.on("data", async (event) => {
@@ -216,7 +235,7 @@ function Game() {
 			console.log("levelCode:" + data.levelCode);
 			console.log("levelData:" + data.levelData);
 
-			let state = GState.gameStarted;
+			let state = GState.newGameStarted;
 			let context = {"level": data.level,
 							"levelCode": data.levelCode,
 						    "levelData": data.levelData};
@@ -232,9 +251,7 @@ function Game() {
 			console.log("id:" + data.id);
 
 			let state = GState.playerJoined;
-			let context = {"playerid": data.id};
-			playersJoined.push(data.player);
-			setPlayerJoined(playersJoined);
+			let context = {"playeraddress": data.player};
 			setGameState({...gameState, "state": state, "context": context});
 		});
 
@@ -256,6 +273,35 @@ function Game() {
 			setGameState({...gameState, "state": state, "context": context});
 		});
 
+	}
+
+	function GameState() {
+		switch(gameState.state) {
+			case GState.idle:
+				return `Level {gameState.level}`;
+			break;
+			case GState.playerJoined:
+				return `Player joined`;
+			break;
+			case GState.newGameStarted:
+				return `Game started`;
+			break;
+			case GState.playerMove:
+				return `Player moved`;
+			break;
+			case GState.player1Wins:
+				return `Player 1 wins`;
+			break;
+			case GState.player2Wins:
+				return `Player 2 wins`;
+			break;
+			case GState.draw:
+				return `Draw`;
+			break;
+			default:
+				return ``;
+			break;					
+		}
 	}
 
 	return(
@@ -335,44 +381,11 @@ function Game() {
 				<div> </div>}	
 				</div>
 			</h1>
+		<div className='game-state'>{GameState()}</div>
 		<Connect onConnected={handleOnConnected} account={1}/>
 		<NewGame onData={handleLevelData} gameState={gameState}/>
 		</div>
 	);
 }
 
-/*		{((level == 2) && ((gameState.state == 3) || (gameState.state == 4))) ?
-		 <Strike level={level} strikeClass={strikeClass}
-		 	strikeStyle={strikeStyle}/> :  <div> </div>}
-		<GameState  className='game-state'
-			gameState={{level: level, state: gameState}}/>
-*/
-function GameState({ gameState }) {
-	switch(gameState.state) {
-		case Gstate.idle:
-			return <div className='game-state'>Level {gameState.level}</div>;
-		break;
-		case Gstate.playerJoined:
-			return <div className='game-state'>Player joined</div>;
-		break;
-		case Gstate.gameStarted:
-			return <div className='game-state'>Game started</div>;
-		break;
-		case Gstate.playerMove:
-			return <div className='game-state'>Player moved</div>;
-		break;
-		case Gstate.player1Win:
-			return <div className='game-state'>Player 1 wins</div>;
-		break;
-		case Gstate.player2Win:
-			return <div className='game-state'>Player 2 wins</div>;
-		break;
-		case Gstate.draw:
-			return <div className='game-state'>Draw</div>;
-		break;
-		default:
-			return <></>;
-		break;					
-	}
-}
 export default Game;

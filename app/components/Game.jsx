@@ -6,12 +6,16 @@ import JoinGame from "./Join.jsx";
 import { useState, useEffect } from "react";
 
 const GState = {
-	levelInProgress: 0,
-	playerMoveInProgress: 1,
-	playerMoveDone: 2,
-	player1Wins: 3,
-	player2Wins: 4,
-	draw: 5,
+	idle: 0,
+	newGameStarted: 1,
+	levelSpwaned: 2,
+	playerJoined: 3,
+	levelStarted: 4,
+	playerMoveInProgress: 5,
+	playerMoveDone: 6,
+	player1Wins: 7,
+	player2Wins: 8,
+	draw: 9,
 }
 
 const Player = {
@@ -43,8 +47,7 @@ function Game() {
 	const [playerVal, setPlayerVal] = useState("❌");
 
 	// Game state
-	const [gameState, setGameState] = useState({state: GState.levelInProgress,
-										context: 0});
+	const [gameState, setGameState] = useState({state: GState.idle, context: 0});
 
 	// Strike
 	const [strikeClass, setStrikeClass] = useState(`strike- - `); 
@@ -201,6 +204,30 @@ function Game() {
 		});
 	}
 
+	function GameState() {
+		switch(gameState.state) {
+			case GState.idle:
+				return '';
+			break;
+			case GState.levelStarted:
+				return `Level ${gameState.level}`;
+			break;
+
+			case GState.player1Wins:
+				return `Player 1 wins`;
+			break;
+			case GState.player2Wins:
+				return `Player 2 wins`;
+			break;
+			case GState.draw:
+				return `Draw`;
+			break;
+			default:
+				return ``;
+			break;					
+		}
+	}
+
 	return(
 		<div className="game">
 			<h1>
@@ -278,35 +305,14 @@ function Game() {
 				<div> </div>}	
 				</div>
 			</h1>
-		{((level == 2) && ((gameState.state == 3) || (gameState.state == 4))) ?
+		{((level == 2) && ((gameState.state == player1Wins) || (gameState.state == player2Wins))) ?
 		 <Strike level={level} strikeClass={strikeClass}
 		 	strikeStyle={strikeStyle}/> :  <div> </div>}
-		<GameState  className='game-state'
-			gameState={{level: level, state: gameState}}/>
+		<div className='game-state'>{GameState()}</div>
 		<Connect onConnected={handleOnConnected} account={3}/>
 		<JoinGame onData={handleLevelData} players={Player}/>
 		</div>
 	);
-}
-
-function GameState({ gameState }) {
-	switch(gameState.state) {
-		case 0/*Gstate.levelInProgress*/:
-			return <div className='game-state'>Level {gameState.level}</div>;
-		break;
-		case 1/*Gstate.player1Wins*/:
-			return <div className='game-state'>Player 1 wins</div>;
-		break;
-		case 2/*Gstate.player2Win*/:
-			return <div className='game-state'>Player 2 wins</div>;
-		break;
-		case 3/*Gstate.draw*/:
-			return <div className='game-state'>Draw</div>;
-		break;
-		default:
-			return <></>;
-		break;					
-	}
 }
 
 export default Game;

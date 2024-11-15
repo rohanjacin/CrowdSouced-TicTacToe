@@ -8,38 +8,6 @@ var signer;
 var Connected;
 var GameContract;
 
-async function createProvider(account) {
-  if (window.ethereum) {
-    await window.ethereum.request({ method: "eth_requestAccounts" });
-    web3 = new Web3(window.ethereum);
-    return true;
-  } else {
-
-    // Add provider (anvil)
-    const wsProvider = new Web3.providers.WebsocketProvider('ws://localhost:8545');
-    web3 = new Web3(wsProvider);
-    let signers = await web3.eth.getAccounts();
-    signer = signers[account];
-    return true;
-  }
-
-  return false;
-}
-
-async function getGameContract() {
-  GameContract = new web3.eth.Contract(GameD.abi, 
-    "0x8464135c8F25Da09e49BC8782676a84730C318bC");
-}
-
-async function getBalance() {
-  if (window.ethereum) {
-    return null;
-  } else {
-    let wei = await web3.eth.getBalance(signer);
-    return Math.floor(web3.utils.fromWei(wei, 'ether'));
-  }  
-}
-
 function Connect({ onConnected, account }) {
 
   const [connected, setConnected] = useState(false);
@@ -47,8 +15,40 @@ function Connect({ onConnected, account }) {
 
   useEffect(() => {
      Connected = connected;
-     onConnected();
   }, [connected]);
+
+  async function createProvider(account) {
+    if (window.ethereum) {
+      await window.ethereum.request({ method: "eth_requestAccounts" });
+      web3 = new Web3(window.ethereum);
+      return true;
+    } else {
+
+      // Add provider (anvil)
+      const wsProvider = new Web3.providers.WebsocketProvider('ws://localhost:8545');
+      web3 = new Web3(wsProvider);
+      let signers = await web3.eth.getAccounts();
+      signer = signers[account];
+      return true;
+    }
+
+    return false;
+  }
+
+  async function getGameContract() {
+    GameContract = new web3.eth.Contract(GameD.abi, 
+      "0x8464135c8F25Da09e49BC8782676a84730C318bC");
+    onConnected();
+  }
+
+  async function getBalance() {
+    if (window.ethereum) {
+      return null;
+    } else {
+      let wei = await web3.eth.getBalance(signer);
+      return Math.floor(web3.utils.fromWei(wei, 'ether'));
+    }  
+  }
 
   return <button className='connect-button' disabled={connected}
           onClick={ async () => { setConnected(await createProvider(account));

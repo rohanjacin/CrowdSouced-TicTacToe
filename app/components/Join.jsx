@@ -5,25 +5,31 @@ import BN from "bn.js";
 
 function JoinGame({ onData, players }) {
 
-	//console.log("Gstate.levelInProgress:", Gstate.levelInProgress);
 	const defaultJoinState = {joined: false, asPlayer :players.PLAYER_NONE};
 	const [joinState, setJoined] = useState(defaultJoinState);
 
 	useEffect(() => {
 	}, [joinState.joined]);
 
+	// Register for messages/events from the Game contract
+	async function listen () {
+
+		// A Player has joined the game
+		const eventPlayerJoined = GameContract.events.PlayerJoined();
+		eventPlayerJoined.on("data", async (event) => {
+			let data = event.returnValues;
+			setJoined({...joinState, joined: true, asPlayer: data.id });
+		});
+	}
+
 	async function requestToJoin() {
 		let ret = { joined : false,  asPlayer: players.PLAYER_NONE };
 		await GameContract.methods.joinGame()
-			.call({from: signer, gas: 100000})
+			.send({from: signer, gas: 100000})
 			.then((result) => {
-				let player = ((result.message == "You are Player1 - X")?
-					players.PLAYER_1 : ((result.message == "You are Player1 - O")?
-						players.PLAYER_2 : players.PLAYER_NONE));
-				ret = {joined : result.success, asPlayer: player};
-				setJoined({...joinState, joined: true, asPlayer: player });
 			});
 	}
+
 
 	async function requestLevelData() {
 		// Call "fetchLevelData()returns(bytes memory)" in Level 1
@@ -63,7 +69,7 @@ function JoinGame({ onData, players }) {
 
 	return (<button className='join-button'
 			disabled={joinState.joined}
-			onClick={async () => { await requestToJoin(); await requestLevelData(); }}
+			onClick={async () => { listen(); await requestToJoin(); await requestLevelData(); }}
 			>{(joinState.joined == true)?`Joined as: Player${joinState.asPlayer}`:"Join"}</button>
 	);
 }

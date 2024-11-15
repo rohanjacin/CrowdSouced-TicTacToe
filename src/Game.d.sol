@@ -137,7 +137,7 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 		address levelData);
 
 	// When player joins the game	
-	event PlayerJoined (address player, Player id);
+	event PlayerJoined (address player, uint8 id);
 
 	// When player makes a move	
 	event PlayerMove (Player id, Move move,
@@ -314,7 +314,7 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 			
 			// Store player 1
 			games[1].player1 = msg.sender;
-			emit PlayerJoined (msg.sender, Player.Player1); 
+			emit PlayerJoined(games[1].player1, uint8(Player.Player1)); 
 			return (true, "You are Player1 - X");
 		}
 
@@ -322,7 +322,7 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 			
 			// Store player 2
 			games[1].player2 = msg.sender;
-			emit PlayerJoined (msg.sender, Player.Player2); 
+			emit PlayerJoined(games[1].player2, uint8(Player.Player2)); 
 			return (true, "You are Player2 - O");			
 		}
 
