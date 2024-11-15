@@ -58,9 +58,9 @@ contract LevelConfigurator {
     // Enables Level configuration
     function start() external view onlyAdmin {}
 
-    function getProposal(address bidder) external
-        returns (LevelConfig memory config) {
-
+    function getProposal(
+        address bidder
+    ) external returns (LevelConfig memory config) {
         if (bidder == address(0)) {
             revert BiddersAddressInvalid();
         }
@@ -182,8 +182,9 @@ contract LevelConfigurator {
         }
 
         // Deploy using create2
-        bytes memory code = abi.encodePacked(_levelCode,
-           abi.encode(_levelNumber, _levelState, _levelSymbols)
+        bytes memory code = abi.encodePacked(
+            _levelCode,
+            abi.encode(_levelNumber, _levelState, _levelSymbols)
         );
 
         assembly {
@@ -202,7 +203,7 @@ contract LevelConfigurator {
                 proposals[msg.sender] = config;
             }
 
-            success = true;            
+            success = true;
         }
     }
 
@@ -215,9 +216,14 @@ contract LevelConfigurator {
         bytes memory _symbols
     ) internal returns (bool success) {
         LevelConfig memory config = LevelConfig(
-            uint256(0), uint256(0), uint256(0),
-            uint256(0), uint256(0), bytes32(0),
-            address(0), address(0)
+            uint256(0),
+            uint256(0),
+            uint256(0),
+            uint256(0),
+            uint256(0),
+            bytes32(0),
+            address(0),
+            address(0)
         );
 
         // Register the lengths
@@ -417,7 +423,7 @@ contract LevelConfigurator {
         _;
     }
 
-/*    function addMember(
+    function addMember(
         uint256 groupId,
         uint256 identityCommitment
     ) external onlyAdmin {
@@ -494,5 +500,5 @@ contract LevelConfigurator {
             points
         );
         semaphore.validateProof(groupId, proof);
-    }*/
+    }
 }
