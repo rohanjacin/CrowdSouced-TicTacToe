@@ -28,12 +28,13 @@ struct LevelConfig {
     bytes32 hash; // 0xA0
     address codeAddress; // 0xC0
     address dataAddress; // 0xE0
+    mapping(string => uint) groupSymbol; // mapping from symbol uid to group id provided by on-chain semaphore contract
 }
 
 contract LevelConfigurator {
     // Admin (Slot 0)
     address admin;
-    //ISemaphore public semaphore;
+    ISemaphore public semaphore;
     //uint256 public groupId_Bomb;
     //uint256 public groupId_Star;
 
@@ -50,7 +51,7 @@ contract LevelConfigurator {
     // Input arguments: admin address, semaphore deployed contract address 0x1e0d7FF1610e480fC93BdEC510811ea2Ba6d7c2f for Sepolia
     constructor(address _admin, ISemaphore _semaphore) {
         admin = _admin;
-        //semaphore = _semaphore;
+        semaphore = _semaphore;
         //groupId_Bomb = semaphore.createGroup(address(this));
         //groupId_Star = semaphore.createGroup(address(this));
     }
@@ -58,9 +59,9 @@ contract LevelConfigurator {
     // Enables Level configuration
     function start() external view onlyAdmin {}
 
-    function getProposal(address bidder) external
-        returns (LevelConfig memory config) {
-
+    function getProposal(
+        address bidder
+    ) external returns (LevelConfig memory config) {
         if (bidder == address(0)) {
             revert BiddersAddressInvalid();
         }
@@ -182,9 +183,31 @@ contract LevelConfigurator {
         }
 
         // Deploy using create2
-        bytes memory code = abi.encodePacked(_levelCode,
-           abi.encode(_levelNumber, _levelState, _levelSymbols)
+        bytes memory code = abi.encodePacked(
+            _levelCode,
+            abi.encode(_levelNumber, _levelState, _levelSymbols)
         );
+
+        // for (uint256 i = 0; i < _symbolsUnicode; i++) {
+        //     // check if group already exist for symbol, if not: create on-chain group
+        //     if (groupSymbol[_symbolsUnicode[i]] == 0) {
+        //         groupSymbol[_symbolsUnicode[i]] = semaphore.createGroup(
+        //             address(this)
+        //         );
+        //     }
+        // }
+
+        // Loop through each 4-byte chunk in _levelSymbols
+        for (uint256 i = 0; i < _levelSymbols.length; i += 4) {
+            // Extract 4 bytes as a slice
+            bytes memory symbol = _levelSymbols[i:i + 4];
+            // check if group already exist for symbol hex, if not: create on-chain group
+            if (groupSymbol[string(symbol)] == 0) {
+                groupSymbol[string(symbol)] = semaphore.createGroup(
+                    address(this)
+                );
+            }
+        }
 
         assembly {
             let target := create2(0, add(code, 0x20), mload(code), gameId)
@@ -202,7 +225,7 @@ contract LevelConfigurator {
                 proposals[msg.sender] = config;
             }
 
-            success = true;            
+            success = true;
         }
     }
 
@@ -215,9 +238,14 @@ contract LevelConfigurator {
         bytes memory _symbols
     ) internal returns (bool success) {
         LevelConfig memory config = LevelConfig(
-            uint256(0), uint256(0), uint256(0),
-            uint256(0), uint256(0), bytes32(0),
-            address(0), address(0)
+            uint256(0),
+            uint256(0),
+            uint256(0),
+            uint256(0),
+            uint256(0),
+            bytes32(0),
+            address(0),
+            address(0)
         );
 
         // Register the lengths
@@ -417,7 +445,7 @@ contract LevelConfigurator {
         _;
     }
 
-/*    function addMember(
+    function addMember(
         uint256 groupId,
         uint256 identityCommitment
     ) external onlyAdmin {
@@ -494,5 +522,5 @@ contract LevelConfigurator {
             points
         );
         semaphore.validateProof(groupId, proof);
-    }*/
+    }
 }
