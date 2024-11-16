@@ -47,7 +47,9 @@ function Game() {
 	const [playerVal, setPlayerVal] = useState("❌");
 
 	// Game state
-	const [gameState, setGameState] = useState({state: GState.idle, context: 0});
+	const initialContext = {"level": null, "levelCode": null, "levelData": null};
+	const initialState = {"state": GState.idle, "context": initialContext};
+	const [gameState, setGameState] = useState(initialState);
 
 	// Strike
 	const [strikeClass, setStrikeClass] = useState(`strike- - `); 
@@ -90,9 +92,11 @@ function Game() {
 		await makeMove(row, col)
 		.then(() => {
 			let state = GState.playerMoveInProgress;
-			let context = {"cell": index, "value": playerVal};
+			let context = {...gameState.context, "cell": index,
+							"value": playerVal};
 			setGameState({...gameState, "state": state, 
-				"context": context});			
+				"context": context});
+			console.log("gameState1:", gameState);			
 		});
 	}
 
@@ -177,9 +181,11 @@ function Game() {
 			.then((value) => {
 				let state = GState.playerMoveDone;
 				let idx = row*marker+col;
-				let context = {"cell": idx, "value": parseInt(value)};
+				let context = {...gameState.context, "cell": idx,
+								"value": parseInt(value)};
 				setGameState({...gameState, "state": state, 
 					"context": context});
+				console.log("gameState2:", gameState);
 		});
 	}
 
@@ -194,10 +200,11 @@ function Game() {
 							  GState.player1Wins :
 							    ((parseInt(info.winner) == Player.PLAYER_2) ?
 								 GState.player2Wins : gameState.state));
-				let context = { ...gameState.state, turn: info.turn, message: info.message };
+				let context = { ...gameState.context, turn: info.turn, message: info.message };
 				if (state != gameState.state) {
 					setGameState({...gameState, "state": state, 
 						"context": context});
+					console.log("gameState3:", gameState);
 				}
 				setPlayerVal(parseInt(info.turn) == Player.PLAYER_1 ? "❌" : 
 					(parseInt(info.turn) == Player.PLAYER_2) ? "⭕" : null);
@@ -210,7 +217,7 @@ function Game() {
 				return '';
 			break;
 			case GState.levelStarted:
-				return `Level ${gameState.level}`;
+				return `Level ${gameState.context.level}`;
 			break;
 
 			case GState.player1Wins:

@@ -6,15 +6,16 @@ import NewGame from "./NewGame.jsx";
 import { useState, useEffect } from "react";
 
 const GState = {
-	idle: 0,
-	newGameStarted: 1,
-	levelSpwaned: 2,
-	playerJoined: 3,
-	levelStarted: 4,
-	playerMove: 5,
-	player1Wins: 6,
-	player2Wins: 7,
-	draw: 8,
+	idle: 1,
+	init: 2,
+	newGameStarted: 3,
+	levelSpwaned: 4,
+	playerJoined: 5,
+	levelStarted: 6,
+	playerMove: 7,
+	player1Wins: 8,
+	player2Wins: 9,
+	draw: 10,
 }
 
 const Player = {
@@ -49,12 +50,12 @@ function Game() {
 	const [playerTurn, setPlayerTurn] = useState(Player.PLAYER_1);
 
 	// Game state
-	const [gameState, setGameState] = useState({state: GState.levelInProgress,
-										context: 0});
+	const initialContext = {"level": null, "levelCode": null, "levelData": null};
+	const initialState = {"state": 0, "context": initialContext};
+	const [gameState, setGameState] = useState(initialState);
 
-	// Strike
-	const [strikeClass, setStrikeClass] = useState(`strike- - `); 
-	const [strikeStyle, setStrikeSyle] = useState({row: null, col: null, diag: null, combo: null}); 
+	// Level addresses
+	//const [levelAddress, setLevelAddress] = useState({code: null, data: null});
 
 	useEffect(() => {
 		if (Connected == true) {
@@ -62,9 +63,28 @@ function Game() {
 		}
 	}, [level]);
 
+/*	useEffect(() => {
+		if (Connected == true) {
+			console.log("On level address change..");
+			
+			if (gameState.state == GState.newGameStarted) {
+				let context = {"level": };				
+				setGameState(...gameState, "context": context);
+			}
+		}
+	}, [levelAddress]);*/
+
 	useEffect(() => {
 		if (Connected == true) {
-			if (gameState.state == GState.newGameStarted) {
+			if (gameState.state == GState.idle) {
+				console.log("In State Idle");
+				handleIdle(gameState.context);
+			}
+			else if (gameState.state == GState.init) {
+				console.log("In State Init");
+				handleInit(gameState.context);
+			}			
+			else if (gameState.state == GState.newGameStarted) {
 				handleNewGameStarted(gameState.context);
 			}
 			else if (gameState.state == GState.levelSpwaned) {
@@ -74,9 +94,8 @@ function Game() {
 				handlePlayerJoined(gameState.context);
 			}
 			else if (gameState.state == GState.levelStarted) {
-				handlePlayerJoined(gameState.context);
 			}			
-			else if (gameState.state == GState.playerMoveDone) {
+			else if (gameState.state == GState.playerMove) {
 				handlePlayerMove(gameState.context);
 			}
 			else if ((gameState.state == GState.player1Wins) ||
@@ -84,7 +103,7 @@ function Game() {
 				     (gameState.state == GState.draw)) {
 				console.log("Game Over:", gameState.state);
 				console.log("gameState.context:", gameState.context);
-				handleStrikeData(gameState.context.message);				
+				handleLevelOver(gameState.context);
 			} 
 		}
 	}, [gameState]);
@@ -92,22 +111,30 @@ function Game() {
 	const handleOnConnected = () => {
 		console.log("Connected..:", signer);
 		listen();
+
+		let state = GState.idle;
+		let ctx = {...gameState.context};
+		setGameState({...gameState, "state": state, "context": ctx});		
+		console.log("gameState5:", gameState);
 	}
 
 	// On move send row and col of cell to Game.sol
 	const handleCellClick = async (index) => {
+	}
 
-		let row = Math.floor(index/marker);
-		let col = index%marker;
+	const handleIdle = async (ctx) => {
+		console.log("Idel state");
+		await getLevel();
+	}
+
+	const handleInit = async (ctx) => {
+		console.log("Init state");
+		//await getLevel();
 	}
 
 	const handleNewGameStarted = async (ctx) => {
 		console.log("New Game started");
-		if (ctx.level == 1) {
-			let state = GState.levelSpwaned;
-			let context = ctx;
-			setGameState({...gameState, "state": state, "context": context});
-		}
+		await getGame();
 	}
 
 	const handleLevelSpwaned = async (ctx) => {
@@ -123,84 +150,55 @@ function Game() {
 			console.log("Player 1:", playersJoined[0]);
 			console.log("Player 2:", playersJoined[1]);
 			let state = GState.levelStarted;
-			let context = {};
-			setGameState({...gameState, "state": state, "context": context});
+			setGameState({...gameState, "state": state});
+			console.log("gameState6:", gameState);
 		}
 	}
 
 	const handleLevelStarted = async (ctx) => {
-
 	}
 
 	const handlePlayerMove = async (ctx) => {
-
-		let row = Math.floor(ctx.cell/marker);
-		let col = ctx.cell%marker;
-
+		console.log("Player move..")
 		await getGame();
+	}
 
-		let idx = row*marker+col;
-		const newQuadCells = [...quadCells];
-		newQuadCells[idx] = (ctx.value == 1 ? "❌" : (ctx.value == 2 ? "⭕": null));
-		setQuadCells(newQuadCells);
+	const handleLevelOver = async (ctx) => {
+		console.log("Level done");
+		let state = GState.idle;
+		let context = {...ctx, "level" : null};
+		setGameState({...gameState, state, "context": context});		
+		console.log("gameState7:", gameState);
 	}
 
 	// On getting level data from Game
 	const handleLevelData = (data) => {
+
+		console.log("handleLevelData");
+		if (gameState.state == GState.newGameStarted) {
+			let state = GState.levelSpwaned;
+			setGameState({...gameState, "state": state});
+			console.log("gameState8:", gameState);
+		}
 
 		let newQuadCells = data.state.map((id) =>  id == 1 ? id = "❌":
 							(id == 2 ? id = "⭕": null));
 		setQuadCells(newQuadCells);
 	}
 
-	const handleStrikeData = (message) => {
-
-		let combo = message.split(":")[1];
-		combo = combo.split(",")[0];
-		let rowS = message.split(":")[2];
-		rowS = rowS.split(",")[0];
-		let colS = message.split(":")[3];
-		colS = colS.split(",")[0];
-		let diagS = message.split(":")[4];
-		diagS = diagS.split(",")[0];
-		
-		let newStrikeClass, newStrikeSyle;
-
-		if ((level == 1) || (level == 2)) {
-			switch (combo) {
-				case "row": {
-		 			newStrikeClass = `strike-${combo}-${level}-${rowS}`;
-		 			rowS = parseInt(rowS);
-		 		}
-				break;
-				case "col":
-		 			newStrikeClass = `strike-${combo}-${level}-${colS}`;
-		 			colS = parseInt(colS);
-				break;
-				case "fwddiag":
-				case "bckwddiag":
-		 			newStrikeClass = `strike-${combo}-${level}`;
-				break;
-			}
-
-			newStrikeSyle = {row:rowS, col:colS, diag:diagS, combo:combo};
-		}
-
-		setStrikeClass(newStrikeClass);
-		setStrikeSyle(newStrikeSyle)
-	}
-
-	async function getCell(row, col) {
-		let ret = { joined : false,  asPlayer: Player.PLAYER_NONE };
-		await GameContract.methods.getState(row, col)
+	async function getLevel() {
+		await GameContract.methods.level()
 			.call({from: signer, gas: 100000})
-			.then((value) => {
-				let state = GState.playerMoveDone;
-				let idx = row*marker+col;
-				let context = {"cell": idx, "value": parseInt(value)};
-				setGameState({...gameState, "state": state, 
-					"context": context});
-		});
+			.then((level) => {
+				let lev = parseInt(level);
+				console.log("LEVEL:", lev);
+				if (lev == 0) {
+					let context = {...gameState.context, "level": 0}
+					setGameState({...gameState, "state": GState.init, "context": context});
+					console.log("gameState9:", gameState);
+				}
+				setLevel(lev);
+			});
 	}
 
 	async function getGame() {
@@ -209,23 +207,40 @@ function Game() {
 		await GameContract.methods.getGame()
 			.call({from: signer, gas: 100000})
 			.then((info) => {
+				console.log("info:", info.levelCode);
 				ret = { winner: info.winner, turn: info.turn, message: info.message };
 				let state = ((parseInt(info.winner) == Player.PLAYER_1) ?
 							  GState.player1Wins :
 							    ((parseInt(info.winner) == Player.PLAYER_2) ?
 								 GState.player2Wins : gameState.state));
-				let context = { ...gameState.state, turn: info.turn, message: info.message };
-				if (state != gameState.state) {
-					setGameState({...gameState, "state": state, 
-						"context": context});
+				let code = info.levelCode;
+				let data = info.levelData;
+				let ctx = gameState.context;
+				console.log("cts:", ctx);
+				if ((state != gameState.state) ||
+					(code != ctx.levelCode) ||
+				    (data != ctx.levelData)) {
+
+					console.log("In here!!");
+					if (state != gameState.state) {
+						let context = { ...ctx, turn: info.turn, message: info.message };
+						setGameState({...gameState, "state": state, 
+							"context": context});						
+						console.log("gameState10:", gameState);
+					}
+					else {
+						let context = { ...ctx, turn: info.turn, message: info.message };
+						setGameState({...gameState, "state": state, 
+							"context": context});						
+						console.log("gameState11:", gameState);
+					}
 				}
-		});
+			});
 	}
 
 	// Register for messages/events from the Game contract
 	function listen () {
 
-		console.log("In Listen");
 		// A new game has started
 		const eventNewGameStarted = GameContract.events.NewGame();
 		eventNewGameStarted.on("data", async (event) => {
@@ -236,10 +251,13 @@ function Game() {
 			console.log("levelData:" + data.levelData);
 
 			let state = GState.newGameStarted;
-			let context = {"level": data.level,
+			let context = {...gameState.context, "level": parseInt(data.level),
 							"levelCode": data.levelCode,
 						    "levelData": data.levelData};
 			setGameState({...gameState, "state": state, "context": context});
+			console.log("gameState2:", gameState);
+
+			setLevel(data.level);
 		});
 
 		// A Player has joined the game
@@ -251,8 +269,10 @@ function Game() {
 			console.log("id:" + data.id);
 
 			let state = GState.playerJoined;
-			let context = {"playeraddress": data.player};
+			let context = {...gameState.context, "playeraddress": data.player};
 			setGameState({...gameState, "state": state, "context": context});
+			console.log("gameState3:", gameState);
+		
 		});
 
 		// A move has been made
@@ -261,16 +281,17 @@ function Game() {
 			let data = event.returnValues;
 			console.log("Player Move..");
 			console.log("player id:" + data.id);
-			console.log("player move:" + data.move);
+			console.log("player move:", data.move);
 			console.log("winner:" + data.winner);
 			console.log("message:" + data.message);
 
 			let state = GState.playerMove;
-			let cell = (data.move.row)*marker+(data.move.col);
-			let context = {"id": data.id, "cell": cell, 
-							"winner": data.winner,
-							"message": data.message};
+			let cell = (parseInt(data.move.row))*marker+(parseInt(data.move.col));
+			let context = {...gameState.context, "id": data.id, "cell": cell, 
+							"winner": data.winner, "message": data.message};
 			setGameState({...gameState, "state": state, "context": context});
+			console.log("gameState4:", gameState);
+
 		});
 
 	}
@@ -278,7 +299,7 @@ function Game() {
 	function GameState() {
 		switch(gameState.state) {
 			case GState.idle:
-				return `Level {gameState.level}`;
+				return ``;
 			break;
 			case GState.playerJoined:
 				return `Player joined`;
@@ -286,8 +307,11 @@ function Game() {
 			case GState.newGameStarted:
 				return `Game started`;
 			break;
+			case GState.levelSpwaned:
+				return `Level ${gameState.context.level}`;
+			break;
 			case GState.playerMove:
-				return `Player moved`;
+				return ``;
 			break;
 			case GState.player1Wins:
 				return `Player 1 wins`;
@@ -345,7 +369,7 @@ function Game() {
 				cells={quadCells} onCellClick={handleCellClick}/></div> 
 				: <div> <Board level={level} gameState={gameState}
 				quad={0} off={0*marker+3*0}
-				cells={quadCells} strikeClass={strikeClass} 
+				cells={quadCells} 
 				onCellClick={handleCellClick}/> </div>}	
 				</div>
 			</h1>
@@ -383,7 +407,8 @@ function Game() {
 			</h1>
 		<div className='game-state'>{GameState()}</div>
 		<Connect onConnected={handleOnConnected} account={1}/>
-		<NewGame onData={handleLevelData} gameState={gameState}/>
+		<NewGame onData={handleLevelData} gameState={gameState}
+				 gState={GState}/>
 		</div>
 	);
 }

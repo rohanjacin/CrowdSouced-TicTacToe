@@ -30,7 +30,6 @@ function JoinGame({ onData, players }) {
 			});
 	}
 
-
 	async function requestLevelData() {
 		// Call "fetchLevelData()returns(bytes memory)" in Level 1
 		const fetchLevelData = web3.eth.abi.encodeFunctionCall({
