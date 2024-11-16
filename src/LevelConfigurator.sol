@@ -28,6 +28,7 @@ struct LevelConfig {
     bytes32 hash; // 0xA0
     address codeAddress; // 0xC0
     address dataAddress; // 0xE0
+    mapping(string => uint) groupSymbol; // mapping from symbol uid to group id provided by on-chain semaphore contract
 }
 
 contract LevelConfigurator {
@@ -36,9 +37,6 @@ contract LevelConfigurator {
     ISemaphore public semaphore;
     //uint256 public groupId_Bomb;
     //uint256 public groupId_Star;
-
-    // mapping from symbol unicode to group id provided by on-chain semaphore contract
-    mapping(string => uint) public groupSymbol;
 
     // Constants (Slot 1)
     uint8 internal constant MAX_LEVEL_STATE = type(uint8).max;
@@ -147,8 +145,7 @@ contract LevelConfigurator {
         bytes calldata _levelSymbols,
         bytes32 msgHash,
         uint8 gameId,
-        bytes memory signature,
-        string[] calldata _symbolsUnicode
+        bytes memory signature
     ) external payable returns (bool success) {
         // Check in cached proposals if hash matches
         LevelConfig memory config = proposals[msg.sender];
@@ -191,10 +188,22 @@ contract LevelConfigurator {
             abi.encode(_levelNumber, _levelState, _levelSymbols)
         );
 
-        for (uint256 i = 0; i < _symbolsUnicode; i++) {
-            // check if group already exist for symbol, if not: create on-chain group
-            if (groupSymbol[_symbolsUnicode[i]] == 0) {
-                groupSymbol[_symbolsUnicode[i]] = semaphore.createGroup(
+        // for (uint256 i = 0; i < _symbolsUnicode; i++) {
+        //     // check if group already exist for symbol, if not: create on-chain group
+        //     if (groupSymbol[_symbolsUnicode[i]] == 0) {
+        //         groupSymbol[_symbolsUnicode[i]] = semaphore.createGroup(
+        //             address(this)
+        //         );
+        //     }
+        // }
+
+        // Loop through each 4-byte chunk in _levelSymbols
+        for (uint256 i = 0; i < _levelSymbols.length; i += 4) {
+            // Extract 4 bytes as a slice
+            bytes memory symbol = _levelSymbols[i:i + 4];
+            // check if group already exist for symbol hex, if not: create on-chain group
+            if (groupSymbol[string(symbol)] == 0) {
+                groupSymbol[string(symbol)] = semaphore.createGroup(
                     address(this)
                 );
             }
