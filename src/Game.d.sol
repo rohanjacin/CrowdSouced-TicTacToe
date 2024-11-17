@@ -26,7 +26,7 @@ error PlayerAddressInvalid();
 contract GameHouse {
 	address public goV;
 	address public levelConfigurator;
-	address public ruleEngine;
+	//address public ruleEngine;
 	address public defaultLevel;
 	address public defaultData;
 

@@ -5,35 +5,34 @@ import { web3, signer, GameContract, Connected, Connect } from "./Connect.jsx";
 import BN from "bn.js";
 import Popup from 'reactjs-popup';
 
-function NewGame({ onData, gameState, gState }) {
+function NewGame({ onData, gameState, levelInfo, gState, players }) {
 
 	const [newGame, setNewGame] = useState({"set":false, "get":false, 
 								  "level": null, "code": null, "data": null});
 
 	useEffect(() => {
 		if (Connected == true) {
-			console.log("In EFFECT:level", gameState.context.level);
-			console.log("levelCODE:", gameState.context.levelCode);
-			console.log("levelDATA:", gameState.context.levelData);
+		}
+	}, [Connected]);
 
-			if (gameState.context.level && (newGame.set == true)) {
+	useEffect(() => {
+		if (Connected == true) {
+			console.log("In EFFECT:level", levelInfo.levelNum);
+			console.log("levelCODE:", levelInfo.levelCode);
+			console.log("levelDATA:", levelInfo.levelData);
+			console.log("gameState:",gameState);
+			console.log("newGame:", newGame);
+
+			if (levelInfo.levelNum && (newGame.set == true) &&
+				(gameState == gState.newGameStarted)) {
 				setNewGame({...newGame, "set": true, 
-							"level": parseInt(gameState.context.level),
-							"code": gameState.context.levelCode, 
-							"data": gameState.context.levelData});
-				requestLevelData(gameState.context.levelCode);
-			}
-			else if ((gameState.context.level == 0) && 
-					 (gameState.state == gState.init) &&
-				     (newGame.set == false)) {
-				console.log("Need to load new level..");
-				setNewGame({...newGame, "set": true, "get": true,
-					 "code": null, "data": null});
+							"level": parseInt(levelInfo.levelNum),
+							"code": levelInfo.levelCode, 
+							"data": levelInfo.levelData});
+				requestLevelData(levelInfo.levelCode);
 			}
 		}
-	}, [gameState.context.level,
-		gameState.context.levelCode,
-		gameState.context.levelData]);	
+	}, [levelInfo]);	
 
 
 	async function startNewGame(num, bidder) {
@@ -88,17 +87,14 @@ function NewGame({ onData, gameState, gState }) {
     }
 
     async function loadLevel (bidder) {
-        console.log("loadLevel:", bidder);
-        console.log("typeofloadLevel:", typeof(bidder));
-
-        await startNewGame(1, bidder);
-        //await requestLevelData();
+        setNewGame({...newGame, "get": false, "set": true});
+        setTimeout(async () => await startNewGame(1, bidder), 500);
     }
 
-	return (<div>
+;	return (<div>
 				<button className='newgame-button'
 				onClick={(newGame.set == true) ? displayLevel :
-				async () => { if (Connected == true) { await startNewGame(1, null)}}}>
+				async () => { if (Connected == true) { setNewGame({...newGame, "get": true}) }}}>
 				{(newGame.set == true)? `Level ${newGame.level}`:"NewGame"}
 		    	</button>
 			    <Popup open={(newGame.get == true)} modal>

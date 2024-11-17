@@ -6,16 +6,16 @@ import JoinGame from "./Join.jsx";
 import { useState, useEffect } from "react";
 
 const GState = {
-	idle: 0,
-	newGameStarted: 1,
-	levelSpwaned: 2,
+	idle: 1,	
+	newGameStarted: 2,
 	playerJoined: 3,
-	levelStarted: 4,
-	playerMoveInProgress: 5,
-	playerMoveDone: 6,
-	player1Wins: 7,
-	player2Wins: 8,
-	draw: 9,
+	levelSpwaned: 4,
+	levelStarted: 5,
+	playerMoveInProgress: 6,
+	playerMoveDone: 7,
+	player1Wins: 8,
+	player2Wins: 9,
+	draw: 10,
 }
 
 const Player = {
@@ -29,7 +29,7 @@ const Player = {
 // for level 1 and level 2
 function Game() {
 	// Level
-	const [level, setLevel] = useState(1);
+	const [level, setLevel] = useState(0);
 	// Level cell count
 	const numCells = (level == 2)? 81 : 9;
 	const marker = (level == 2)? 9 : 3;
@@ -43,13 +43,20 @@ function Game() {
 	// Linearized cells in order to fill board quadrants
 	const [quadCells, setQuadCells] = useState(Array(numCells).fill(null));
 
-	// Player turn
-	const [playerVal, setPlayerVal] = useState("❌");
-
 	// Game state
-	const initialContext = {"level": null, "levelCode": null, "levelData": null};
-	const initialState = {"state": GState.idle, "context": initialContext};
-	const [gameState, setGameState] = useState(initialState);
+	const [levelCode, setLevelCode] = useState("");
+	const [levelData, setLevelData] = useState("");
+	var levelInfo = {"levelNum": level, "levelCode": levelCode, "levelData": levelData}
+	const [gcell, setGameCell] = useState(null);
+	const [gturn, setGameTurn] = useState(Player.PLAYER_1);
+	const [gplayers, setGamePlayers] = useState(Array(2).fill(null));
+	const [gplayerValue, setGamePlayerValue] = useState("❌");
+	const [gwinner, setGameWinner] = useState(Player.PLAYER_NONE);
+	const [gmessage, setGameMessage] = useState("");
+
+	var gameInfo = {"cell": gcell, "turn": gturn, "value": gplayerValue,
+			"players": gplayers, "winner": gwinner, "message": gmessage};
+	const [gameState, setGameState] = useState(0);
 
 	// Strike
 	const [strikeClass, setStrikeClass] = useState(`strike- - `); 
@@ -57,30 +64,108 @@ function Game() {
 
 	useEffect(() => {
 		if (Connected == true) {
-			console.log("On level change..");
+			console.log("on Level change:", level);
+			if (level == 2) {
+			}
 		}
 	}, [level]);
 
+	function gamestateprint() {
+		switch(gameState) {
+			case GState.idle:
+				console.log('Idle'); 
+			break;
+			case GState.newGameStarted:
+				console.log('newGameStarted'); 
+			break;
+			case GState.levelSpwaned:
+				console.log('levelSpwaned'); 
+			break;
+			case GState.playerJoined:
+				console.log(`playerJoined`);
+			break;
+			case GState.levelStarted:
+				console.log('levelStarted'); 
+			break;
+			case GState.playerMoveInProgress:
+				console.log('playerMoveInProgress'); 
+			break;
+			case GState.playerMoveDone:
+				console.log('playerMoveDone'); 
+			break;			
+			case GState.player1Wins:
+				console.log(`player1Wins`);
+			break;
+			case GState.player2Wins:
+				console.log(`player2Wins`);
+			break;
+			case GState.draw:
+				console.log(`draw`);
+			break;
+			default:
+				console.log(`unknown`);
+			break;					
+		}
+	}
+
 	useEffect(() => {
 		if (Connected == true) {
-			if (gameState.state == GState.playerMoveInProgress) {
-				fetchCellValue(gameState.context);
+			console.log("\nState Change::");
+			console.log("state:", gameState);
+			gamestateprint();			
+			console.log("levelNum:", levelInfo.levelNum);
+			console.log("levelCode:", levelInfo.levelCode);
+			console.log("levelData:", levelInfo.levelData);
+			console.log("cell:", gameInfo.cell);
+			console.log("turn:", gameInfo.turn);
+			console.log("players[0]:", gameInfo.players[0]);
+			console.log("players[1]:", gameInfo.players[1]);
+			console.log("winner:", gameInfo.winner);
+			console.log("message:", gameInfo.message);
+
+			if (gameState == GState.idle) {
+				handleIdle();
 			}
-			else if (gameState.state == GState.playerMoveDone) {
-				handleCellUpdate(gameState.context);
+			else if (gameState == GState.init) {
+				handleInit();
 			}
-			else if ((gameState.state == GState.player1Wins) ||
-				     (gameState.state == GState.player2Wins) ||
-				     (gameState.state == GState.draw)) {
-				console.log("Game Over:", gameState.state);
-				console.log("gameState.context:", gameState.context);
-				handleStrikeData(gameState.context.message);				
+			else if (gameState == GState.newGameStarted) {
+				handleGameStarted();
+			}
+			else if (gameState == GState.playerJoined) {
+				handleInit();
+			}			
+			else if (gameState == GState.playerMoveInProgress) {
+				fetchCellValue();
+			}
+			else if (gameState == GState.playerMoveDone) {
+				handleCellUpdate();
+			}
+			else if ((gameState == GState.player1Wins) ||
+				     (gameState == GState.player2Wins) ||
+				     (gameState == GState.draw)) {
+				handleStrikeData();				
 			} 
 		}
 	}, [gameState]);
 
+
 	const handleOnConnected = () => {
-		console.log("Connected..:", signer);
+		listen();
+		setGameState(GState.idle);		
+	}
+
+
+	const handleIdle = async () => {
+		await getLevel();
+	}
+
+	const handleInit = async () => {
+		await getGame();
+	}
+
+	const handlePlayerJoined = async () => {
+		await getGame();
 	}
 
 	// On move send row and col of cell to Game.sol
@@ -89,35 +174,59 @@ function Game() {
 		let row = Math.floor(index/marker);
 		let col = index%marker;
 
-		await makeMove(row, col)
-		.then(() => {
-			let state = GState.playerMoveInProgress;
-			let context = {...gameState.context, "cell": index,
-							"value": playerVal};
-			setGameState({...gameState, "state": state, 
-				"context": context});
-			console.log("gameState1:", gameState);			
-		});
+		console.log("index:", index);
+		console.log("row:", row);
+		console.log("col:", col);
+
+		makeMove(row, col)
+		setGameCell(index);
+		console.log("GameCell:", gameInfo.cell);
+		console.log("playerVal:", gameInfo.value);
+		setTimeout(() => setGameState(GState.playerMoveInProgress), 500);
 	}
 
-	const fetchCellValue = async (ctx) => {
+	const fetchCellValue = async () => {
 
-		let row = Math.floor(ctx.cell/marker);
-		let col = ctx.cell%marker;
+		console.log("fetchCellValue:", gameInfo.cell);
+		console.log("fetchCellValue:gameInfo:", gameInfo);
+
+		let row = Math.floor(gameInfo.cell/marker);
+		let col = gameInfo.cell%marker;
+		console.log("fetchCellValue:row", row);
+		console.log("fetchCellValue:col", col);
 		await getCell(row, col)
 	}
 
-	const handleCellUpdate = async (ctx) => {
+	const handleCellUpdate = async () => {
 
-		let row = Math.floor(ctx.cell/marker);
-		let col = ctx.cell%marker;
+		console.log("handleCellUpdate:", gameInfo.cell);
+		let row = Math.floor(gameInfo.cell/marker);
+		let col = gameInfo.cell%marker;
+		console.log("handleCellUpdate:row:", row);
+		console.log("handleCellUpdate:col", col);
 
 		await getGame();
 
 		let idx = row*marker+col;
+		console.log("handleCellUpdate:idx", idx);
+
 		const newQuadCells = [...quadCells];
-		newQuadCells[idx] = (ctx.value == 1 ? "❌" : (ctx.value == 2 ? "⭕": null));
+		newQuadCells[idx] = (gameInfo.value == 1 ? "❌" : (gameInfo.value == 2 ? "⭕": null));
+		console.log("newQuadCells:", newQuadCells);
 		setQuadCells(newQuadCells);
+	}
+
+	// On getting level data from Game
+	const handleOnJoin = () => {
+		setGameState(GState.newGameStarted);		
+	}
+
+	const handleGameStarted = () => {
+		getGame();
+	}
+
+	const handleLevelOver = () => {
+		//setGameState(0)
 	}
 
 	// On getting level data from Game
@@ -128,8 +237,9 @@ function Game() {
 		setQuadCells(newQuadCells);
 	}
 
-	const handleStrikeData = (message) => {
+	const handleStrikeData = () => {
 
+		let message = gmessage;
 		let combo = message.split(":")[1];
 		combo = combo.split(",")[0];
 		let rowS = message.split(":")[2];
@@ -165,13 +275,22 @@ function Game() {
 		setStrikeSyle(newStrikeSyle)
 	}
 
-	async function makeMove(row, col) {
-		let ret = { won : false,  player: Player.PLAYER_NONE };
-		await GameContract.methods.makeMove({row, col})
+	function makeMove(row, col) {
+		GameContract.methods.makeMove({row, col})
 			.send({from: signer, gas: 1000000})
 			.then((result) => {
 				//console.log("result:", result);
 		});
+	}
+
+	async function getLevel() {
+		await GameContract.methods.level()
+			.call({from: signer, gas: 100000})
+			.then((level) => {
+				levelInfo.levelNum = parseInt(level);
+				setGameState(GState.init);
+				setLevel(parseInt(level));
+			});
 	}
 
 	async function getCell(row, col) {
@@ -179,13 +298,11 @@ function Game() {
 		await GameContract.methods.getState(row, col)
 			.call({from: signer, gas: 100000})
 			.then((value) => {
-				let state = GState.playerMoveDone;
-				let idx = row*marker+col;
-				let context = {...gameState.context, "cell": idx,
-								"value": parseInt(value)};
-				setGameState({...gameState, "state": state, 
-					"context": context});
-				console.log("gameState2:", gameState);
+				console.log("Cell Value:", parseInt(value));
+				console.log("row*marker+col:", row*marker+col);
+				setGameCell(row*marker+col);
+				setGamePlayerValue(parseInt(value))
+				setGameState(GState.playerMoveDone);
 		});
 	}
 
@@ -199,25 +316,59 @@ function Game() {
 				let state = ((parseInt(info.winner) == Player.PLAYER_1) ?
 							  GState.player1Wins :
 							    ((parseInt(info.winner) == Player.PLAYER_2) ?
-								 GState.player2Wins : gameState.state));
-				let context = { ...gameState.context, turn: info.turn, message: info.message };
-				if (state != gameState.state) {
-					setGameState({...gameState, "state": state, 
-						"context": context});
-					console.log("gameState3:", gameState);
+								 GState.player2Wins : gameState));
+				if ((state != gameState) ||
+					(info.levelCode !=  levelInfo.levelCode) ||
+					(info.levelData !=  levelInfo.levelData)) {
+
+					if (state != gameState) {
+						setGameTurn(parseInt(info.turn))
+						setGameMessage(info.message);
+						setGameState(state);
+					}
+					else {
+						console.log("Level code changes:", info.levelCode);
+						setLevelCode(info.levelCode);
+						setLevelData(info.levelData);
+					}
 				}
-				setPlayerVal(parseInt(info.turn) == Player.PLAYER_1 ? "❌" : 
+				setGamePlayerValue(parseInt(info.turn) == Player.PLAYER_1 ? "❌" : 
 					(parseInt(info.turn) == Player.PLAYER_2) ? "⭕" : null);
 		});
 	}
 
+	// Register for messages/events from the Game contract
+	function listen () {
+
+		// A new game has started
+		const eventNewGameStarted = GameContract.events.NewGame();
+		eventNewGameStarted.on("data", async (event) => {
+			let data = event.returnValues;
+			levelInfo.levelNum = data.level;
+			setGameState(GState.newGameStarted);			
+			setLevel(parseInt(data.level));
+			setLevelCode(data.levelCode);
+			setLevelData(data.levelData);			
+		});
+
+		// A Player has joined the game
+		const eventPlayerJoined = GameContract.events.PlayerJoined();
+		eventPlayerJoined.on("data", async (event) => {
+			let data = event.returnValues;
+			if (data.player == signer) {
+				console.log("Joined as player:", parseInt(data.id));
+				setGameState(GState.playerJoined);
+			}
+		});
+	}
+
 	function GameState() {
-		switch(gameState.state) {
+		switch(gameState) {
 			case GState.idle:
 				return '';
 			break;
 			case GState.levelStarted:
-				return `Level ${gameState.context.level}`;
+				return `Level ${levelInfo.level}`;
 			break;
 
 			case GState.player1Wins:
@@ -240,7 +391,7 @@ function Game() {
 			<h1>
 				<div>
 				{(level == 2)? <div> <Board level={level} gameState={gameState} 
-				playerVal={playerVal} quad={0} off={0*marker+3*0}
+				gState={GState} playerVal={gplayerValue} quad={0} off={0*marker+3*0}
 				cells={quadCells} onCellClick={handleCellClick}/></div> :
 				<div> </div>}	
 				</div>
@@ -248,7 +399,7 @@ function Game() {
 			<h1>
 				<div>
 				{(level == 2)? <div> <Board level={level} gameState={gameState}
-				playerVal={playerVal} quad={1} off={0*marker+3*1}
+				gState={GState} playerVal={gplayerValue} quad={1} off={0*marker+3*1}
 				cells={quadCells} onCellClick={handleCellClick}/></div> :
 				<div> </div>}	
 				</div>
@@ -256,7 +407,7 @@ function Game() {
 			<h1>
 				<div>
 				{(level == 2)? <div> <Board level={level} gameState={gameState}
-				playerVal={playerVal} quad={2} off={0*marker+3*2}
+				gState={GState} playerVal={gplayerValue} quad={2} off={0*marker+3*2}
 				cells={quadCells} onCellClick={handleCellClick}/></div> :
 				<div> </div>}	
 				</div>
@@ -264,7 +415,7 @@ function Game() {
 			<h1>
 				<div>
 				{(level == 2)? <div> <Board level={level} gameState={gameState}
-				playerVal={playerVal} quad={3} off={3*marker+3*0}
+				gState={GState} playerVal={gplayerValue} quad={3} off={3*marker+3*0}
 				cells={quadCells} onCellClick={handleCellClick}/></div> :
 				<div> </div>}	
 				</div>
@@ -272,10 +423,10 @@ function Game() {
 			<h1>
 				<div>
 				{(level == 2)? <div> <Board level={level} gameState={gameState}
-				playerVal={playerVal} quad={4} off={3*marker+3*1}
+				gState={GState} playerVal={gplayerValue} quad={4} off={3*marker+3*1}
 				cells={quadCells} onCellClick={handleCellClick}/></div> 
 				: <div> <Board level={level} gameState={gameState}
-				playerVal={playerVal} quad={0} off={0*marker+3*0}
+				gState={GState} playerVal={gplayerValue} quad={0} off={0*marker+3*0}
 				cells={quadCells} strikeClass={strikeClass} 
 				onCellClick={handleCellClick}/> </div>}	
 				</div>
@@ -283,7 +434,7 @@ function Game() {
 			<h1>
 				<div>
 				{(level == 2)? <div> <Board level={level} gameState={gameState}
-				playerVal={playerVal} quad={5} off={3*marker+3*2}
+				gState={GState} playerVal={gplayerValue} quad={5} off={3*marker+3*2}
 				cells={quadCells} onCellClick={handleCellClick}/></div> :
 				<div> </div>}	
 				</div>
@@ -291,7 +442,7 @@ function Game() {
 			<h1>
 				<div>
 				{(level == 2)? <div> <Board level={level} gameState={gameState}
-				playerVal={playerVal} quad={6} off={6*marker+3*0}
+				gState={GState} playerVal={gplayerValue} quad={6} off={6*marker+3*0}
 				cells={quadCells} onCellClick={handleCellClick}/></div> :
 				<div> </div>}	
 				</div>
@@ -299,7 +450,7 @@ function Game() {
 			<h1>
 				<div>
 				{(level == 2)? <div> <Board level={level} gameState={gameState}
-				playerVal={playerVal} quad={7} off={6*marker+3*1}
+				gState={GState} playerVal={gplayerValue} quad={7} off={6*marker+3*1}
 				cells={quadCells} onCellClick={handleCellClick}/></div> :
 				<div> </div>}	
 				</div>
@@ -307,17 +458,19 @@ function Game() {
 			<h1>
 				<div>
 				{(level == 2)? <div> <Board level={level} gameState={gameState}
-				playerVal={playerVal} quad={8} off={6*marker+3*2}
+				gState={GState} playerVal={gplayerValue} quad={8} off={6*marker+3*2}
 				cells={quadCells} onCellClick={handleCellClick}/></div> :
 				<div> </div>}	
 				</div>
 			</h1>
-		{((level == 2) && ((gameState.state == player1Wins) || (gameState.state == player2Wins))) ?
+		{((level == 2) && ((gameState == GState.player1Wins) ||
+		  (gameState == GState.player2Wins))) ?
 		 <Strike level={level} strikeClass={strikeClass}
 		 	strikeStyle={strikeStyle}/> :  <div> </div>}
 		<div className='game-state'>{GameState()}</div>
 		<Connect onConnected={handleOnConnected} account={3}/>
-		<JoinGame onData={handleLevelData} players={Player}/>
+		<JoinGame onData={handleLevelData} levelInfo={levelInfo}
+		   		  gameState={gameState} gState={GState} players={Player}/>
 		</div>
 	);
 }
