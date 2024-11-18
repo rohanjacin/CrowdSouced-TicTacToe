@@ -3,13 +3,32 @@ import { useState, useEffect } from "react";
 import { web3, signer, GameContract, Connected, Connect } from "./Connect.jsx";
 import BN from "bn.js";
 
-function JoinGame({ onData, players }) {
+function JoinGame({ onData, levelInfo, gameState, gState, players }) {
 
 	const defaultJoinState = {joined: false, asPlayer :players.PLAYER_NONE};
 	const [joinState, setJoined] = useState(defaultJoinState);
 
 	useEffect(() => {
-	}, [joinState.joined]);
+		if (Connected == true) {
+			console.log("In EFFECT:level", levelInfo.levelNum);
+			console.log("levelCODE:", levelInfo.levelCode);
+			console.log("levelDATA:", levelInfo.levelData);
+			console.log("joinState:", joinState);
+			console.log("gameState:", gameState);
+
+			if ((levelInfo.levelNum) && 
+			    (levelInfo.levelCode) &&
+			    (levelInfo.levelData) && 
+			    (joinState.joined == true) &&
+			    gameState == gState.playerJoined) {
+				console.log("Level code updated", levelInfo.levelCode);
+				requestLevelData(levelInfo.levelCode);
+			}
+		}
+	}, [levelInfo.levelNum,
+		levelInfo.levelCode,
+		levelInfo.levelData,
+		joinState]);	
 
 	// Register for messages/events from the Game contract
 	async function listen () {
@@ -18,7 +37,10 @@ function JoinGame({ onData, players }) {
 		const eventPlayerJoined = GameContract.events.PlayerJoined();
 		eventPlayerJoined.on("data", async (event) => {
 			let data = event.returnValues;
-			setJoined({...joinState, joined: true, asPlayer: data.id });
+			if (data.player == signer) {
+				console.log("Added as player:", parseInt(data.id));
+				setJoined({...joinState, joined: true, asPlayer: parseInt(data.id) });
+			}
 		});
 	}
 
@@ -30,7 +52,7 @@ function JoinGame({ onData, players }) {
 			});
 	}
 
-	async function requestLevelData() {
+	async function requestLevelData(addr) {
 		// Call "fetchLevelData()returns(bytes memory)" in Level 1
 		const fetchLevelData = web3.eth.abi.encodeFunctionCall({
 		    name: 'fetchLevelData',
@@ -38,9 +60,10 @@ function JoinGame({ onData, players }) {
 		    inputs: []    
 		}, []);
 
+		console.log("In requestLevelData:", addr);
 		// Level Contract address + Encoded Function
 		const callData = web3.eth.abi.encodeParameters(['address','bytes'], 
-			["0x597E1a805f392F5B265831401Ee7B2AfF2cb62c0", fetchLevelData]);
+			[addr, fetchLevelData]);
 		
 		await GameContract.methods.callLevel(callData)
 			.call({from: signer, gas: 100000})
@@ -68,7 +91,7 @@ function JoinGame({ onData, players }) {
 
 	return (<button className='join-button'
 			disabled={joinState.joined}
-			onClick={async () => { listen(); await requestToJoin(); await requestLevelData(); }}
+			onClick={async () => { listen(); await requestToJoin();}}
 			>{(joinState.joined == true)?`Joined as: Player${joinState.asPlayer}`:"Join"}</button>
 	);
 }
