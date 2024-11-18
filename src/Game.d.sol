@@ -8,7 +8,6 @@ import "./BaseData.sol";
 import "./LevelConfigurator.sol";
 import "./ILevelConfigurator.sol";
 import "./RuleEngine.d.sol";
-import { Level1D } from "./Level1.d.sol";
 import "semaphore/packages/contracts/contracts/interfaces/ISemaphore.sol";
 import "openzeppelin-contracts/contracts/utils/Strings.sol";
 
@@ -21,29 +20,16 @@ enum CellValueL { Empty , X, O}
 error LevelInvalid();
 error LevelNotDeployed();
 error LevelCopyFailed();
+error BidderAddressInvalid();
 error PlayerAddressInvalid();
 
 contract GameHouse {
-	address public goV;
 	address public levelConfigurator;
-	//address public ruleEngine;
-	address public defaultLevel;
-	address public defaultData;
 
 	constructor(address _admin) {
-		//goV = new goV();
 		levelConfigurator = address(new LevelConfigurator(_admin, 
 								ISemaphore(address(0x02))));
 		console.log("levelConfigurator:", levelConfigurator);
-		defaultLevel = address(new Level1D( _setLevelNum(1),
-								_setState(1), _setSymbol(1)));
-		(bool ret, bytes memory d) = defaultLevel.call(
-									 	abi.encodeWithSignature("data()"));
-		defaultData = abi.decode(d, (address));
-		console.log("defaultLevel:", defaultLevel);
-		console.log("defaultData:", defaultData);
-
-		//ruleEngine = new RuleEngine();
 	}
 
     // Internal function to set levelnum
@@ -97,7 +83,7 @@ struct GameInfo {
 	address levelData;
 	Player winner;
 	Player turn;
-	string message;	
+	string message;
 }
 
 // Players move
@@ -224,20 +210,8 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 		ILevelConfigurator.LevelConfig memory config;
 
 		console.log("_loadLevel:", _level);
-		if (bidder != address(0)) {
-			config = ILevelConfigurator(
-						games[1].house.levelConfigurator())
+		config = ILevelConfigurator(games[1].house.levelConfigurator())
 						.getProposal(bidder);			
-		}
-		else {
-			// Default Game Level is 1
-			config = ILevelConfigurator.LevelConfig(
-					0, 0, 0, 0, 0, 0, address(0), address(0));
-			config.num = 1;
-			config.symbolLen = 8;
-			config.codeAddress = address(games[1].house.defaultLevel());
-			config.dataAddress = address(games[1].house.defaultData());			
-		}
 
 		// Level check for L1 or L2
 		if (!(config.num == _level)) {
@@ -289,6 +263,10 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 		// for configured level
 		if (!((_level == 1) || (_level == 2))) {
 			revert LevelInvalid();
+		}
+
+		if (_bidder == address(0)) {
+			revert BidderAddressInvalid();
 		}
 
 		(success, message) = _loadLevel(_level, _bidder);
@@ -380,7 +358,7 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 			message = string(abi.encodePacked("You Won!", "@", m));
 			games[1].message = message;
 			emit PlayerMove(games[1].turn, move, winner, message);
-			return (true, message); 
+			return (true, message);
 		}
 		else {
 			emit PlayerMove(games[1].turn, move, winner, message);			

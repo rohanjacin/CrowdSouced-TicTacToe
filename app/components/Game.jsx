@@ -27,9 +27,11 @@ const Player = {
 // Main Tictactoe game component
 // contains dynamic board and cells
 // for level 1 and level 2
-function Game() {
+function Game({ initalLevel, onGameOver }) {
 	// Level
-	const [level, setLevel] = useState(0);
+	console.log("initalLevel:", initalLevel);
+
+	const [level, setLevel] = useState(initalLevel);
 	// Level cell count
 	const numCells = (level == 2)? 81 : 9;
 	const marker = (level == 2)? 9 : 3;
@@ -41,7 +43,32 @@ function Game() {
 							  (Array.from({ length: 3 }, 
 							  () => new Array(3).fill(null))));
 	// Linearized cells in order to fill board quadrants
-	const [quadCells, setQuadCells] = useState(Array(numCells).fill(null));
+	const lastQuadCells = sessionStorage.getItem("cells");
+	console.log("lastQuadCells:", lastQuadCells);
+
+	var defaultQuadCells = null;
+	if ((lastQuadCells) && (initalLevel == 2)) {
+		let i = 0;
+		let prefillCells = JSON.parse(lastQuadCells);
+		let tempCells = Array(numCells).fill(null);
+		function preFill(value, idx, array) {
+
+			if ((idx == 30) || (idx == 31) || (idx == 32) ||
+			    (idx == 39) || (idx == 40) || (idx == 41) ||
+			    (idx == 48) || (idx == 49) || (idx == 50)) {
+
+				value = prefillCells[i]; 
+				i++;
+				return value;
+			}
+		
+		}		
+		defaultQuadCells = tempCells.map(preFill);
+	}
+	else {
+		defaultQuadCells = Array(numCells).fill(null);
+	}
+	const [quadCells, setQuadCells] = useState(defaultQuadCells);
 
 	// Game state
 	const [levelCode, setLevelCode] = useState("");
@@ -144,7 +171,8 @@ function Game() {
 			else if ((gameState == GState.player1Wins) ||
 				     (gameState == GState.player2Wins) ||
 				     (gameState == GState.draw)) {
-				handleStrikeData();				
+				handleStrikeData();
+				handleGameOver();				
 			} 
 		}
 	}, [gameState]);
@@ -166,6 +194,12 @@ function Game() {
 
 	const handlePlayerJoined = async () => {
 		await getGame();
+	}
+
+	const handleGameOver = async () => {
+
+		sessionStorage.setItem('cells', JSON.stringify(quadCells));
+		onGameOver();
 	}
 
 	// On move send row and col of cell to Game.sol
@@ -223,10 +257,6 @@ function Game() {
 
 	const handleGameStarted = () => {
 		getGame();
-	}
-
-	const handleLevelOver = () => {
-		//setGameState(0)
 	}
 
 	// On getting level data from Game
