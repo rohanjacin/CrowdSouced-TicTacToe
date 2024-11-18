@@ -7,6 +7,7 @@ import "./BaseSymbol.d.sol";
 import "./BaseData.sol";
 import "./LevelConfigurator.sol";
 import "./ILevelConfigurator.sol";
+import {ILevelD} from "./ILevel.d.sol";
 import "./RuleEngine.d.sol";
 import "semaphore/packages/contracts/contracts/interfaces/ISemaphore.sol";
 import "openzeppelin-contracts/contracts/utils/Strings.sol";
@@ -31,52 +32,10 @@ contract GameHouse {
 								ISemaphore(address(0x02))));
 		console.log("levelConfigurator:", levelConfigurator);
 	}
-
-    // Internal function to set levelnum
-    function _setLevelNum(uint8 _num) internal pure 
-        returns (bytes memory _levelNum) {
-
-        _levelNum = abi.encodePacked(_num);
-    }
-
-    // Internal function to set state
-    function _setState(uint8 _num) internal pure 
-        returns (bytes memory _state) {
-
-        // Set state of level 1 i.e 3x3 matrix
-        _state = new bytes(9);
-
-        _state[1] = bytes1(uint8(1));
-        // C0  C1 C2
-        // [ ,  ,  ] R0
-        // [ ,  ,  ] R1
-        // [ ,  ,  ] R2
-	}
-
-    // Internal function to set symbols
-    function _setSymbol(uint8 num) internal pure 
-        returns (bytes memory _symbols) {
-
-        _symbols = new bytes(8);
-
-        // ❌ hex"e29d8c00"
-        _symbols[0] = hex"e2";
-        _symbols[1] = hex"9d";
-        _symbols[2] = hex"8c";
-        _symbols[3] = hex"00";
-
-        // ⭕ hex"e2ad9500"
-        _symbols[4] = hex"e2";
-        _symbols[5] = hex"ad";
-        _symbols[6] = hex"95";
-        _symbols[7] = hex"00";
-	}	
-
 }
 
 // Game info
 struct GameInfo {
-	GameHouse house;
 	address player1;
 	address player2;
 	address levelCode;
@@ -115,6 +74,7 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 
 	// SLOT 6 is for Game Admin
 	address admin;
+	GameHouse house;
 
 	// SLOT 7 is Game instance (id = level number)
 	mapping(uint8 => GameInfo) public games;
@@ -134,7 +94,7 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 	constructor(address _admin) {
 		admin = _admin;
 		// Game House components
-		games[1].house = new GameHouse(admin);
+		house = new GameHouse(admin);
 	}
 
 	fallback() external {
@@ -142,7 +102,7 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 	}
 
 	// Direct calls to valid Level Contract
-	function callLevel(bytes calldata levelCall)
+	function callLevel(uint8 id, bytes calldata levelCall)
 		external payable returns(bool success, bytes memory data) {
 
 		console.log("In callLevel");
@@ -150,9 +110,9 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
         (address target, bytes memory callData) = abi.decode(levelCall,
 													(address, bytes));
 		console.log("target:", target);
-		console.log("games[1].levelCode:", games[1].levelCode);
+		console.log("games[id].levelCode:", games[id].levelCode);
 
-		if (target ==  games[1].levelCode) {
+		if (target ==  games[id].levelCode) {
 			(success, data) = target.call{value: msg.value}(callData);
 			console.log("success:", success);
 		}
@@ -168,11 +128,13 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 		uint8 _symbollen;
 
 		if (levelnum == 1) {
+			console.log("retetive 1");
 			_numlen = 1;
 			_statelen = 9;
 			_symbollen = 2;
 		}
 		else if (levelnum == 2) {
+			console.log("retetive 2");
 			_numlen = 1;
 			_statelen = 81;
 			_symbollen = 4;
@@ -204,14 +166,21 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 	}
 
 	// Loads the level
-	function _loadLevel(uint8 _level, address bidder)
+	function _loadLevel(uint8 id, uint8 _level, address bidder)
 		internal returns(bool success, string memory message) {
 
 		ILevelConfigurator.LevelConfig memory config;
 
 		console.log("_loadLevel:", _level);
-		config = ILevelConfigurator(games[1].house.levelConfigurator())
+		config = ILevelConfigurator(house.levelConfigurator())
 						.getProposal(bidder);			
+		console.log("config.num:", config.num);
+		console.log("config.codeLen:", config.codeLen);
+		console.log("config.levelNumLen:", config.levelNumLen);
+		console.log("config.stateLen:", config.stateLen);
+		console.log("config.symbolLen:", config.symbolLen);
+		console.log("config.codeAddress:", config.codeAddress);
+		console.log("config.dataAddress:", config.dataAddress);
 
 		// Level check for L1 or L2
 		if (!(config.num == _level)) {
@@ -225,19 +194,23 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 		 								config.dataAddress);
 
 		// Copy Level via delegatecall
-		(success, ) = config.codeAddress
-			.delegatecall(abi.encodeWithSignature("copyLevelData(bytes,bytes,bytes)",
-			 _levelnum, _levelstate, _levelsymbol));
+		console.log("config.codeAddress:", config.codeAddress);
+		console.log("config.dataAddress:", config.dataAddress);
+	
+		bytes memory cdata = abi.encodeCall(ILevelD.copyLevelData,
+			(_levelnum, _levelstate, _levelsymbol));
+		
+		(success, ) = config.codeAddress.delegatecall(cdata);
 
 		if (success == false) {
 			revert LevelCopyFailed();
 		}
 
 		// Store level address
-		games[1].levelCode = config.codeAddress;
-		games[1].levelData = config.dataAddress;
-		console.log("levelCode:", games[1].levelCode);
-		console.log("levelData:", games[1].levelData);
+		games[id].levelCode = config.codeAddress;
+		games[id].levelData = config.dataAddress;
+		console.log("levelCode:", games[id].levelCode);
+		console.log("levelData:", games[id].levelData);
 
 		// Add level rules
 		uint8 _symbolLen = uint8(config.symbolLen/4);
@@ -249,14 +222,14 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 			_symbols.v[i] = getSymbol(i);
 		}
 
-		addRules(games[1].levelCode, _symbols);
+		addRules(games[id].levelCode, _symbols);
 
 		return (true, "Level loaded");
 	}
 
 	// Starts a new game
-	function newGame(uint8 _level, address _bidder) external onlyAdmin
-		returns (bool success, string memory message) {
+	function newGame(uint8 id, uint8 _level, address _bidder)
+		external onlyAdmin returns (bool success, string memory message) {
 
 		console.log("newgame:", _level);
 		// Check if game requested is 
@@ -269,23 +242,23 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 			revert BidderAddressInvalid();
 		}
 
-		(success, message) = _loadLevel(_level, _bidder);
+		(success, message) = _loadLevel(id, _level, _bidder);
 
 		if (success == true) {
 			// Initalize game
-			games[1].winner = Player.None;
-			games[1].turn = Player.Player1;
+			games[id].winner = Player.None;
+			games[id].turn = Player.Player1;
 
-			emit NewGame(level, games[1].levelCode, games[1].levelData);			
+			emit NewGame(level, games[id].levelCode, games[id].levelData);			
 		}
 	}
 
-	function getGame() external returns(GameInfo memory info){
-		return games[1];
+	function getGame(uint8 id) external returns(GameInfo memory info){
+		return games[id];
 	}
 
 	// Join the game
-	function joinGame() external returns(bool success,
+	function joinGame(uint8 id) external returns(bool success,
 		string memory message) {
 
 		// Check players address
@@ -293,19 +266,19 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 			revert PlayerAddressInvalid();
 		}
 
-		if (games[1].player1 == address(0)) {
+		if (games[id].player1 == address(0)) {
 			
 			// Store player 1
-			games[1].player1 = msg.sender;
-			emit PlayerJoined(games[1].player1, uint8(Player.Player1)); 
+			games[id].player1 = msg.sender;
+			emit PlayerJoined(games[id].player1, uint8(Player.Player1)); 
 			return (true, "You are Player1 - X");
 		}
 
-		if (games[1].player2 == address(0)) {
+		if (games[id].player2 == address(0)) {
 			
 			// Store player 2
-			games[1].player2 = msg.sender;
-			emit PlayerJoined(games[1].player2, uint8(Player.Player2)); 
+			games[id].player2 = msg.sender;
+			emit PlayerJoined(games[id].player2, uint8(Player.Player2)); 
 			return (true, "You are Player2 - O");			
 		}
 
@@ -313,16 +286,16 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 	}
 
 	// Make a move //onlyPlayers
-	function makeMove(Move memory move) external 
+	function makeMove(uint8 id, Move memory move) external onlyPlayers(id)
 		returns(bool success, string memory message) {
 
 		// Check if already winner exists
-		if (games[1].winner != Player.None) {
+		if (games[id].winner != Player.None) {
 			return (false, "The game has aready ended!");
 		}
 
 		// Only player who's turn it is can make a move
-		if (msg.sender != _getCurrentPlayer()) {
+		if (msg.sender != _getCurrentPlayer(id)) {
 			//return (false, "Not your turn");
 		}
 
@@ -335,15 +308,15 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 		}
 
 		uint8 setVal;
-		if (games[1].turn == Player.Player1) {
+		if (games[id].turn == Player.Player1) {
 			setVal = uint8(CellValueL.X);
 		}
-		else if (games[1].turn == Player.Player2) {
+		else if (games[id].turn == Player.Player2) {
 			setVal = uint8(CellValueL.O);
 		}
 
 		// Execute for move as per rule
-		(success) = setCell(games[1].levelCode, 
+		(success) = setCell(games[id].levelCode, 
 								move.row, move.col, setVal);
 		assert(success == true);
 		assert(uint8(getState(move.row, move.col)) == setVal);
@@ -354,36 +327,36 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 		if (winner != Player.None) {
 
 			// Game ended 
-			games[1].winner = winner;
+			games[id].winner = winner;
 			message = string(abi.encodePacked("You Won!", "@", m));
-			games[1].message = message;
-			emit PlayerMove(games[1].turn, move, winner, message);
+			games[id].message = message;
+			emit PlayerMove(games[id].turn, move, winner, message);
 			return (true, message);
 		}
 		else {
-			emit PlayerMove(games[1].turn, move, winner, message);			
+			emit PlayerMove(games[id].turn, move, winner, message);			
 		}
 
 		// Next player's turn
-		if (games[1].turn == Player.Player1) {
-			games[1].turn = Player.Player2;
+		if (games[id].turn == Player.Player1) {
+			games[id].turn = Player.Player2;
 		}
-		else if (games[1].turn == Player.Player2) {
-			games[1].turn = Player.Player1;
+		else if (games[id].turn == Player.Player2) {
+			games[id].turn = Player.Player1;
 		}
 
 		return (true, "Next player's turn");
 	}
 
 	// Gets current players who's turn it is
-	function _getCurrentPlayer() internal view returns(address player) {
+	function _getCurrentPlayer(uint8 id) internal view returns(address player) {
 
-		if (games[1].turn == Player.Player1) {
-			return games[1].player1;
+		if (games[id].turn == Player.Player1) {
+			return games[id].player1;
 		}
 		
-		if (games[1].turn == Player.Player2) {
-			return games[1].player2;
+		if (games[id].turn == Player.Player2) {
+			return games[id].player2;
 		}
 	
 		return address(0);
@@ -744,9 +717,9 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
         _;
     }
 
-    modifier onlyPlayers {
-        if ((msg.sender != games[1].player1) &&
-        	(msg.sender != games[1].player2)) revert("Not Player");
+    modifier onlyPlayers(uint8 id) {
+        if ((msg.sender != games[id].player1) &&
+        	(msg.sender != games[id].player2)) revert("Not Player");
         _;
     }
 }

@@ -32,6 +32,10 @@ function Game({ initalLevel, onGameOver }) {
 	console.log("initalLevel:", initalLevel);
 
 	const [level, setLevel] = useState(initalLevel);
+
+	if (level != initalLevel) {
+		window.location.reload();
+	}
 	// Level cell count
 	const numCells = (level == 2)? 81 : 9;
 	const marker = (level == 2)? 9 : 3;
@@ -93,6 +97,7 @@ function Game({ initalLevel, onGameOver }) {
 		if (Connected == true) {
 			console.log("on Level change:", level);
 			if (level == 2) {
+				console.log("FInally LEVEl2");
 			}
 		}
 	}, [level]);
@@ -262,8 +267,30 @@ function Game({ initalLevel, onGameOver }) {
 	// On getting level data from Game
 	const handleLevelData = (data) => {
 
-		let newQuadCells = data.state.map((id) =>  id == 1 ? id = "❌":
-							(id == 2 ? id = "⭕": null));
+		let newQuadCells;
+		let levelCells = data.state.map((id) =>  id == 1 ? id = "❌":
+						(id == 2 ? id = "⭕": null));
+
+		if (initalLevel == 2) {
+			let i = 0;
+			function preFill(value, idx, array) {
+
+				if ((idx == 30) || (idx == 31) || (idx == 32) ||
+				    (idx == 39) || (idx == 40) || (idx == 41) ||
+				    (idx == 48) || (idx == 49) || (idx == 50)) {
+				}
+				else {
+					value = levelCells[i];
+				}
+				i++;
+				return value;			
+			}
+			newQuadCells = quadCells.map(preFill);
+		}
+		else {
+			newQuadCells = [levelCells];
+		}
+		console.log("NnewQuadCells:", newQuadCells);
 		setQuadCells(newQuadCells);
 	}
 
@@ -306,7 +333,7 @@ function Game({ initalLevel, onGameOver }) {
 	}
 
 	function makeMove(row, col) {
-		GameContract.methods.makeMove({row, col})
+		GameContract.methods.makeMove(initalLevel ? initalLevel : 1, {row, col})
 			.send({from: signer, gas: 1000000})
 			.then((result) => {
 				//console.log("result:", result);
@@ -317,9 +344,11 @@ function Game({ initalLevel, onGameOver }) {
 		await GameContract.methods.level()
 			.call({from: signer, gas: 100000})
 			.then((level) => {
-				levelInfo.levelNum = parseInt(level);
-				setGameState(GState.init);
-				setLevel(parseInt(level));
+				if (level == initalLevel) {
+					//levelInfo.levelNum = parseInt(level);
+					setGameState(GState.init);
+					setLevel(parseInt(level));
+				}
 			});
 	}
 
@@ -339,7 +368,7 @@ function Game({ initalLevel, onGameOver }) {
 	async function getGame() {
 		let ret = { winner: Player.PLAYER_NONE, turn: Player.PLAYER_NONE, 
 					message: ""};
-		await GameContract.methods.getGame()
+		await GameContract.methods.getGame(initalLevel ? initalLevel : 1)
 			.call({from: signer, gas: 100000})
 			.then((info) => {
 				ret = { winner: info.winner, turn: info.turn, message: info.message };
@@ -499,7 +528,7 @@ function Game({ initalLevel, onGameOver }) {
 		 	strikeStyle={strikeStyle}/> :  <div> </div>}
 		<div className='game-state'>{GameState()}</div>
 		<Connect onConnected={handleOnConnected} account={3}/>
-		<JoinGame onData={handleLevelData} levelInfo={levelInfo}
+		<JoinGame initalLevel={initalLevel} onData={handleLevelData} levelInfo={levelInfo}
 		   		  gameState={gameState} gState={GState} players={Player}/>
 		</div>
 	);

@@ -4,7 +4,7 @@ import Game from "./components/Game.jsx";
 import "./AppPlayer.css";
 
 const App = () =>{
-    const [initalLevel, SetInitialLevel] = useState(sessionStorage.getItem('level') || 1);
+    const [initalLevel, SetInitialLevel] = useState(parseInt(sessionStorage.getItem('level')) || 1);
 
     function onGameOver () {
       console.log("In onGameOver");

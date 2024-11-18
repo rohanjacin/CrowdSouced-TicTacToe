@@ -26,11 +26,11 @@ contract Level2D is BaseLevelD, BaseStateD, BaseSymbolD, BaseDataD {
 		public returns(bool success){
 
 		// Copy level num
-		BaseLevelD.copyLevel(_levelNumData);
+		success = BaseLevelD.copyLevel(_levelNumData);
 		// Copy level state as per schema
-		_copyState(_stateData);
+		success =_copyState(_stateData);
 		// Copy level symbols as per schema
-		_copySymbol(_symbolsData);
+		success =_copySymbol(_symbolsData);
 	}
 
 	// Copies state into game storage as per schema
@@ -84,9 +84,9 @@ contract Level2D is BaseLevelD, BaseStateD, BaseSymbolD, BaseDataD {
             _state.v[3][0] = uint8(cell[27]);
             _state.v[3][1] = uint8(cell[28]);
             _state.v[3][2] = uint8(cell[29]);
-            _state.v[3][3] = uint8(cell[30]);
-            _state.v[3][4] = uint8(cell[31]);
-            _state.v[3][5] = uint8(cell[32]);
+            _state.v[3][3] = uint8(BaseStateD.getState(0, 0)); // Level 1       C0 C1 C2 
+            _state.v[3][4] = uint8(BaseStateD.getState(0, 1)); // Level 1   R0 [  ,  ,  ]
+            _state.v[3][5] = uint8(BaseStateD.getState(0, 2)); // Level 1
             _state.v[3][6] = uint8(cell[33]);
             _state.v[3][7] = uint8(cell[34]);
             _state.v[3][8] = uint8(cell[35]);
@@ -95,9 +95,9 @@ contract Level2D is BaseLevelD, BaseStateD, BaseSymbolD, BaseDataD {
             _state.v[4][0] = uint8(cell[36]);
             _state.v[4][1] = uint8(cell[37]);
             _state.v[4][2] = uint8(cell[38]);
-            _state.v[4][3] = uint8(cell[39]);
-            _state.v[4][4] = uint8(cell[40]);
-            _state.v[4][5] = uint8(cell[41]);
+            _state.v[4][3] = uint8(BaseStateD.getState(1, 0)); // Level 1       C0 C1 C2 
+            _state.v[4][4] = uint8(BaseStateD.getState(1, 1)); // Level 1   R1 [  ,  ,  ]
+            _state.v[4][5] = uint8(BaseStateD.getState(1, 2)); // Level 1
             _state.v[4][6] = uint8(cell[42]);
             _state.v[4][7] = uint8(cell[43]);
             _state.v[4][8] = uint8(cell[44]); 
@@ -106,9 +106,9 @@ contract Level2D is BaseLevelD, BaseStateD, BaseSymbolD, BaseDataD {
             _state.v[5][0] = uint8(cell[45]);
             _state.v[5][1] = uint8(cell[46]);
             _state.v[5][2] = uint8(cell[47]);
-            _state.v[5][3] = uint8(cell[48]);
-            _state.v[5][4] = uint8(cell[49]);
-            _state.v[5][5] = uint8(cell[50]);
+            _state.v[5][3] = uint8(BaseStateD.getState(2, 0)); // Level 1       C0 C1 C2 
+            _state.v[5][4] = uint8(BaseStateD.getState(2, 1)); // Level 1   R2 [  ,  ,  ]
+            _state.v[5][5] = uint8(BaseStateD.getState(2, 2)); // Level 1
             _state.v[5][6] = uint8(cell[51]);
             _state.v[5][7] = uint8(cell[52]);
             _state.v[5][8] = uint8(cell[53]);

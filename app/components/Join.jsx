@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { web3, signer, GameContract, Connected, Connect } from "./Connect.jsx";
 import BN from "bn.js";
 
-function JoinGame({ onData, levelInfo, gameState, gState, players }) {
+function JoinGame({ initalLevel, onData, levelInfo, gameState, gState, players }) {
 
 	const defaultJoinState = {joined: false, asPlayer :players.PLAYER_NONE};
 	const [joinState, setJoined] = useState(defaultJoinState);
@@ -46,7 +46,7 @@ function JoinGame({ onData, levelInfo, gameState, gState, players }) {
 
 	async function requestToJoin() {
 		let ret = { joined : false,  asPlayer: players.PLAYER_NONE };
-		await GameContract.methods.joinGame()
+		await GameContract.methods.joinGame(initalLevel ? initalLevel : 1)
 			.send({from: signer, gas: 100000})
 			.then((result) => {
 			});
@@ -65,7 +65,8 @@ function JoinGame({ onData, levelInfo, gameState, gState, players }) {
 		const callData = web3.eth.abi.encodeParameters(['address','bytes'], 
 			[addr, fetchLevelData]);
 		
-		await GameContract.methods.callLevel(callData)
+		await GameContract.methods.callLevel(initalLevel ?
+									initalLevel : 1, callData)
 			.call({from: signer, gas: 100000})
 			.then((data) => {
 				data.data = data.data.split("0x")[1];

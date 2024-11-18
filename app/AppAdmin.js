@@ -5,14 +5,16 @@ import "./AppAdmin.css";
 
 const App = () => {
 
-    const [instance, SetInstance] = useState(1);
+    const [initalLevel, SetInitialLevel] = useState(parseInt(sessionStorage.getItem('level')) || 0);
 
     function onGameOver () {
-      SetInstance(2);
+      console.log("In onGameOver");
+      sessionStorage.setItem('level', 2);
+      SetInitialLevel(2);
     }
 
    return (
-      <Admin instance={instance} onGameOver={onGameOver}/>
+      <Admin initalLevel={initalLevel} onGameOver={onGameOver}/>
    );
 }
 

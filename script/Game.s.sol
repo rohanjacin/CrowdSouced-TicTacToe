@@ -289,7 +289,7 @@ contract NewGame is Script {
         vm.startBroadcast(signer);
         
         IGame(address(0x8464135c8F25Da09e49BC8782676a84730C318bC))
-            .newGame(1, address(0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC));
+            .newGame(1, 1, address(0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC));
 
         vm.stopBroadcast();
     }

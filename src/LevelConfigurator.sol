@@ -202,7 +202,9 @@ contract LevelConfigurator {
                 proposals[msg.sender] = config;
             }
 
-            success = true;            
+            success = true;
+            console.log("Deployed:Code", config.codeAddress);            
+            console.log("Deployed:Data", config.dataAddress);
         }
     }
 

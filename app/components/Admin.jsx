@@ -27,10 +27,16 @@ const Player = {
 // Main Tictactoe game component
 // contains dynamic board and cells
 // for level 1 and level 2
-function Game() {
+function Game({ initalLevel, onGameOver }) {
 	// Level
-	const [gameOver, setGameOver] = useState(false);
-	const [level, setLevel] = useState(0);
+	console.log("initalLevel:", initalLevel);
+
+	const [level, setLevel] = useState(initalLevel);
+
+	if ((initalLevel == 2) && (level != initalLevel)) {
+		console.log("Reload..");
+		window.location.reload();
+	}
 
 	// Level cell count
 	const numCells = (level == 2)? 81 : 9;
@@ -49,9 +55,19 @@ function Game() {
 	const [levelCode, setLevelCode] = useState("");
 	const [levelData, setLevelData] = useState("");
 	var levelInfo = {"levelNum": level, "levelCode": levelCode, "levelData": levelData}
-	var gameInfo = {"cell": null, "turn": Player.PLAYER_1,
-					"players": Array(2).fill(null),
-					"winner": Player.PLAYER_NONE, "message": ""};
+	//var gameInfo = {"cell": null, "turn": Player.PLAYER_1,
+	//				"players": Array(2).fill(null),
+	//				"winner": Player.PLAYER_NONE, "message": ""};
+
+	const [gcell, setGameCell] = useState(null);
+	const [gturn, setGameTurn] = useState(Player.PLAYER_1);
+	const [gplayers, setGamePlayers] = useState(Array(2).fill(null));
+	const [gplayerValue, setGamePlayerValue] = useState("❌");
+	const [gwinner, setGameWinner] = useState(Player.PLAYER_NONE);
+	const [gmessage, setGameMessage] = useState("");
+	var gameInfo = {"cell": gcell, "turn": gturn, "value": gplayerValue,
+			"players": gplayers, "winner": gwinner, "message": gmessage};
+
 	const [gameState, setGameState] = useState(0);
 
 	useEffect(() => {
@@ -65,11 +81,6 @@ function Game() {
 			listen();
 		}
 	}, [Connected]);
-
-	useEffect(() => {
-		console.log("On gameover..:", gameOver);
-	}, [gameOver]);
-
 
 	function gamestateprint() {
 		switch(gameState) {
@@ -147,10 +158,19 @@ function Game() {
 			else if ((gameState == GState.player1Wins) ||
 				     (gameState == GState.player2Wins) ||
 				     (gameState == GState.draw)) {
-				handleLevelOver();
+				handleGameOver();
 			} 
 		}
 	}, [gameState]);
+
+	useEffect(() => {
+		if (Connected == true) {
+			if (gameState == GState.playerMove) {
+				console.log("Winner found!!");
+				getGame();
+			}
+		}
+	}, [gwinner]);
 
 	function handleOnConnected() {
 		console.log("Connected..:", signer);
@@ -194,9 +214,10 @@ function Game() {
 		await getGame();
 	}
 
-	const handleLevelOver = async () => {
-		console.log("Level done");
-		//setLevel(level+1);
+	const handleGameOver = async () => {
+		console.log("Game Over");
+		sessionStorage.setItem('cells', JSON.stringify(quadCells));
+		onGameOver();
 	}
 
 	// On getting level data from Game
@@ -217,15 +238,18 @@ function Game() {
 		await GameContract.methods.level()
 			.call({from: signer, gas: 100000})
 			.then((level) => {
-				setLevel(parseInt(level));
+				if (level == initalLevel) {
+					setLevel(parseInt(level));
+				}
 			});
 	}
 
 	async function getGame() {
-		await GameContract.methods.getGame()
+		console.log("initalLevel ? initalLevel : 1:::", initalLevel ? initalLevel : 1);
+		await GameContract.methods.getGame(initalLevel ? initalLevel : 1)
 			.call({from: signer, gas: 100000})
 			.then((info) => {
-				console.log("info:", info.levelCode);
+				console.log("info:", info);
 				let state = ((parseInt(info.winner) == Player.PLAYER_1) ?
 							  GState.player1Wins :
 							    ((parseInt(info.winner) == Player.PLAYER_2) ?
@@ -235,8 +259,8 @@ function Game() {
 				    (info.levelData != levelInfo.levelData)) {
 
 					if (state != gameState) {
-						gameInfo.turn = info.turn;
-						gameInfo.message = info.message;
+						setGameTurn(parseInt(info.turn))
+						setGameMessage(info.message);
 						setGameState(state);					
 					}
 					else {
@@ -273,7 +297,6 @@ function Game() {
 			console.log("address:" + data.player);
 			console.log("id:" + data.id);
 
-			//gameInfo.player.push(data.player);
 			setGameState(GState.playerJoined);		
 		};
 
@@ -283,9 +306,9 @@ function Game() {
 			let data = event.returnValues;
 
 			let cell = (parseInt(data.move.row))*marker+(parseInt(data.move.col));			
-			gameInfo.cell = cell;
-			gameInfo.winner = data.winner;
-			gameInfo.message = data.message;
+			setGameCell(cell);
+			setGameWinner(parseInt(data.winner));
+			setGameMessage(data.message);
 			setGameState(GState.playerMove);
 		});
 
@@ -323,7 +346,7 @@ function Game() {
 		}
 	}
 
-	return !gameOver ? (
+	return (
 		<div className="game">
 			<h1>
 				<div>
@@ -402,10 +425,10 @@ function Game() {
 			</h1>
 		<div className='game-state'>{GameState()}</div>
 		<Connect onConnected={handleOnConnected} account={1}/>
-		<NewGame onData={handleLevelData} gameState={gameState}
+		<NewGame initalLevel={initalLevel} onData={handleLevelData} gameState={gameState}
 				 levelInfo={levelInfo} gState={GState}/>
 		</div>
-		) : null;
+	);
 }
 
 export default Game;

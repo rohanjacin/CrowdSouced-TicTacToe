@@ -24,6 +24,7 @@ contract BaseStateD {
 		uint256 len;
 		uint256 v;
 		uint256 s;
+
 		assembly {
 			let d
 			// Fetch dimension

@@ -25,12 +25,13 @@ contract Level1D is BaseLevelD, BaseStateD, BaseSymbolD, BaseDataD {
 		bytes calldata _stateData, bytes calldata _symbolsData)
 		public returns(bool success){
 
+		console.log("in l1 copyLevelData");
 		// Copy level num
-		BaseLevelD.copyLevel(_levelNumData);
+		success = BaseLevelD.copyLevel(_levelNumData);
 		// Copy level state as per schema
-		_copyState(_stateData);
+		success = _copyState(_stateData);
 		// Copy level symbols as per schema
-		_copySymbol(_symbolsData);
+		success =_copySymbol(_symbolsData);
 	}
 
 	// Copies state into game storage as per schema

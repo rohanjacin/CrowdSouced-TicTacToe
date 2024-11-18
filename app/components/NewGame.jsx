@@ -5,7 +5,7 @@ import { web3, signer, GameContract, Connected, Connect } from "./Connect.jsx";
 import BN from "bn.js";
 import Popup from 'reactjs-popup';
 
-function NewGame({ onData, gameState, levelInfo, gState, players }) {
+function NewGame({ initalLevel, onData, gameState, levelInfo, gState, players }) {
 
 	const [newGame, setNewGame] = useState({"set":false, "get":false, 
 								  "level": null, "code": null, "data": null});
@@ -35,11 +35,13 @@ function NewGame({ onData, gameState, levelInfo, gState, players }) {
 	}, [levelInfo]);	
 
 
-	async function startNewGame(num, bidder) {
+	async function startNewGame(bidder) {
 		console.log("startNewGame:", bidder);
 
-		await GameContract.methods.newGame(num, bidder)
-			.send({from: signer, gas: 300000})
+		let num = initalLevel ? initalLevel : 1;
+		await GameContract.methods.newGame(initalLevel ? 
+									initalLevel : 1, num, bidder)
+			.send({from: signer, gas: 900000})
 			.then((result) => {
 				console.log("result:", result);
 			});
@@ -58,8 +60,9 @@ function NewGame({ onData, gameState, levelInfo, gState, players }) {
 		const callData = web3.eth.abi.encodeParameters(['address','bytes'], 
 			[addr, fetchLevelData]);
 		
-		await GameContract.methods.callLevel(callData)
-			.call({from: signer, gas: 100000})
+		await GameContract.methods.callLevel(initalLevel ?
+									initalLevel : 1, callData)
+			.call({from: signer, gas: 500000})
 			.then((data) => {
 				data.data = data.data.split("0x")[1];
 				let len = parseInt(data.data.slice(126,128), 16);
@@ -88,23 +91,24 @@ function NewGame({ onData, gameState, levelInfo, gState, players }) {
 
     async function loadLevel (bidder) {
         setNewGame({...newGame, "get": false, "set": true});
-        setTimeout(async () => await startNewGame(1, bidder), 500);
+        setTimeout(async () => await startNewGame(bidder), 500);
     }
 
-;	return (<div>
-				<button className='newgame-button'
-				onClick={(newGame.set == true) ? displayLevel :
-				async () => { if (Connected == true) { setNewGame({...newGame, "get": true}) }}}>
-				{(newGame.set == true)? `Level ${newGame.level}`:"NewGame"}
-		    	</button>
-			    <Popup open={(newGame.get == true)} modal>
-			    	{() => (<h1><input className='loadlevel-popup' type="text"
-			    		placeholder="Level proposer's address"
-			    		onChange={async(event) => {
-			    			loadLevel(event.target.value)
-			    		}}/></h1>)}
-			    </Popup>
-		    </div>
+;	return (
+		<div>
+			<button className='newgame-button'
+			onClick={(newGame.set == true) ? displayLevel :
+			async () => { if (Connected == true) { setNewGame({...newGame, "get": true}) }}}>
+			{(newGame.set == true)? `Level ${newGame.level}`:"NewGame"}
+	    	</button>
+		    <Popup open={(newGame.get == true)} modal>
+		    	{() => (<h1><input className='loadlevel-popup' type="text"
+		    		placeholder="Level proposer's address"
+		    		onChange={async(event) => {
+		    			loadLevel(event.target.value)
+		    		}}/></h1>)}
+		    </Popup>
+		</div>
 	);
 }
 
