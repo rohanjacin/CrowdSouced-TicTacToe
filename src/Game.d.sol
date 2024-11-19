@@ -7,7 +7,7 @@ import "./BaseSymbol.d.sol";
 import "./BaseData.sol";
 import "./LevelConfigurator.sol";
 import "./ILevelConfigurator.sol";
-import {ILevelD} from "./ILevel.d.sol";
+import { ILevelD } from "./ILevel.d.sol";
 import "./RuleEngine.d.sol";
 import "semaphore/packages/contracts/contracts/interfaces/ISemaphore.sol";
 import "openzeppelin-contracts/contracts/utils/Strings.sol";
@@ -28,9 +28,7 @@ contract GameHouse {
 	address public levelConfigurator;
 
 	constructor(address _admin) {
-		levelConfigurator = address(new LevelConfigurator(_admin, 
-								ISemaphore(address(0x02))));
-		console.log("levelConfigurator:", levelConfigurator);
+		levelConfigurator = address(new LevelConfigurator(_admin));
 	}
 }
 
@@ -74,7 +72,7 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 
 	// SLOT 6 is for Game Admin
 	address admin;
-	GameHouse house;
+	GameHouse public house;
 
 	// SLOT 7 is Game instance (id = level number)
 	mapping(uint8 => GameInfo) public games;
@@ -98,23 +96,18 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 	}
 
 	fallback() external {
-		console.log("In Game fallback");
 	}
 
 	// Direct calls to valid Level Contract
 	function callLevel(uint8 id, bytes calldata levelCall)
 		external payable returns(bool success, bytes memory data) {
 
-		console.log("In callLevel");
 		// Level Address + encoded Function Data (i.e sel, params)
         (address target, bytes memory callData) = abi.decode(levelCall,
 													(address, bytes));
-		console.log("target:", target);
-		console.log("games[id].levelCode:", games[id].levelCode);
 
 		if (target ==  games[id].levelCode) {
 			(success, data) = target.call{value: msg.value}(callData);
-			console.log("success:", success);
 		}
 	}
 
@@ -128,13 +121,11 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 		uint8 _symbollen;
 
 		if (levelnum == 1) {
-			console.log("retetive 1");
 			_numlen = 1;
 			_statelen = 9;
 			_symbollen = 2;
 		}
 		else if (levelnum == 2) {
-			console.log("retetive 2");
 			_numlen = 1;
 			_statelen = 81;
 			_symbollen = 4;
@@ -171,20 +162,11 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 
 		ILevelConfigurator.LevelConfig memory config;
 
-		console.log("_loadLevel:", _level);
 		config = ILevelConfigurator(house.levelConfigurator())
 						.getProposal(bidder);			
-		console.log("config.num:", config.num);
-		console.log("config.codeLen:", config.codeLen);
-		console.log("config.levelNumLen:", config.levelNumLen);
-		console.log("config.stateLen:", config.stateLen);
-		console.log("config.symbolLen:", config.symbolLen);
-		console.log("config.codeAddress:", config.codeAddress);
-		console.log("config.dataAddress:", config.dataAddress);
 
 		// Level check for L1 or L2
 		if (!(config.num == _level)) {
-			console.log("invalid level");
 			//revert LevelInvalid();
 		}
 
@@ -193,10 +175,7 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 		 bytes memory _levelsymbol) = retrieveLevel(uint8(config.num),
 		 								config.dataAddress);
 
-		// Copy Level via delegatecall
-		console.log("config.codeAddress:", config.codeAddress);
-		console.log("config.dataAddress:", config.dataAddress);
-	
+		// Copy Level via delegatecall	
 		bytes memory cdata = abi.encodeCall(ILevelD.copyLevelData,
 			(_levelnum, _levelstate, _levelsymbol));
 		
@@ -209,8 +188,6 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 		// Store level address
 		games[id].levelCode = config.codeAddress;
 		games[id].levelData = config.dataAddress;
-		console.log("levelCode:", games[id].levelCode);
-		console.log("levelData:", games[id].levelData);
 
 		// Add level rules
 		uint8 _symbolLen = uint8(config.symbolLen/4);
@@ -231,7 +208,6 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 	function newGame(uint8 id, uint8 _level, address _bidder)
 		external onlyAdmin returns (bool success, string memory message) {
 
-		console.log("newgame:", _level);
 		// Check if game requested is 
 		// for configured level
 		if (!((_level == 1) || (_level == 2))) {
@@ -253,7 +229,7 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 		}
 	}
 
-	function getGame(uint8 id) external returns(GameInfo memory info){
+	function getGame(uint8 id) external view returns(GameInfo memory info){
 		return games[id];
 	}
 
@@ -384,9 +360,6 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 		if (true == _isBoardFull()) {
 			winner = Player.None;
 		}
-
-		console.log("Final winner:", uint(winner));
-		console.log("Message:", message);
 	}
 
 	// Check if there are no empty cells on the board
@@ -435,14 +408,10 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 			_tuples = 6;
 		}
 
-		console.log("In Rows..");
 		// Rows
 		for (uint8 r = 0; r < _marker; r++) {
 
-			console.log("r:", r);
-
 			for (uint8 c = 0; c < _tuples; c++) {
-				console.log(" c:", c);
 
 				if (level == 1) {
 					if ((getState(r, c) == getState(r, c+1)) &&
@@ -450,13 +419,11 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 
 						if (getState(r, c) == uint8(CellValueL.X)) {
 						   	countX = 1;
-							console.log(" countX:", countX);
 						   	winner = Player.Player1;
 						   	col = c;							
 						}
 						else if (getState(r, c) == uint8(CellValueL.O)) {
 						   	countO = 1;
-							console.log(" countO:", countO);
 						   	winner = Player.Player2;
 						   	col = c;							
 						} 
@@ -469,13 +436,11 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 
 					   	if (getState(r, c) == uint8(CellValueL.X)) {
 						   	countX = 1;
-							console.log(" countX:", countX);
 						   	winner = Player.Player1;
 						   	col = c;
 					   	}
 					   	if (getState(r, c) == uint8(CellValueL.O)) {
 						   	countO = 1;
-							console.log(" countO:", countO);
 						   	winner = Player.Player2;
 						   	col = c;
 					   	}
@@ -494,9 +459,6 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 				break;
 			}
 		}
-
-		console.log("winner:", uint(winner));
-		console.log("message:", message);
 	}
 
 	// Check longest X or O sequence in all columns
@@ -520,15 +482,10 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 			_tuples = 6;
 		}
 
-		console.log("In Columns..");
-
 		// Columns
 		for (uint8 c = 0; c < _marker; c++) {
 
-			console.log("c:", c);
-
 			for (uint8 r = 0; r < _tuples; r++) {
-				console.log(" r:", r);
 
 				if (level == 1) {
 					if ((getState(r, c) == getState(r+1, c)) &&
@@ -536,13 +493,11 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 
 						if (getState(r, c) == uint8(CellValueL.X)) {
 						   	countX = 1;
-							console.log(" countX:", countX);
 						   	winner = Player.Player1;
 						   	row = r;							
 						}
 						else if (getState(r, c) == uint8(CellValueL.O)) {
 						   	countO = 1;
-							console.log(" countO:", countO);
 						   	winner = Player.Player2;
 						   	row = r;							
 						} 
@@ -555,13 +510,11 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 
 					   	if (getState(r, c) == uint8(CellValueL.X)) {
 						   	countX = 1;
-							console.log(" countX:", countX);
 						   	winner = Player.Player1;
 						   	row = r;
 					   	}
 					   	if (getState(r, c) == uint8(CellValueL.O)) {
 						   	countO = 1;
-							console.log(" countO:", countO);
 						   	winner = Player.Player2;
 						   	row = r;
 					   	}
@@ -580,9 +533,6 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 				break;
 			}
 		}
-
-		console.log("winner:", uint(winner));
-		console.log("message:", message);
 	}
 
 	function _winnerInDiagonals() internal view
@@ -604,8 +554,6 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 			_tuples = 6;
 		}
 
-		console.log("In Diagonals..");
-
 		if (level == 1) {
 
 			if ((getState(0, 0) == getState(1, 1)) &&
@@ -613,12 +561,10 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 
 				if (getState(0, 0) == uint8(CellValueL.X)) {
 				   	countX = 1;
-					console.log(" countX:", countX);
 				   	winner = Player.Player1;
 			   	}
 			   	if (getState(0, 0) == uint8(CellValueL.O)) {
 				   	countO = 1;
-					console.log(" countO:", countO);
 				   	winner = Player.Player2;
 			   	}
 			   	combo = 1;	
@@ -628,12 +574,10 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 
 				if (getState(0, 2) == uint8(CellValueL.X)) {
 				   	countX = 1;
-					console.log(" countX:", countX);
 				   	winner = Player.Player1;
 			   	}
 			   	if (getState(0, 2) == uint8(CellValueL.O)) {
 				   	countO = 1;
-					console.log(" countO:", countO);
 				   	winner = Player.Player2;
 			   	}
 			   	combo = 2;
@@ -645,8 +589,6 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 			uint8 d = 0;
 
 			for (d = 0; d < _tuples; d++) {
-				console.log("forward:");
-				console.log(" d:", d);
 			
 				if ((getState(d, d) == getState(d+1, d+1)) &&
 					(getState(d+1, d+1) == getState(d+2, d+2)) &&
@@ -654,12 +596,10 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 
 				   	if (getState(d, d) == uint8(CellValueL.X)) {
 					   	countX = 1;
-						console.log(" countX:", countX);
 					   	winner = Player.Player1;
 				   	}
 				   	if (getState(d, d) == uint8(CellValueL.O)) {
 					   	countO = 1;
-						console.log(" countO:", countO);
 					   	winner = Player.Player2;
 				   	}
 			   		combo = 1;
@@ -670,9 +610,6 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 			if (countX == countO) {
 				d = 0;
 				for ( ; (d < _tuples && e < _tuples); ) {
-					console.log("backward:");
-					console.log(" d:", d);
-					console.log(" e:", e);
 				
 					if ((getState(e, 8-d) == getState(e+1, 7-d)) &&
 						(getState(e+1, 7-d) == getState(e+2, 6-d)) &&
@@ -680,12 +617,10 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 
 					   	if (getState(e, 8-d) == uint8(CellValueL.X)) {
 						   	countX = 1;
-							console.log(" countX:", countX);
 						   	winner = Player.Player1;
 					   	}
 					   	if (getState(e, 8-d) == uint8(CellValueL.O)) {
 						   	countO = 1;
-							console.log(" countO:", countO);
 						   	winner = Player.Player2;
 					   	}
 
@@ -707,8 +642,6 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 				combo == 2 ? "bckwddiag" : ""), ",r:", " ", ",c:", " ",
 				",d:", Strings.toString(diag)));
 		}
-
-		console.log("winner:", uint(winner));
 	}
 
     modifier onlyAdmin {

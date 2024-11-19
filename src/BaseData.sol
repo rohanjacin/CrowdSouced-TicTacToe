@@ -56,7 +56,6 @@ contract BaseData {
 		uint256 size;
 
 		if (loc == address(0)) {
-			console.log("Address is zero");
 			revert();
 		}
 

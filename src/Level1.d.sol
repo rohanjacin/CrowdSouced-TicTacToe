@@ -25,7 +25,6 @@ contract Level1D is BaseLevelD, BaseStateD, BaseSymbolD, BaseDataD {
 		bytes calldata _stateData, bytes calldata _symbolsData)
 		public returns(bool success){
 
-		console.log("in l1 copyLevelData");
 		// Copy level num
 		success = BaseLevelD.copyLevel(_levelNumData);
 		// Copy level state as per schema

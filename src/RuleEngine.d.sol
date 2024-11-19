@@ -74,18 +74,15 @@ abstract contract RuleEngine {
 	function setCell(address levelAddress, uint8 row, uint8 col,
 		uint8 input) internal returns(bool success) {
 
-		console.log("In SetCell:", levelAddress);
-		console.log("input:", input);
-
 		// Check for valid address
 		if (levelAddress == address(0)) {
-			//revert();
+			revert();
 		}
 
 		// Check if level contract exists
 		assembly {
 			if iszero(extcodesize(levelAddress)) {
-				//revert(0, 0)
+				revert(0, 0)
 			}
 		}
 
@@ -96,11 +93,9 @@ abstract contract RuleEngine {
 
 		// Call level function to set cell via its selector
 		bytes4 sel = rules[input];
-		console.log("sel:", uint32(sel));
 
 		(success, ) = levelAddress.delegatecall(
 						abi.encodeWithSelector(sel, row, col, input));
-		console.log("success:", success);
 	}
 
 	// 

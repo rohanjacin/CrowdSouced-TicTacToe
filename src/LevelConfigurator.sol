@@ -48,7 +48,7 @@ contract LevelConfigurator {
     mapping(address => LevelConfig) proposals;
 
     // Input arguments: admin address, semaphore deployed contract address 0x1e0d7FF1610e480fC93BdEC510811ea2Ba6d7c2f for Sepolia
-    constructor(address _admin, ISemaphore _semaphore) {
+    constructor(address _admin) {
         admin = _admin;
         //semaphore = _semaphore;
         //groupId_Bomb = semaphore.createGroup(address(this));
@@ -58,7 +58,7 @@ contract LevelConfigurator {
     // Enables Level configuration
     function start() external view onlyAdmin {}
 
-    function getProposal(address bidder) external
+    function getProposal(address bidder) external view
         returns (LevelConfig memory config) {
 
         if (bidder == address(0)) {
@@ -203,8 +203,6 @@ contract LevelConfigurator {
             }
 
             success = true;
-            console.log("Deployed:Code", config.codeAddress);            
-            console.log("Deployed:Data", config.dataAddress);
         }
     }
 

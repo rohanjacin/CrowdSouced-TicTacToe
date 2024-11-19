@@ -16,17 +16,13 @@ contract DeployLevel1 is Script {
 		bytes memory _levelNum = _setLevelNum(1);
 		bytes memory _state = _setState(1);
 		bytes memory _symbols = _setSymbol(1);
-        bytes memory _levelCode = abi.encodePacked(vm.getCode("Level1.d.sol:Level1D"), 
-            abi.encode(_levelNum, _state, _symbols));
 
-        bytes memory coode = type(Level1D).creationCode;
 		vm.startBroadcast();
 
 		Level1D level1 = new Level1D(_levelNum, _state, _symbols);
 
-		//level1.copyLevelData();
-
 		vm.stopBroadcast();
+        level1=level1;
 	}
 
     // Internal function to set levelnum

@@ -16,18 +16,15 @@ contract DeployGame is Script {
 
 	function run() external {
 
-		bytes memory _levelNum = _setLevelNum(2);
-		BaseState.State memory _state = _setState(2);
-		BaseSymbol.Symbols memory _symbols = _setSymbol(2);
-
         uint256 privKey = vm.envUint("PRIVATE_KEY");
         address signer = vm.addr(privKey);
         vm.startBroadcast(signer);
 
 		GameD game1 = new GameD(signer);
-        //game1.newGame(1, address(0));
         
         vm.stopBroadcast();
+        
+        game1=game1;
 	}
 
     // Internal function to set levelnum
@@ -286,6 +283,7 @@ contract NewGame is Script {
 
         uint256 privKey = vm.envUint("PRIVATE_KEY");
         address signer = vm.addr(privKey);
+       
         vm.startBroadcast(signer);
         
         IGame(address(0x8464135c8F25Da09e49BC8782676a84730C318bC))

@@ -13,7 +13,6 @@ contract BaseDataD {
 		         bytes memory symbols) {
 		// Store data
 		data = _storeLevel(levelNum, state, symbols);
-		console.log("data:", data);
 	}
 
 	// Store level number, state and symbols as code  
