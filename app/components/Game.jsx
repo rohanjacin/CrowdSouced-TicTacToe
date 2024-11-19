@@ -2,20 +2,21 @@ import React from "react";
 import Board from "./Board.jsx";
 import Strike from "./Strike.jsx";
 import { web3, signer, GameContract, Connected, Connect } from "./Connect.jsx";
-import JoinGame from "./Join.jsx";
+import { PlayerId, JoinGame} from "./Join.jsx";
 import { useState, useEffect } from "react";
 
 const GState = {
-	idle: 1,	
-	newGameStarted: 2,
-	playerJoined: 3,
-	levelSpwaned: 4,
-	levelStarted: 5,
-	playerMoveInProgress: 6,
-	playerMoveDone: 7,
-	player1Wins: 8,
-	player2Wins: 9,
-	draw: 10,
+	idle: 1,
+	init: 2,
+	newGameStarted: 3,
+	playerJoined: 4,
+	levelSpwaned: 5,
+	levelStarted: 6,
+	playerMoveInProgress: 7,
+	playerMoveDone: 8,
+	player1Wins: 9,
+	player2Wins: 10,
+	draw: 11,
 }
 
 const Player = {
@@ -27,7 +28,7 @@ const Player = {
 // Main Tictactoe game component
 // contains dynamic board and cells
 // for level 1 and level 2
-function Game({ initalLevel, onGameOver }) {
+function Game({ initalLevel, initialPlayerId, onGameOver }) {
 	// Level
 	console.log("initalLevel:", initalLevel);
 
@@ -107,6 +108,9 @@ function Game({ initalLevel, onGameOver }) {
 			case GState.idle:
 				console.log('Idle'); 
 			break;
+			case GState.init:
+				console.log('Init'); 
+			break;
 			case GState.newGameStarted:
 				console.log('newGameStarted'); 
 			break;
@@ -165,7 +169,7 @@ function Game({ initalLevel, onGameOver }) {
 				handleGameStarted();
 			}
 			else if (gameState == GState.playerJoined) {
-				handleInit();
+				handlePlayerJoined();
 			}			
 			else if (gameState == GState.playerMoveInProgress) {
 				fetchCellValue();
@@ -217,11 +221,12 @@ function Game({ initalLevel, onGameOver }) {
 		console.log("row:", row);
 		console.log("col:", col);
 
-		makeMove(row, col)
-		setGameCell(index);
-		console.log("GameCell:", gameInfo.cell);
-		console.log("playerVal:", gameInfo.value);
-		setTimeout(() => setGameState(GState.playerMoveInProgress), 500);
+		await makeMove(row, col).then(() => {
+			setGameCell(index);
+			console.log("GameCell:", gameInfo.cell);
+			console.log("playerVal:", gameInfo.value);
+			setTimeout(() => setGameState(GState.playerMoveInProgress), 500);			
+		});
 	}
 
 	const fetchCellValue = async () => {
@@ -332,11 +337,11 @@ function Game({ initalLevel, onGameOver }) {
 		setStrikeSyle(newStrikeSyle)
 	}
 
-	function makeMove(row, col) {
-		GameContract.methods.makeMove(initalLevel ? initalLevel : 1, {row, col})
+	async function makeMove(row, col) {
+		await GameContract.methods.makeMove(initalLevel ? initalLevel : 1, {row, col})
 			.send({from: signer, gas: 1000000})
 			.then((result) => {
-				//console.log("result:", result);
+				console.log("makemove result:", result);
 		});
 	}
 
@@ -344,7 +349,9 @@ function Game({ initalLevel, onGameOver }) {
 		await GameContract.methods.level()
 			.call({from: signer, gas: 100000})
 			.then((level) => {
-				if (level == initalLevel) {
+				console.log("IN get level:", level);
+				if (parseInt(level) == initalLevel) {
+					console.log("in IF");
 					//levelInfo.levelNum = parseInt(level);
 					setGameState(GState.init);
 					setLevel(parseInt(level));
@@ -391,8 +398,10 @@ function Game({ initalLevel, onGameOver }) {
 						setLevelData(info.levelData);
 					}
 				}
-				setGamePlayerValue(parseInt(info.turn) == Player.PLAYER_1 ? "❌" : 
-					(parseInt(info.turn) == Player.PLAYER_2) ? "⭕" : null);
+				setGamePlayerValue(
+					(parseInt(info.turn) == PlayerId) ? 
+					((parseInt(info.turn) == Player.PLAYER_1) ? "❌" :
+					 ((parseInt(info.turn) == Player.PLAYER_2) ? "⭕" : null)):null);
 		});
 	}
 
@@ -414,11 +423,37 @@ function Game({ initalLevel, onGameOver }) {
 		const eventPlayerJoined = GameContract.events.PlayerJoined();
 		eventPlayerJoined.on("data", async (event) => {
 			let data = event.returnValues;
+			console.log("PlayerJoined event:", data.player);
+			console.log("PlayerJoined signer:", signer);
+
 			if (data.player == signer) {
 				console.log("Joined as player:", parseInt(data.id));
 				setGameState(GState.playerJoined);
 			}
 		});
+
+		// A Player has made a move
+		const eventOppPlayerMoved = GameContract.events.PlayerMove();
+		eventOppPlayerMoved.on("data", async (event) => {
+			let data = event.returnValues;
+			console.log("PlayerMove id:", data.id);
+			console.log("PlayerMove move:", data.move);
+			console.log("PlayerMove winner:", data.winner);
+			console.log("PlayerMove message:", data.message);
+
+			if (data.id ? (parseInt(data.id) != PlayerId) : false) {
+				console.log("Opp player move:");
+
+				let idx = parseInt(data.move.row)*marker+parseInt(data.move.col);
+				let value = (parseInt(data.id) == Player.PLAYER_1 ? "❌" :
+					 (parseInt(data.id) == Player.PLAYER_2) ? "⭕" : null);
+				setGameCell(idx);
+				setGamePlayerValue(value);
+				console.log("OppGameCell:", idx);
+				console.log("OppPlayerVal:", value);
+				setTimeout(() => setGameState(GState.playerMoveInProgress), 500);
+			}
+		});		
 	}
 
 	function GameState() {
@@ -527,7 +562,7 @@ function Game({ initalLevel, onGameOver }) {
 		 <Strike level={level} strikeClass={strikeClass}
 		 	strikeStyle={strikeStyle}/> :  <div> </div>}
 		<div className='game-state'>{GameState()}</div>
-		<Connect onConnected={handleOnConnected} account={3}/>
+		<Connect onConnected={handleOnConnected} account={initialPlayerId}/>
 		<JoinGame initalLevel={initalLevel} onData={handleLevelData} levelInfo={levelInfo}
 		   		  gameState={gameState} gState={GState} players={Player}/>
 		</div>

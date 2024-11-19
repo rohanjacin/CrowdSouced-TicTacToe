@@ -273,8 +273,7 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 			emit PlayerJoined(games[id].player1, uint8(Player.Player1)); 
 			return (true, "You are Player1 - X");
 		}
-
-		if (games[id].player2 == address(0)) {
+		else if (games[id].player2 == address(0)) {
 			
 			// Store player 2
 			games[id].player2 = msg.sender;
@@ -296,7 +295,7 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 
 		// Only player who's turn it is can make a move
 		if (msg.sender != _getCurrentPlayer(id)) {
-			//return (false, "Not your turn");
+			return (false, "Not your turn");
 		}
 
 		// Check cell initial value

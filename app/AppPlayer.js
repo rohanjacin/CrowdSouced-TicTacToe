@@ -3,7 +3,7 @@ import { useState } from "react";
 import Game from "./components/Game.jsx";
 import "./AppPlayer.css";
 
-const App = () =>{
+const App = ({ initialPlayerId }) =>{
     const [initalLevel, SetInitialLevel] = useState(parseInt(sessionStorage.getItem('level')) || 1);
 
     function onGameOver () {
@@ -13,7 +13,7 @@ const App = () =>{
     }
 
    return (
-      <Game initalLevel={initalLevel} onGameOver={onGameOver}/>
+      <Game initalLevel={initalLevel} initialPlayerId={initialPlayerId} onGameOver={onGameOver}/>
    );
 }
 

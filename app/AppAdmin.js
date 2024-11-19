@@ -14,7 +14,7 @@ const App = () => {
     }
 
    return (
-      <Admin initalLevel={initalLevel} onGameOver={onGameOver}/>
+      <Admin initalLevel={initalLevel} initialPlayerId={1} onGameOver={onGameOver}/>
    );
 }
 

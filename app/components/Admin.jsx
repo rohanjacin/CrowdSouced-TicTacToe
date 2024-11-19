@@ -27,7 +27,7 @@ const Player = {
 // Main Tictactoe game component
 // contains dynamic board and cells
 // for level 1 and level 2
-function Game({ initalLevel, onGameOver }) {
+function Game({ initalLevel, initialPlayerId, onGameOver }) {
 	// Level
 	console.log("initalLevel:", initalLevel);
 
@@ -182,7 +182,7 @@ function Game({ initalLevel, onGameOver }) {
 	}
 
 	const handleIdle = async () => {
-		await getLevel();
+		getLevel();
 	}
 
 	const handleInit = async () => {
@@ -235,13 +235,15 @@ function Game({ initalLevel, onGameOver }) {
 	}
 
 	async function getLevel() {
-		await GameContract.methods.level()
-			.call({from: signer, gas: 100000})
+		console.log("LL:", GameContract);
+		GameContract.methods.level()
+			.call({from: signer, gas: 500000})
 			.then((level) => {
+				console.log("In then");
 				if (level == initalLevel) {
 					setLevel(parseInt(level));
 				}
-			});
+		});
 	}
 
 	async function getGame() {
@@ -278,6 +280,7 @@ function Game({ initalLevel, onGameOver }) {
 		// A new game has started
 		const eventNewGameStarted = GameContract.events.NewGame();
 		eventNewGameStarted.on("data", (event) => {
+			console.log("NEEW Game");
 			let data = event.returnValues;
 			//levelInfo.levelNum = data.level;
 			levelInfo.levelData = data.levelData;
@@ -424,7 +427,7 @@ function Game({ initalLevel, onGameOver }) {
 				</div>
 			</h1>
 		<div className='game-state'>{GameState()}</div>
-		<Connect onConnected={handleOnConnected} account={1}/>
+		<Connect onConnected={handleOnConnected} account={initialPlayerId}/>
 		<NewGame initalLevel={initalLevel} onData={handleLevelData} gameState={gameState}
 				 levelInfo={levelInfo} gState={GState}/>
 		</div>

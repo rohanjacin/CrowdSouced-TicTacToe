@@ -41,7 +41,7 @@ function NewGame({ initalLevel, onData, gameState, levelInfo, gState, players })
 		let num = initalLevel ? initalLevel : 1;
 		await GameContract.methods.newGame(initalLevel ? 
 									initalLevel : 1, num, bidder)
-			.send({from: signer, gas: 900000})
+			.send({from: signer, gas: 1200000})
 			.then((result) => {
 				console.log("result:", result);
 			});

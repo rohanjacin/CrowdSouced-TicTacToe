@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 import { web3, signer, GameContract, Connected, Connect } from "./Connect.jsx";
 import BN from "bn.js";
 
+var PlayerId;
+
 function JoinGame({ initalLevel, onData, levelInfo, gameState, gState, players }) {
 
 	const defaultJoinState = {joined: false, asPlayer :players.PLAYER_NONE};
@@ -29,6 +31,15 @@ function JoinGame({ initalLevel, onData, levelInfo, gameState, gState, players }
 		levelInfo.levelCode,
 		levelInfo.levelData,
 		joinState]);	
+
+	useEffect (() => {
+
+		if (Connected == true) {
+			if (joinState.joined == true) {
+				PlayerId = joinState.asPlayer;	
+			}
+		}
+	}, [joinState]);
 
 	// Register for messages/events from the Game contract
 	async function listen () {
@@ -97,4 +108,7 @@ function JoinGame({ initalLevel, onData, levelInfo, gameState, gState, players }
 	);
 }
 
-export default JoinGame;
+export {
+	PlayerId,
+	JoinGame
+}

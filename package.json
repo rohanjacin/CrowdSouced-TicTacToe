@@ -11,7 +11,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start-admin": "webpack-dev-server --env admin",
-    "start-player": "webpack-dev-server --env player",
+    "start-player1": "webpack-dev-server --env player1",
+    "start-player2": "webpack-dev-server --env player2",
     "build": "webpack ."
   },
   "repository": {
