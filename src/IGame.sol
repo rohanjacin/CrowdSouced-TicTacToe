@@ -10,4 +10,6 @@ interface IGame {
 	// Starts a new game
 	function newGame(uint8 id, uint8 _level, address _bidder) external
 		returns (bool success, string memory message);
+
+	function getLevelConfigurator() external view returns(address);
 }

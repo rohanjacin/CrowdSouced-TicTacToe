@@ -98,6 +98,10 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 	fallback() external {
 	}
 
+	function getLevelConfigurator() external view returns(address) {
+		return house.levelConfigurator();
+	}
+
 	// Direct calls to valid Level Contract
 	function callLevel(uint8 id, bytes calldata levelCall)
 		external payable returns(bool success, bytes memory data) {
@@ -224,6 +228,8 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 			// Initalize game
 			games[id].winner = Player.None;
 			games[id].turn = Player.Player1;
+			games[id].player1 = address(0);
+			games[id].player2 = address(0);
 
 			emit NewGame(level, games[id].levelCode, games[id].levelData);			
 		}

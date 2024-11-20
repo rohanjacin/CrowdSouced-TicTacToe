@@ -19,7 +19,7 @@ function Connect({ onConnected, account }) {
   }, [connected]);
 
   async function createProvider(account) {
-    if (0/*window.ethereum*/) {
+    if (window.ethereum) {
       web3 = new Web3(window.ethereum);
       let signers = await window.ethereum.request({ method: "eth_requestAccounts" });
       signer = web3.utils.toChecksumAddress(signers[account]);
@@ -43,12 +43,12 @@ function Connect({ onConnected, account }) {
   async function getGameContract() {
     console.log("getGameContract");
     GameContract = new web3.eth.Contract(GameD.abi, 
-      "0x8464135c8F25Da09e49BC8782676a84730C318bC");
+      "0xAe387934b3632477F4B0299F5E4d65c8c2D2b7f1");
     onConnected();
   }
 
   async function getBalance() {
-    if (0/*window.ethereum*/) {
+    if (window.ethereum) {
       let wei = await web3.eth.getBalance(signer)
       return Math.floor(web3.utils.fromWei(wei, 'ether'));
     } else {

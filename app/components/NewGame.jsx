@@ -86,7 +86,9 @@ function NewGame({ initalLevel, onData, gameState, levelInfo, gState, players })
 	}
 
     function displayLevel() {
-        window.open("https://remix.ethereum.org/");
+        window.open("https://sepolia.etherscan.io/address/" + levelInfo.levelCode);
+        window.open("https://sepolia.etherscan.io/address/" + levelInfo.levelData);
+
     }
 
     async function loadLevel (bidder) {

@@ -6,5 +6,5 @@ import App from './app/AppPlayer.js'
 const container = document.getElementById('root');
 const root = createRoot(container);
 root.render(
-    <App initialPlayerId={4}/>
+    <App initialPlayerId={0}/>
 );

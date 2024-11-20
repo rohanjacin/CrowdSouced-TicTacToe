@@ -61,6 +61,7 @@ contract LevelConfigurator {
     function getProposal(address bidder) external view
         returns (LevelConfig memory config) {
 
+        console.log("In getProposal");
         if (bidder == address(0)) {
             revert BiddersAddressInvalid();
         }
