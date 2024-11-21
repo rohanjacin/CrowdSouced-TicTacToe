@@ -9,7 +9,6 @@ import "./LevelConfigurator.sol";
 import "./ILevelConfigurator.sol";
 import { ILevelD } from "./ILevel.d.sol";
 import "./RuleEngine.d.sol";
-import "semaphore/packages/contracts/contracts/interfaces/ISemaphore.sol";
 import "openzeppelin-contracts/contracts/utils/Strings.sol";
 
 // Players

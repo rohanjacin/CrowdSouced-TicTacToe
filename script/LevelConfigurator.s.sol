@@ -14,7 +14,6 @@ import {Level1D} from "../src/Level1.d.sol";
 import {Level2D} from "../src/Level2.d.sol";
 import { ECDSA } from "openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import "openzeppelin-contracts/contracts/utils/cryptography/MessageHashUtils.sol";
-import "semaphore/packages/contracts/contracts/interfaces/ISemaphore.sol";
 import "../src/ILevelConfigurator.sol";
 import {IGame} from "../src/IGame.sol";
 
