@@ -5,7 +5,7 @@ const path = require('path');
 module.exports = env => {
     console.log("env.admin:", env.admin);
     return {
-    entry: env.admin ? __dirname + "/index-admin.js" : (env.player1 ? __dirname + "/index-player1.js" : env.player2 ? __dirname + "/index-player2.js" : __dirname + "/index.js"),
+    entry: env.admin ? __dirname + "/index-admin.js" : __dirname + "/index-player.js",
     mode: 'development',
     output: {
       path: path.resolve(__dirname, './dist'),
@@ -13,7 +13,7 @@ module.exports = env => {
     },
     target: 'web',
     devServer: {
-      port: env.admin ? '5000' : (env.player1 ? '5001' : env.player2 ? '5002' : '5003'),
+      //port: env.admin,
       static: {
         directory: path.join(__dirname, 'public')
       },

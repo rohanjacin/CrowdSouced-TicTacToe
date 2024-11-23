@@ -29,12 +29,9 @@ const Player = {
 // for level 1 and level 2
 function Game({ initalLevel, initialPlayerId, onGameOver }) {
 	// Level
-	console.log("initalLevel:", initalLevel);
-
 	const [level, setLevel] = useState(initalLevel);
 
 	if ((initalLevel == 2) && (level != initalLevel)) {
-		console.log("Reload..");
 		window.location.reload();
 	}
 
@@ -51,14 +48,12 @@ function Game({ initalLevel, initialPlayerId, onGameOver }) {
 	// Linearized cells in order to fill board quadrants
 	const [quadCells, setQuadCells] = useState(Array(numCells).fill(null));
 
-	// Game state
+	// Level Info
 	const [levelCode, setLevelCode] = useState("");
 	const [levelData, setLevelData] = useState("");
 	var levelInfo = {"levelNum": level, "levelCode": levelCode, "levelData": levelData}
-	//var gameInfo = {"cell": null, "turn": Player.PLAYER_1,
-	//				"players": Array(2).fill(null),
-	//				"winner": Player.PLAYER_NONE, "message": ""};
 
+	// Game state
 	const [gcell, setGameCell] = useState(null);
 	const [gturn, setGameTurn] = useState(Player.PLAYER_1);
 	const [gplayers, setGamePlayers] = useState(Array(2).fill(null));
@@ -72,7 +67,6 @@ function Game({ initalLevel, initialPlayerId, onGameOver }) {
 
 	useEffect(() => {
 		if (Connected == true) {
-			console.log("On level change..:", level);
 		}
 	}, [level]);
 
@@ -97,22 +91,22 @@ function Game({ initalLevel, initialPlayerId, onGameOver }) {
 				console.log('levelSpwaned'); 
 			break;
 			case GState.playerJoined:
-				return `playerJoined`;
+				console.log('playerJoined');
 			break;
 			case GState.playerJoined:
-				return `playerJoined`;
+				console.log('playerJoined');
 			break;			
 			case GState.playerMove:
-				return `playerMove`;
+				console.log('playerMove');
 			break;
 			case GState.player1Wins:
-				return `player1Wins`;
+				console.log('player1Wins');
 			break;
 			case GState.player2Wins:
-				return `player2Wins`;
+				console.log('player2Wins');
 			break;
 			case GState.draw:
-				return `draw`;
+				console.log('draw');
 			break;
 			default:
 				return `unknown`;
@@ -122,18 +116,8 @@ function Game({ initalLevel, initialPlayerId, onGameOver }) {
 
 	useEffect(() => {
 		if (Connected == true) {
-			console.log("\nState Change::");
 			console.log("state:");
 			gamestateprint();			
-			console.log("levelNum:", levelInfo.levelNum);
-			console.log("levelCode:", levelInfo.levelCode);
-			console.log("levelData:", levelInfo.levelData);
-			console.log("cell:", gameInfo.cell);
-			console.log("turn:", gameInfo.turn);
-			console.log("players[0]:", gameInfo.players[0]);
-			console.log("players[1]:", gameInfo.players[1]);
-			console.log("winner:", gameInfo.winner);
-			console.log("message:", gameInfo.message);
 
 			if (gameState == GState.idle) {
 				handleIdle();
@@ -166,14 +150,12 @@ function Game({ initalLevel, initialPlayerId, onGameOver }) {
 	useEffect(() => {
 		if (Connected == true) {
 			if (gameState == GState.playerMove) {
-				console.log("Winner found!!");
 				getGame();
 			}
 		}
 	}, [gwinner]);
 
 	function handleOnConnected() {
-		console.log("Connected..:", signer);
 		setGameState(GState.idle);		
 	};
 
@@ -200,8 +182,6 @@ function Game({ initalLevel, initialPlayerId, onGameOver }) {
 
 		if ((gameInfo.players[0] != null) &&
 			(gameInfo.players[1] != null)) {
-			console.log("Player 1:", gameInfo.players[0]);
-			console.log("Player 2:", gameInfo.players[1]);
 			setGameState(GState.levelStarted);
 		}
 	}
@@ -210,12 +190,10 @@ function Game({ initalLevel, initialPlayerId, onGameOver }) {
 	}
 
 	const handlePlayerMove = async () => {
-		console.log("Player move..")
 		await getGame();
 	}
 
 	const handleGameOver = async () => {
-		console.log("Game Over");
 		sessionStorage.setItem('cells', JSON.stringify(quadCells));
 		onGameOver();
 	}
@@ -223,7 +201,6 @@ function Game({ initalLevel, initialPlayerId, onGameOver }) {
 	// On getting level data from Game
 	const handleLevelData = (data) => {
 
-		console.log("handleLevelData");
 		if (gameState == GState.newGameStarted) {
 			setGameState(GState.levelSpwaned);
 		}
@@ -235,11 +212,9 @@ function Game({ initalLevel, initialPlayerId, onGameOver }) {
 	}
 
 	async function getLevel() {
-		console.log("LL:", GameContract);
 		GameContract.methods.level()
 			.call({from: signer, gas: 500000})
 			.then((level) => {
-				console.log("In then");
 				if (level == initalLevel) {
 					setLevel(parseInt(level));
 				}
@@ -247,11 +222,9 @@ function Game({ initalLevel, initialPlayerId, onGameOver }) {
 	}
 
 	async function getGame() {
-		console.log("initalLevel ? initalLevel : 1:::", initalLevel ? initalLevel : 1);
 		await GameContract.methods.getGame(initalLevel ? initalLevel : 1)
 			.call({from: signer, gas: 100000})
 			.then((info) => {
-				console.log("info:", info);
 				let state = ((parseInt(info.winner) == Player.PLAYER_1) ?
 							  GState.player1Wins :
 							    ((parseInt(info.winner) == Player.PLAYER_2) ?
@@ -266,7 +239,6 @@ function Game({ initalLevel, initialPlayerId, onGameOver }) {
 						setGameState(state);					
 					}
 					else {
-						console.log("Level code changes:", info.levelCode);
 						setLevelCode(info.levelCode);
 						setLevelData(info.levelData);
 					}
@@ -280,9 +252,7 @@ function Game({ initalLevel, initialPlayerId, onGameOver }) {
 		// A new game has started
 		const eventNewGameStarted = GameContract.events.NewGame();
 		eventNewGameStarted.on("data", (event) => {
-			console.log("NEEW Game");
 			let data = event.returnValues;
-			//levelInfo.levelNum = data.level;
 			levelInfo.levelData = data.levelData;
 			setGameState(GState.newGameStarted);
 			setLevel(parseInt(data.level));
@@ -296,10 +266,6 @@ function Game({ initalLevel, initialPlayerId, onGameOver }) {
 
 		function playerJoinedCb (event) {
 			let data = event.returnValues;
-			console.log("Player Joined..");
-			console.log("address:" + data.player);
-			console.log("id:" + data.id);
-
 			setGameState(GState.playerJoined);		
 		};
 

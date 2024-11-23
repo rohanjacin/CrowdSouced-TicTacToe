@@ -17,11 +17,6 @@ function NewGame({ initalLevel, onData, gameState, levelInfo, gState, players })
 
 	useEffect(() => {
 		if (Connected == true) {
-			console.log("In EFFECT:level", levelInfo.levelNum);
-			console.log("levelCODE:", levelInfo.levelCode);
-			console.log("levelDATA:", levelInfo.levelData);
-			console.log("gameState:",gameState);
-			console.log("newGame:", newGame);
 
 			if (levelInfo.levelNum && (newGame.set == true) &&
 				(gameState == gState.newGameStarted)) {
@@ -36,14 +31,12 @@ function NewGame({ initalLevel, onData, gameState, levelInfo, gState, players })
 
 
 	async function startNewGame(bidder) {
-		console.log("startNewGame:", bidder);
 
 		let num = initalLevel ? initalLevel : 1;
 		await GameContract.methods.newGame(initalLevel ? 
 									initalLevel : 1, num, bidder)
 			.send({from: signer, gas: 1200000})
 			.then((result) => {
-				console.log("result:", result);
 			});
 	}
 
@@ -55,7 +48,6 @@ function NewGame({ initalLevel, onData, gameState, levelInfo, gState, players })
 		    inputs: []
 		}, []);
 
-		console.log("in Request data:", typeof(addr));
 		// Level Contract address + Encoded Function
 		const callData = web3.eth.abi.encodeParameters(['address','bytes'], 
 			[addr, fetchLevelData]);
@@ -88,7 +80,6 @@ function NewGame({ initalLevel, onData, gameState, levelInfo, gState, players })
     function displayLevel() {
         window.open("https://sepolia.etherscan.io/address/" + levelInfo.levelCode);
         window.open("https://sepolia.etherscan.io/address/" + levelInfo.levelData);
-
     }
 
     async function loadLevel (bidder) {

@@ -13,7 +13,6 @@ function Connect({ onConnected, account }) {
   const [connected, setConnected] = useState(false);
   const [balance, setBalance] = useState(null);
 
-  console.log("AAaccount:", account);
   useEffect(() => {
      Connected = connected;
   }, [connected]);
@@ -23,7 +22,6 @@ function Connect({ onConnected, account }) {
       web3 = new Web3(window.ethereum);
       let signers = await window.ethereum.request({ method: "eth_requestAccounts" });
       signer = web3.utils.toChecksumAddress(signers[account]);
-      console.log("signer:", signer);
       return true;
     } else {
 
@@ -32,8 +30,6 @@ function Connect({ onConnected, account }) {
       web3 = new Web3(wsProvider);
       let signers = await web3.eth.getAccounts();
       signer = signers[account];
-      console.log("account:", account);
-      console.log("signer:", signer);
       return true;
     }
 
@@ -41,9 +37,8 @@ function Connect({ onConnected, account }) {
   }
 
   async function getGameContract() {
-    console.log("getGameContract");
     GameContract = new web3.eth.Contract(GameD.abi, 
-      "0xAe387934b3632477F4B0299F5E4d65c8c2D2b7f1");
+      "0x4AE85136760964B0A2d87fF8CAB53014AE458237");
     onConnected();
   }
 

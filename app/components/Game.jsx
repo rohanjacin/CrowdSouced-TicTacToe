@@ -29,9 +29,8 @@ const Player = {
 // contains dynamic board and cells
 // for level 1 and level 2
 function Game({ initalLevel, initialPlayerId, onGameOver }) {
+	
 	// Level
-	console.log("initalLevel:", initalLevel);
-
 	const [level, setLevel] = useState(initalLevel);
 
 	if (level != initalLevel) {
@@ -49,7 +48,6 @@ function Game({ initalLevel, initialPlayerId, onGameOver }) {
 							  () => new Array(3).fill(null))));
 	// Linearized cells in order to fill board quadrants
 	const lastQuadCells = sessionStorage.getItem("cells");
-	console.log("lastQuadCells:", lastQuadCells);
 
 	var defaultQuadCells = null;
 	if ((lastQuadCells) && (initalLevel == 2)) {
@@ -75,10 +73,12 @@ function Game({ initalLevel, initialPlayerId, onGameOver }) {
 	}
 	const [quadCells, setQuadCells] = useState(defaultQuadCells);
 
-	// Game state
+	// Level info
 	const [levelCode, setLevelCode] = useState("");
 	const [levelData, setLevelData] = useState("");
 	var levelInfo = {"levelNum": level, "levelCode": levelCode, "levelData": levelData}
+	
+	// Game state
 	const [gcell, setGameCell] = useState(null);
 	const [gturn, setGameTurn] = useState(Player.PLAYER_1);
 	const [gplayers, setGamePlayers] = useState(Array(2).fill(null));
@@ -96,9 +96,7 @@ function Game({ initalLevel, initialPlayerId, onGameOver }) {
 
 	useEffect(() => {
 		if (Connected == true) {
-			console.log("on Level change:", level);
 			if (level == 2) {
-				console.log("FInally LEVEl2");
 			}
 		}
 	}, [level]);
@@ -146,18 +144,8 @@ function Game({ initalLevel, initialPlayerId, onGameOver }) {
 
 	useEffect(() => {
 		if (Connected == true) {
-			console.log("\nState Change::");
 			console.log("state:", gameState);
 			gamestateprint();			
-			console.log("levelNum:", levelInfo.levelNum);
-			console.log("levelCode:", levelInfo.levelCode);
-			console.log("levelData:", levelInfo.levelData);
-			console.log("cell:", gameInfo.cell);
-			console.log("turn:", gameInfo.turn);
-			console.log("players[0]:", gameInfo.players[0]);
-			console.log("players[1]:", gameInfo.players[1]);
-			console.log("winner:", gameInfo.winner);
-			console.log("message:", gameInfo.message);
 
 			if (gameState == GState.idle) {
 				handleIdle();
@@ -217,46 +205,30 @@ function Game({ initalLevel, initialPlayerId, onGameOver }) {
 		let row = Math.floor(index/marker);
 		let col = index%marker;
 
-		console.log("index:", index);
-		console.log("row:", row);
-		console.log("col:", col);
-
 		await makeMove(row, col).then(() => {
 			setGameCell(index);
-			console.log("GameCell:", gameInfo.cell);
-			console.log("playerVal:", gameInfo.value);
 			setTimeout(() => setGameState(GState.playerMoveInProgress), 500);			
 		});
 	}
 
 	const fetchCellValue = async () => {
 
-		console.log("fetchCellValue:", gameInfo.cell);
-		console.log("fetchCellValue:gameInfo:", gameInfo);
-
 		let row = Math.floor(gameInfo.cell/marker);
 		let col = gameInfo.cell%marker;
-		console.log("fetchCellValue:row", row);
-		console.log("fetchCellValue:col", col);
 		await getCell(row, col)
 	}
 
 	const handleCellUpdate = async () => {
 
-		console.log("handleCellUpdate:", gameInfo.cell);
 		let row = Math.floor(gameInfo.cell/marker);
 		let col = gameInfo.cell%marker;
-		console.log("handleCellUpdate:row:", row);
-		console.log("handleCellUpdate:col", col);
 
 		await getGame();
 
 		let idx = row*marker+col;
-		console.log("handleCellUpdate:idx", idx);
 
 		const newQuadCells = [...quadCells];
 		newQuadCells[idx] = (gameInfo.value == 1 ? "❌" : (gameInfo.value == 2 ? "⭕": null));
-		console.log("newQuadCells:", newQuadCells);
 		setQuadCells(newQuadCells);
 	}
 
@@ -295,7 +267,6 @@ function Game({ initalLevel, initialPlayerId, onGameOver }) {
 		else {
 			newQuadCells = [levelCells];
 		}
-		console.log("NnewQuadCells:", newQuadCells);
 		setQuadCells(newQuadCells);
 	}
 
@@ -341,7 +312,6 @@ function Game({ initalLevel, initialPlayerId, onGameOver }) {
 		await GameContract.methods.makeMove(initalLevel ? initalLevel : 1, {row, col})
 			.send({from: signer, gas: 1000000})
 			.then((result) => {
-				console.log("makemove result:", result);
 		});
 	}
 
@@ -349,10 +319,7 @@ function Game({ initalLevel, initialPlayerId, onGameOver }) {
 		await GameContract.methods.level()
 			.call({from: signer, gas: 100000})
 			.then((level) => {
-				console.log("IN get level:", level);
 				if (parseInt(level) == initalLevel) {
-					console.log("in IF");
-					//levelInfo.levelNum = parseInt(level);
 					setGameState(GState.init);
 					setLevel(parseInt(level));
 				}
@@ -364,8 +331,6 @@ function Game({ initalLevel, initialPlayerId, onGameOver }) {
 		await GameContract.methods.getState(row, col)
 			.call({from: signer, gas: 100000})
 			.then((value) => {
-				console.log("Cell Value:", parseInt(value));
-				console.log("row*marker+col:", row*marker+col);
 				setGameCell(row*marker+col);
 				setGamePlayerValue(parseInt(value))
 				setGameState(GState.playerMoveDone);
@@ -393,7 +358,6 @@ function Game({ initalLevel, initialPlayerId, onGameOver }) {
 						setGameState(state);
 					}
 					else {
-						console.log("Level code changes:", info.levelCode);
 						setLevelCode(info.levelCode);
 						setLevelData(info.levelData);
 					}
@@ -423,11 +387,8 @@ function Game({ initalLevel, initialPlayerId, onGameOver }) {
 		const eventPlayerJoined = GameContract.events.PlayerJoined();
 		eventPlayerJoined.on("data", async (event) => {
 			let data = event.returnValues;
-			console.log("PlayerJoined event:", data.player);
-			console.log("PlayerJoined signer:", signer);
 
 			if (data.player == signer) {
-				console.log("Joined as player:", parseInt(data.id));
 				setGameState(GState.playerJoined);
 			}
 		});
@@ -436,21 +397,14 @@ function Game({ initalLevel, initialPlayerId, onGameOver }) {
 		const eventOppPlayerMoved = GameContract.events.PlayerMove();
 		eventOppPlayerMoved.on("data", async (event) => {
 			let data = event.returnValues;
-			console.log("PlayerMove id:", data.id);
-			console.log("PlayerMove move:", data.move);
-			console.log("PlayerMove winner:", data.winner);
-			console.log("PlayerMove message:", data.message);
 
 			if (data.id ? (parseInt(data.id) != PlayerId) : false) {
-				console.log("Opp player move:");
 
 				let idx = parseInt(data.move.row)*marker+parseInt(data.move.col);
 				let value = (parseInt(data.id) == Player.PLAYER_1 ? "❌" :
 					 (parseInt(data.id) == Player.PLAYER_2) ? "⭕" : null);
 				setGameCell(idx);
 				setGamePlayerValue(value);
-				console.log("OppGameCell:", idx);
-				console.log("OppPlayerVal:", value);
 				setTimeout(() => setGameState(GState.playerMoveInProgress), 500);
 			}
 		});		

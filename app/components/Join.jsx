@@ -12,18 +12,12 @@ function JoinGame({ initalLevel, onData, levelInfo, gameState, gState, players }
 
 	useEffect(() => {
 		if (Connected == true) {
-			console.log("In EFFECT:level", levelInfo.levelNum);
-			console.log("levelCODE:", levelInfo.levelCode);
-			console.log("levelDATA:", levelInfo.levelData);
-			console.log("joinState:", joinState);
-			console.log("gameState:", gameState);
 
 			if ((levelInfo.levelNum) && 
 			    (levelInfo.levelCode) &&
 			    (levelInfo.levelData) && 
 			    (joinState.joined == true) &&
 			    gameState == gState.playerJoined) {
-				console.log("Level code updated", levelInfo.levelCode);
 				requestLevelData(levelInfo.levelCode);
 			}
 		}
@@ -49,7 +43,6 @@ function JoinGame({ initalLevel, onData, levelInfo, gameState, gState, players }
 		eventPlayerJoined.on("data", async (event) => {
 			let data = event.returnValues;
 			if (data.player == signer) {
-				console.log("Added as player:", parseInt(data.id));
 				setJoined({...joinState, joined: true, asPlayer: parseInt(data.id) });
 			}
 		});
@@ -71,7 +64,6 @@ function JoinGame({ initalLevel, onData, levelInfo, gameState, gState, players }
 		    inputs: []    
 		}, []);
 
-		console.log("In requestLevelData:", addr);
 		// Level Contract address + Encoded Function
 		const callData = web3.eth.abi.encodeParameters(['address','bytes'], 
 			[addr, fetchLevelData]);

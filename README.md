@@ -7,7 +7,6 @@ The main idea is that of a crowdsourced contract upgrade, the usecase of which i
 
 1. Players - Who play the game (Player 1 & Player 2)
 2. Bidders - Who bid for levels (Bidder A, B & C)
-3. Governance - Who run the game
 
 **Game Rules**
 
@@ -15,34 +14,30 @@ The main idea is that of a crowdsourced contract upgrade, the usecase of which i
 2. Player 2 is assigned “**O**”
 3. Default level is **Level 1**  - it contains **empty** **3x3** cells
 4. The next level is **Level 2** - it contains **9x9** partially filled cells
-5. The next level is **Level 3** - it contains **15x15** partially filled cells
-6. A partially filled cell is show as below - It contains pre-filled cells
-
-      with “**X**” and “**O**” and can also contain pre-filled special cells that contain 
-
-     ⭐ or 💣. Only the **special pre-filled cells are covered** so that the players 
-
-don’t know what’s underneath.
+5. A partially filled cell is show as below - It contains pre-filled cells
+   with “**X**” and “**O**” and can also contain pre-filled special cells that contain 
+   ⭐ or 💣. Only the **special pre-filled cells are covered** so that the players don’t know what’s underneath.
 
 ![Level2](./Level2-0.jpg?raw=true "Level2")
    
 ![Level2](./Level2-1.jpg?raw=true "Level2")
 
-1. Each Player makes one move at a time, **Player 1 get the first move**
-2. A move is defined by either player placing an “**X**” or “**O**” ****in an empty cell
-3. A move is also defined by **pressing the** **special covered cell,** in this case the **cell is uncovered** and is revealed.
-4. If the revealed cell is a ⭐ then the **player gets the ⭐** and gets to player **another move**.
-5. If the revealed cell is a 💣 then the **player loses** and the **game ends** with the other player as the winner.
+6. Each Player makes one move at a time, **Player 1 get the first move**
+7. A move is defined by either player placing an “**X**” or “**O**” ****in an empty cell
+8. A move is also defined by **pressing the** **special covered cell,**
+   in this case the **cell is uncovered** and is revealed.
+4. If the revealed cell is a ⭐ then the **player gets the ⭐** and
+   gets to player **another move**.
+5. If the revealed cell is a 💣 then the **player loses** and the **game ends**
+   with the other player as the winner.
 6. The game is over when all the cells are filled or uncovered.
 
 **Level Rules**
 
 1. The default level is starts when the game loads (by the Governance).
 2. A level 2 has to be a **Eight** **3x3 cell grid** with the level 1 cells absent
-    
-    as shown below. Note that even the **cells directly adjoining level 1 cells**
-    
-    **are to be absent** for fair game play.  
+   as shown below. Note that even the **cells directly adjoining level 1 cells**
+   **are to be absent** for fair game play.  
     
 
 []()
@@ -54,18 +49,61 @@ don’t know what’s underneath.
 3. There can be only one “X” or “O” in a given row or column.
 4. There can be only 3 special cells with either ⭐ or 💣
 
-**Voting Rules**
+**Deploy Game**
+forge script --chain sepolia script/Game.s.sol:DeployGame --rpc-url $SEPOLIA_RPC_URL --broadcast --verify -vvvv -i 1
 
-1. Voting for Level 2 starts after Level 1 is complete.
-2. Bidders submit one proposal each for a Level.
-3. The Governace does voting and based on the result the winning 
-    
-    Bidder’s Level configuration is selected to be the next Level.
-    
+**Deploy Level 1**
+forge script --chain sepolia script/LevelConfigurator.s.sol:ProposeLevel1 --rpc-url $SEPOLIA_RPC_URL --broadcast --verify -vvvv -i 1
 
-**Staking Rules**
+**Deploy Level 2**
+forge script --chain sepolia script/LevelConfigurator.s.sol:ProposeLevel2 --rpc-url $SEPOLIA_RPC_URL --broadcast --verify -vvvv -i 1
 
-1. Each bidder has to stake a fixed amount of tokens along with their bids.
-2. Bidder’s who have not won get their stakes refunded before the game begins.
-3. If a bidder submits a proposal with an invalid Level configuration (as per level rules) then that bidder’s stake is slashed.
-4. If there are only two bidders, then winner is decided on a coin toss. The bidder who submits the proposal earlier get to call the toss.
+**Game deployed on Sepolia Testnet**
+GAMECONTRACT="0x4AE85136760964B0A2d87fF8CAB53014AE458237"
+LEVELCONFIGURATOR="0xda36288642f7e7859865154d6500711E062B529D"
+
+**Level 1**
+BIDDER1="0x483a0D0dF404515975CCFE1c5Aa910d653Ca70e8"
+
+**Level 2**
+BIDDER2="0x4B4C0050cA76A572a13546073186122B353d5BBF"
+
+**Install Steps**
+1. npm install
+2. start-player
+
+**More Details**
+
+The Dapp upgraded version can be provided by a bidder, on winning the bid the version 1 of the Dapp is extended to version 2 with the option of retaining the previous state or re-configuring or re-purposing the previous state. 
+For. e.g A Dapp can change the prerequisites for airdrop based the following
+1. In version 1 the requirement for claiming an airdrop could be an NFT token
+2. In version 2 the requirement could extend to certain amount of and ERC20 token.
+3. In version 3 the requirement could extend to proof of a social media handle
+In case of version 3 the level could integrate oracles or commitment proofs to extend the scope of actions. 
+
+The template for creating a level can be explicitly implied to the developer by mandatory use of certain fixed base contracts For. e.g In case of a Tictactoe game the base contracts BaseLevel, BaseState, BaseSymbols could govern how the level info, Initial state of cells, Symbols used; are set or get. 
+
+"contract Level1D is BaseLevelD, BaseStateD, BaseSymbolD, BaseDataD {
+    constructor (bytes memory levelNum, bytes memory state, 
+                                 bytes memory symbols)
+        BaseDataD(levelNum, state, symbols) {}
+"
+The Dapp caches the hash of the level proposal (code, levelinfo, state, symbols) until the governance decides which bidder's proposals wins (currently out of scope).  
+The Data for the level is stored as contract code so that other bidders can easily access it while proposing the next level so as to not create duplicate configurations (level info, pre-filled cells, symbols).
+
+Essentially the Dapp should follow the same template as of the Level either implicitly or explicitly by using the Base contracts (the same used by the bidders). In this way the whole Dapp can be made modular and easily extendable.   
+
+We had to reduce the scope of the project, hence we decide to not include the governance, voting and rewards parts of the game. 
+
+We tried to implement the special symbols like ⭐ and 💣 as follows
+1. Bidder provides masked values of these symbols as part of the level 
+   pre-filled cells and a commitment for each symbol (at each location) 
+2. We used semaphore protocol's merkle group identities and proofs and
+   successfully tested its working as a standalone module.
+3. But due to time restrictions we were not able to integrate it into 
+   the main game contract.
+4. We will do this post bootcamp. 
+
+We also thought of integrating ERC-4337 for better UX but due to time restrictions were not able to do it. We will do it in the future. 
+
+We have tested successfully on Sepolia Testnet, but will continue to optimise for deployment and running cost in version 2  

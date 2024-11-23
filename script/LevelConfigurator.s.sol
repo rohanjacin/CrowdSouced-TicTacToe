@@ -33,7 +33,7 @@ contract ProposeLevel1 is Script {
         vm.startBroadcast(signer);
 
         address levelConfigurator = IGame(
-            address(0xAe387934b3632477F4B0299F5E4d65c8c2D2b7f1))
+            address(0x4AE85136760964B0A2d87fF8CAB53014AE458237))
             .getLevelConfigurator();
         ILevelConfigurator(levelConfigurator)
 		  .initLevel(type(Level1D).creationCode, _levelNum, _state, _symbols);
@@ -46,7 +46,7 @@ contract ProposeLevel1 is Script {
 
         ILevelConfigurator(levelConfigurator)
             .deployLevel(type(Level1D).creationCode,
-                          _levelNum, _state, _symbols, _msghash, 0x19, 
+                          _levelNum, _state, _symbols, _msghash, 0x22, 
                           abi.encodePacked(r, s, v));
 
 		vm.stopBroadcast();
@@ -149,7 +149,7 @@ contract ProposeLevel2 is Script {
         vm.startBroadcast(signer);
 
         address levelConfigurator = IGame(
-            address(0xAe387934b3632477F4B0299F5E4d65c8c2D2b7f1))
+            address(0x4AE85136760964B0A2d87fF8CAB53014AE458237))
             .getLevelConfigurator();
 
         ILevelConfigurator(levelConfigurator)
@@ -163,7 +163,7 @@ contract ProposeLevel2 is Script {
 
         ILevelConfigurator(levelConfigurator)
             .deployLevel(type(Level2D).creationCode,
-                          _levelNum, _state, _symbols, _msghash, 0x19, 
+                          _levelNum, _state, _symbols, _msghash, 0x22, 
                           abi.encodePacked(r, s, v));
 
         vm.stopBroadcast();
