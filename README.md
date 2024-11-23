@@ -70,7 +70,7 @@ BIDDER2="0x4B4C0050cA76A572a13546073186122B353d5BBF"
 
 **Install Steps**
 1. npm install
-2. start-player
+2. npm run start-player
 
 **More Details**
 
