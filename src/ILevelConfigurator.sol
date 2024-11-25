@@ -6,7 +6,7 @@ interface ILevelConfigurator {
     struct LevelConfig {
         // packed
         uint256 num; // 0x00
-        uint256 codeLen; // 0x20
+        bytes32 codeHash; // 0x20
         uint256 levelNumLen; // 0x40
         uint256 stateLen; // 0x60
         uint256 symbolLen; // 0x80

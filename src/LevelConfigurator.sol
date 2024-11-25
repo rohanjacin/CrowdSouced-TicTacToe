@@ -20,10 +20,10 @@ error FailedToDeployLevel();
 struct LevelConfig {
     // packed
     uint256 num; // 0x00
-    uint256 codeLen; // 0x20
     uint256 levelNumLen; // 0x40
     uint256 stateLen; // 0x60
     uint256 symbolLen; // 0x80
+    bytes32 codeHash; // 0x20
     bytes32 hash; // 0xA0
     address codeAddress; // 0xC0
     address dataAddress; // 0xE0
@@ -40,7 +40,6 @@ contract LevelConfigurator {
     uint8 internal constant MAX_LEVELS = 2;
     uint8 internal constant MAX_CELLS_L1 = 9;
     uint8 internal constant MAX_CELLS_L2 = 81;
-    uint32 internal constant MAX_LEVEL_CODESIZE = 24000; // 24kB
 
     // Level Proposals (Slot 2)
     mapping(address => LevelConfig) proposals;
@@ -69,18 +68,13 @@ contract LevelConfigurator {
 
     // Reads the level proposal
     function initLevel(
-        bytes calldata _levelCode,
         bytes calldata _levelNumber,
         bytes calldata _levelState,
-        bytes calldata _levelSymbols
+        bytes calldata _levelSymbols,
+        bytes32 _levelCodeHash
     ) external payable returns (bool success) {
         // Check for sender's address
         if (msg.sender == address(0)) revert BiddersAddressInvalid();
-
-        // Check for code length
-        if (
-            (_levelCode.length > MAX_LEVEL_CODESIZE) || (_levelCode.length == 0)
-        ) revert BiddersLevelCodeSizeInvalid();
 
         // Check for level number
         uint8 levelNum;
@@ -92,46 +86,44 @@ contract LevelConfigurator {
             revert BiddersLevelNumberInvalid();
 
         // Check for state length
-        if (
-            (_levelState.length >= MAX_LEVEL_STATE) || (_levelState.length == 0)
-        ) revert BiddersLevelStateSizeInvalid();
+        if ((_levelState.length >= MAX_LEVEL_STATE) || (_levelState.length == 0)) {
+            revert BiddersLevelStateSizeInvalid();
+        }
 
         // Check for number of state cells
         if (levelNum == 1) {
-            if (!(_levelState.length == MAX_CELLS_L1))
+            if (!(_levelState.length == MAX_CELLS_L1)) {
                 revert BiddersLevelStateSizeInvalid();
+            }
         } else if (levelNum == 2) {
-            if (!(_levelState.length == MAX_CELLS_L2))
+            if (!(_levelState.length == MAX_CELLS_L2)) 
                 revert BiddersLevelStateSizeInvalid();
         }
 
         // Check for number of symbols in level
         if (levelNum == 1) {
-            if (!(_levelSymbols.length == 8))
+            if (!(_levelSymbols.length == 8)) {
                 // ❌ and ⭕
-                revert BiddersStatesSymbolsInvalid();
+                revert BiddersStatesSymbolsInvalid();                
+            }
         } else if (levelNum == 2) {
-            if (!(_levelSymbols.length == 16))
+            if (!(_levelSymbols.length == 16)) {
                 // ❌, ⭕, ⭐ and 💣
-                revert BiddersStatesSymbolsInvalid();
+                revert BiddersStatesSymbolsInvalid();                
+            }
         }
 
         // Check state against common level rules
         // TODO: check for return value (return var causes stack too deep)
-        if (
-            1 == _checkStateValidity(_levelNumber, _levelState, _levelSymbols)
-        ) {
+        if (1 == _checkStateValidity(_levelNumber, _levelState, _levelSymbols)) {
             revert BiddersStatesInvalid();
         }
 
         // Cache reference for level (level code, level num, state and symbols)
-        if (
-            false ==
-            _cacheLevel(_levelCode, _levelNumber, _levelState, _levelSymbols)
-        ) {
+/*        if (false == _cacheLevel(_levelNumber, _levelState, _levelSymbols, _levelCodeHash)) {
             revert FailedToCacheLevel();
         }
-
+*/
         success = true;
     }
 
@@ -149,25 +141,14 @@ contract LevelConfigurator {
         LevelConfig memory config = proposals[msg.sender];
 
         // Verify level configuration
-        if (
-            (config.codeLen != _levelCode.length) ||
-            (config.levelNumLen != _levelNumber.length) ||
+        if ((config.levelNumLen != _levelNumber.length) ||
             (config.stateLen != _levelState.length) ||
             (config.symbolLen != _levelSymbols.length)
         ) {
             revert FailedToDeployLevel();
         }
 
-        bytes32 hash = keccak256(
-            abi.encodePacked(
-                _levelCode,
-                _levelNumber,
-                _levelState,
-                _levelSymbols
-            )
-        );
-
-        if ((config.hash != hash) || (config.hash != msgHash)) {
+        if (config.hash != msgHash) {
             revert FailedToDeployLevel();
         }
 
@@ -190,7 +171,8 @@ contract LevelConfigurator {
             mstore(add(config, 0xC0), target)
         }
 
-        // Register data address
+        success = true;
+/*        // Register data address
         if (config.codeAddress != address(0)) {
             (bool ret, bytes memory addr) = config.codeAddress.call{value: 0}(
                 abi.encodeWithSignature("data()")
@@ -202,20 +184,20 @@ contract LevelConfigurator {
             }
 
             success = true;
-        }
+        }*/
     }
 
     // Cache the hash of proposal
     // i.e level code, number, state and symbols
     function _cacheLevel(
-        bytes memory _levelCode,
         bytes memory _levelNum,
         bytes memory _state,
-        bytes memory _symbols
-    ) internal returns (bool success) {
+        bytes memory _symbols,
+        bytes32 _levelCodeHash
+    ) external returns (bool success) {
         LevelConfig memory config = LevelConfig(
             uint256(0), uint256(0), uint256(0),
-            uint256(0), uint256(0), bytes32(0),
+            uint256(0), bytes32(0), bytes32(0),
             address(0), address(0)
         );
 
@@ -225,9 +207,9 @@ contract LevelConfigurator {
             let ptr := config
             mstore(ptr, byte(0, mload(add(_levelNum, 0x20))))
 
-            // codeLen
+            // levelCodeHash
             ptr := add(config, 0x20)
-            mstore(ptr, mload(_levelCode))
+            mstore(ptr, _levelCodeHash)
 
             // levelNumLen
             ptr := add(config, 0x40)
@@ -240,14 +222,27 @@ contract LevelConfigurator {
             // symbolLen
             ptr := add(config, 0x80)
             mstore(ptr, mload(_symbols))
+
+            // Calculate hash and store in config.hash
+            ptr := add(config, 0xa0)
+            mstore(ptr, keccak256(config, 0xa0))
+
+            ptr := add(ptr, 0x60)
+            mstore(0x40, ptr)
+
+            mstore(ptr, caller())
+            mstore(0x40, add(ptr, 0x20))
+
+            mstore(add(ptr, 0x20), proposals.slot)
+            mstore(0x40, add(ptr, 0x40))
+
+            let bslot := keccak256(ptr, 0x40)
+            sstore(bslot, add(_levelNum, 0x20)) 
+            sstore(add(bslot, 1), add(_state, 0x20)) 
+            sstore(add(bslot, 2), add(_symbols, 0x20)) 
+            sstore(add(bslot, 3), _levelCodeHash)
+            sstore(add(bslot, 4), keccak256(config, 0xa0))
         }
-
-        // Calculate hash
-        config.hash = keccak256(
-            abi.encodePacked(_levelCode, _levelNum, _state, _symbols)
-        );
-
-        proposals[msg.sender] = config;
 
         success = true;
     }
