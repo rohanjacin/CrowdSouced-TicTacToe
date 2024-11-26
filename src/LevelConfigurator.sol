@@ -6,10 +6,8 @@ import "openzeppelin-contracts/contracts/utils/cryptography/MessageHashUtils.sol
 import "./BaseState.sol";
 import "./ILevelConfigurator.sol";
 
-error ContractAddressesInvalid();
 error BiddersAddressInvalid();
 error BiddersLevelNumberInvalid();
-error BiddersLevelCodeSizeInvalid();
 error BiddersLevelStateSizeInvalid();
 error BiddersStatesInvalid();
 error BiddersStatesSymbolsInvalid();

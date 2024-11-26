@@ -21,15 +21,12 @@ contract BaseStateD {
 	// Updates the base state data to the callers
 	// context when delegated
 	function copyState(State memory _state) public virtual returns(bool success) {
-		uint256 len;
-		uint256 v;
-		uint256 s;
 
 		assembly {
 			let d
 			// Fetch dimension
 			let ptr := add(_state, 0x20)
-			len := mload(ptr)
+			let len := mload(ptr)
 
 			// Revert if length is not 9 for Level 1
 			// Revert if length is not 81 for Level 2
@@ -58,7 +55,7 @@ contract BaseStateD {
 
 				// TODO: Check if all state are present in memory
 
-				for { let j := 0 v := 0 s := 0 let p := 0 let q := 0 } 
+				for { let j := 0 let v := 0 let s := 0 let p := 0 let q := 0 } 
 					lt(j, d) { j := add(j, 1) } {
 
 					 // Calculate the slot and store					
@@ -76,10 +73,11 @@ contract BaseStateD {
 				}
 			}
 		}
+
 		success = true;
 	}
 
-    function getState(uint8 row, uint8 col) public virtual view returns (uint256 val) {
+    function getState(uint8 row, uint8 col) internal view returns (uint256 val) {
 
         assembly {
             let ptr := mload(0x40)
@@ -109,7 +107,6 @@ contract BaseStateD {
 			 sstore(s, val)
         }
     }
-
 	// To be overriden by level
     function supportedStates() public pure virtual returns (bytes memory) {
 	}

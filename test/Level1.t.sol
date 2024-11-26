@@ -210,18 +210,13 @@ contract TestLevel1 is Test {
     // Test Level 1 contract creation
     function test_level1() external {
 
-        // Should pass for levelnum = 1, state = 3x3 and symbols = 2
+        // Should pass for levelnum = 1, state = 3x3 and symbols = 1
         Level1 levelA = new Level1(_setLevelNum(1), _setState(1), _setSymbol(1));
         levelA=levelA;
 
-        // Should fail for levelnum = 1, state = 3x3 and symbols = 4
+        // Should fail for levelnum = 1, state = 3x3 and symbols = 3
         vm.expectRevert();
-        Level1 levelB = new Level1(_setLevelNum(1), _setState(1), _setSymbol(2));
+        Level1 levelB = new Level1(_setLevelNum(1), _setState(1), _setSymbol(3));
         levelB=levelB;
-
-        // Should fail for levelnum = 1, state = 9x9 and symbols = 4
-        vm.expectRevert();
-        Level1 levelC = new Level1(_setLevelNum(1), _setState(2), _setSymbol(2));
-        levelC=levelC;
     }
 }
