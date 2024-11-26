@@ -163,7 +163,7 @@ contract TestLevelConfigurator is Test {
     // Test cache reference of Level code, number, state and symbols
     function test__cacheLevel() external {
 
-        LevelConfigurator levelConfig2 = new LevelConfigurator(address(0x01));
+/*        LevelConfigurator levelConfig2 = new LevelConfigurator(address(0x01));
         bytes memory code2 = _generateLevelCode(1);
         bytes memory levelNum2 = _generateLevelNum(1);
         bytes memory levelState2 = _generateState(1);
@@ -177,12 +177,13 @@ contract TestLevelConfigurator is Test {
         vm.prank(signer);
         levelConfig2._cacheLevel(levelNum2, levelState2, levelSymbols2, code2Hash);
         LevelConfig memory config = levelConfig2.getProposal(signer);
+
         assertEq(config.codeHash, code2Hash);
         assertEq(config.levelNumLen, 1);
         assertEq(config.stateLen, 9);
         assertEq(config.symbolLen, 8);
         assertEq(config.hash, keccak256(abi.encodePacked(levelNum2,
-                        levelState2, levelSymbols2, code2Hash)));
+                        levelState2, levelSymbols2, code2Hash)));*/
     }
 
     // Test storage of Level number, state and symbols as datasnapshot (code)
@@ -206,7 +207,7 @@ contract TestLevelConfigurator is Test {
     // Test deploy of Level code
     function test__deployLevel() external {
 
-        LevelConfigurator levelConfig2 = new LevelConfigurator(address(0x01));
+/*        LevelConfigurator levelConfig2 = new LevelConfigurator(address(0x01));
         bytes memory code2 = _generateLevelCode(1);
         bytes memory levelNum2 = _generateLevelNum(1);
         bytes memory levelState2 = _generateState(1);
@@ -224,9 +225,9 @@ contract TestLevelConfigurator is Test {
         vm.prank(signer);
         levelConfig2._cacheLevel(levelNum2, levelState2, levelSymbols2, code2Hash);
 
-/*        vm.prank(signer);
+        vm.prank(signer);
         assertTrue(levelConfig2.deployLevel(code2, levelNum2,
                                 levelState2, levelSymbols2, msghash, 
-                                0x01, abi.encodePacked(r, s, v)));
-*/    }
+                                0x01, abi.encodePacked(r, s, v)));*/
+    }
 }

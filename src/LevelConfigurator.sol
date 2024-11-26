@@ -20,10 +20,10 @@ error FailedToDeployLevel();
 struct LevelConfig {
     // packed
     uint256 num; // 0x00
-    uint256 levelNumLen; // 0x40
-    uint256 stateLen; // 0x60
-    uint256 symbolLen; // 0x80
-    bytes32 codeHash; // 0x20
+    uint256 levelNumLen; // 0x20
+    uint256 stateLen; // 0x40
+    uint256 symbolLen; // 0x60
+    bytes32 codeHash; // 0x80
     bytes32 hash; // 0xA0
     address codeAddress; // 0xC0
     address dataAddress; // 0xE0
@@ -32,8 +32,6 @@ struct LevelConfig {
 contract LevelConfigurator {
     // Admin (Slot 0)
     address admin;
-    //uint256 public groupId_Bomb;
-    //uint256 public groupId_Star;
 
     // Constants (Slot 1)
     uint8 internal constant MAX_LEVEL_STATE = type(uint8).max;
@@ -47,9 +45,6 @@ contract LevelConfigurator {
     // Input arguments: admin address, semaphore deployed contract address 0x1e0d7FF1610e480fC93BdEC510811ea2Ba6d7c2f for Sepolia
     constructor(address _admin) {
         admin = _admin;
-        //semaphore = _semaphore;
-        //groupId_Bomb = semaphore.createGroup(address(this));
-        //groupId_Star = semaphore.createGroup(address(this));
     }
 
     // Enables Level configuration
@@ -120,10 +115,10 @@ contract LevelConfigurator {
         }
 
         // Cache reference for level (level code, level num, state and symbols)
-/*        if (false == _cacheLevel(_levelNumber, _levelState, _levelSymbols, _levelCodeHash)) {
+        if (false == _cacheLevel(_levelNumber, _levelState, _levelSymbols, _levelCodeHash)) {
             revert FailedToCacheLevel();
         }
-*/
+
         success = true;
     }
 
@@ -141,14 +136,14 @@ contract LevelConfigurator {
         LevelConfig memory config = proposals[msg.sender];
 
         // Verify level configuration
+        if (config.hash != msgHash) {
+            revert FailedToDeployLevel();
+        }
+
         if ((config.levelNumLen != _levelNumber.length) ||
             (config.stateLen != _levelState.length) ||
             (config.symbolLen != _levelSymbols.length)
         ) {
-            revert FailedToDeployLevel();
-        }
-
-        if (config.hash != msgHash) {
             revert FailedToDeployLevel();
         }
 
@@ -168,11 +163,11 @@ contract LevelConfigurator {
 
         assembly {
             let target := create2(0, add(code, 0x20), mload(code), gameId)
+            // Store codeAddress
             mstore(add(config, 0xC0), target)
         }
 
-        success = true;
-/*        // Register data address
+        // Register data address
         if (config.codeAddress != address(0)) {
             (bool ret, bytes memory addr) = config.codeAddress.call{value: 0}(
                 abi.encodeWithSignature("data()")
@@ -180,11 +175,24 @@ contract LevelConfigurator {
 
             if (ret == true) {
                 config.dataAddress = abi.decode(addr, (address));
-                proposals[msg.sender] = config;
+
+                assembly {
+                    let ptr := mload(0x40)
+
+                    mstore(ptr, caller())
+                    mstore(0x40, add(ptr, 0x20))
+
+                    mstore(add(ptr, 0x20), proposals.slot)
+                    mstore(0x40, add(ptr, 0x40))
+
+                    let bslot := keccak256(ptr, 0x40)
+                    // Store codeAddress
+                    sstore(add(bslot, 6), mload(add(config, 0xC0)))
+                }
             }
 
             success = true;
-        }*/
+        }
     }
 
     // Cache the hash of proposal
@@ -194,41 +202,16 @@ contract LevelConfigurator {
         bytes memory _state,
         bytes memory _symbols,
         bytes32 _levelCodeHash
-    ) external returns (bool success) {
-        LevelConfig memory config = LevelConfig(
-            uint256(0), uint256(0), uint256(0),
-            uint256(0), bytes32(0), bytes32(0),
-            address(0), address(0)
+    ) internal returns (bool success) {
+
+        // Calculate hash
+        bytes32 _hash = keccak256(
+            abi.encodePacked(_levelNum, _state, _symbols, _levelCodeHash)
         );
 
         // Register the lengths
         assembly {
-            // num
-            let ptr := config
-            mstore(ptr, byte(0, mload(add(_levelNum, 0x20))))
-
-            // levelCodeHash
-            ptr := add(config, 0x20)
-            mstore(ptr, _levelCodeHash)
-
-            // levelNumLen
-            ptr := add(config, 0x40)
-            mstore(ptr, mload(_levelNum))
-
-            // stateLen
-            ptr := add(config, 0x60)
-            mstore(ptr, mload(_state))
-
-            // symbolLen
-            ptr := add(config, 0x80)
-            mstore(ptr, mload(_symbols))
-
-            // Calculate hash and store in config.hash
-            ptr := add(config, 0xa0)
-            mstore(ptr, keccak256(config, 0xa0))
-
-            ptr := add(ptr, 0x60)
-            mstore(0x40, ptr)
+            let ptr := mload(0x40)
 
             mstore(ptr, caller())
             mstore(0x40, add(ptr, 0x20))
@@ -237,11 +220,12 @@ contract LevelConfigurator {
             mstore(0x40, add(ptr, 0x40))
 
             let bslot := keccak256(ptr, 0x40)
-            sstore(bslot, add(_levelNum, 0x20)) 
-            sstore(add(bslot, 1), add(_state, 0x20)) 
-            sstore(add(bslot, 2), add(_symbols, 0x20)) 
-            sstore(add(bslot, 3), _levelCodeHash)
-            sstore(add(bslot, 4), keccak256(config, 0xa0))
+            sstore(bslot, byte(0, mload(add(_levelNum, 0x20))))
+            sstore(add(bslot, 1), mload(_levelNum))
+            sstore(add(bslot, 2), mload(_state))
+            sstore(add(bslot, 3), mload(_symbols))
+            sstore(add(bslot, 4), _levelCodeHash)
+            sstore(add(bslot, 5), _hash)
         }
 
         success = true;
