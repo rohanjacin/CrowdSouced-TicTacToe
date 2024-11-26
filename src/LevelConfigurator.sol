@@ -53,7 +53,6 @@ contract LevelConfigurator {
     function getProposal(address bidder) external view
         returns (LevelConfig memory config) {
 
-        console.log("In getProposal");
         if (bidder == address(0)) {
             revert BiddersAddressInvalid();
         }
@@ -87,21 +86,22 @@ contract LevelConfigurator {
 
         // Check for number of state cells
         if (levelNum == 1) {
+
             if (!(_levelState.length == MAX_CELLS_L1)) {
                 revert BiddersLevelStateSizeInvalid();
             }
-        } else if (levelNum == 2) {
-            if (!(_levelState.length == MAX_CELLS_L2)) 
-                revert BiddersLevelStateSizeInvalid();
-        }
 
-        // Check for number of symbols in level
-        if (levelNum == 1) {
+            // Check for number of symbols in level
             if (!(_levelSymbols.length == 8)) {
                 // ❌ and ⭕
                 revert BiddersStatesSymbolsInvalid();                
             }
         } else if (levelNum == 2) {
+
+            if (!(_levelState.length == MAX_CELLS_L2)) 
+                revert BiddersLevelStateSizeInvalid();
+
+            // Check for number of symbols in level
             if (!(_levelSymbols.length == 16)) {
                 // ❌, ⭕, ⭐ and 💣
                 revert BiddersStatesSymbolsInvalid();                

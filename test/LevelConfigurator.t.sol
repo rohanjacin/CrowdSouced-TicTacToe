@@ -78,6 +78,19 @@ contract TestLevelConfigurator is Test {
         }
     }
 
+    // Test get proposal 
+    function test_getProposal() external {
+
+        LevelConfigurator levelConfig1 = new LevelConfigurator(vm.addr(1));
+
+        uint256 privKey = 0xabc123;
+        address signer = vm.addr(privKey);
+
+        vm.prank(signer);
+        LevelConfig memory config = levelConfig1.getProposal(signer);
+        config=config;
+    }
+
     // Test the level proposal submitted by Bidder
     function test_initLevel() external {
 
@@ -140,9 +153,9 @@ contract TestLevelConfigurator is Test {
 
         LevelConfigurator levelConfig1 = new LevelConfigurator(vm.addr(1));
         levelConfig1._checkStateValidity(levelnum1, state1, symbols1);
+*/
 
-
-*/        // Should clear check for level 2 with X and O
+        // Should clear check for level 2 with X and O
 /*        bytes memory state2 = _generateState(2);
         bytes memory symbols2 = _generateSymbols(1);
 
