@@ -55,7 +55,7 @@ contract LevelConfigurator {
             revert BiddersAddressInvalid();
         }
 
-        config = proposals[bidder];
+        config = proposals[bidder];        
     }
 
     // Reads the level proposal
@@ -186,6 +186,8 @@ contract LevelConfigurator {
                     let bslot := keccak256(ptr, 0x40)
                     // Store codeAddress
                     sstore(add(bslot, 6), mload(add(config, 0xC0)))
+                    // Store dataAddress
+                    sstore(add(bslot, 7), mload(add(config, 0xE0)))
                 }
             }
 

@@ -5,20 +5,19 @@ import "./BaseLevel.d.sol";
 import "./BaseState.d.sol";
 import "./BaseSymbol.d.sol";
 import "./BaseData.sol";
+import "./RuleEngine.d.sol";
 import "./LevelConfigurator.sol";
 import "./ILevelConfigurator.sol";
 import { ILevelD } from "./ILevel.d.sol";
-import "./RuleEngine.d.sol";
 import "openzeppelin-contracts/contracts/utils/Strings.sol";
 
 // Players
 enum Player { None, Player1, Player2 }
 // Possible cell values
-enum CellValueL { Empty , X, O}
+enum CellValue { Empty , X, O}
 
 // Errors
 error LevelInvalid();
-error LevelNotDeployed();
 error LevelCopyFailed();
 error BidderAddressInvalid();
 error PlayerAddressInvalid();
@@ -70,22 +69,22 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 	//mapping(uint8 => bytes4) rules;
 
 	// SLOT 6 is for Game Admin
-	address admin;
+	address public admin;
+
+	// SLOT 7 is Game house	
 	GameHouse public house;
 
-	// SLOT 7 is Game instance (id = level number)
+	// SLOT 8 is Game instance (id = level number)
 	mapping(uint8 => GameInfo) public games;
 
 	// When a new game is started	
-	event NewGame (uint8 level, address levelCode,
-		address levelData);
+	event NewGame (uint8 level, address levelCode, address levelData);
 
 	// When player joins the game	
 	event PlayerJoined (address player, uint8 id);
 
 	// When player makes a move	
-	event PlayerMove (Player id, Move move,
-		Player winner, string message);
+	event PlayerMove (Player id, Move move, Player winner, string message);
 
 	// Load the default state in Base State
 	constructor(address _admin) {
@@ -94,9 +93,7 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 		house = new GameHouse(admin);
 	}
 
-	fallback() external {
-	}
-
+	// Get level configurator contract address
 	function getLevelConfigurator() external view returns(address) {
 		return house.levelConfigurator();
 	}
@@ -114,9 +111,10 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 		}
 	}
 
+	// Fetches level data from level data contract
 	function retrieveLevel(uint8 levelnum, address data)
-		internal returns (bytes memory _num,
-		bytes memory _state, bytes memory _symbol) {
+		internal returns (bytes memory _num,bytes memory _state,
+		bytes memory _symbol) {
 
 		bytes memory _data = BaseData.copyData(data);
 		uint8 _numlen;
@@ -153,7 +151,8 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 
 			// Reserve and copy level state 
 			_symbol := mload(0x40)
-			mcopy(add(_symbol, 0x20), add(ptr, add(_numlen, _statelen)), mul(_symbollen, 4))
+			mcopy(add(_symbol, 0x20), add(ptr, add(_numlen, _statelen)),
+				  mul(_symbollen, 4))
 			mstore(_symbol, mul(_symbollen, 4))
 			mstore(0x40, add(_symbol, 0x40))
 		}
@@ -262,7 +261,7 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 			return (true, "You are Player2 - O");			
 		}
 
-		return (false, "Players already joined");
+		return (false, "Players joined");
 	}
 
 	// Make a move //onlyPlayers
@@ -271,7 +270,7 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 
 		// Check if already winner exists
 		if (games[id].winner != Player.None) {
-			return (false, "The game has aready ended!");
+			return (false, "The game has ended!");
 		}
 
 		// Only player who's turn it is can make a move
@@ -282,17 +281,17 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 		// Check cell initial value
 		uint8 value = uint8(getState(move.row, move.col));
 
-		if (!((value == uint8(CellValueL.Empty)) ||
+		if (!((value == uint8(CellValue.Empty)) ||
 		     (value > 128))) {
 			//revert();
 		}
 
 		uint8 setVal;
 		if (games[id].turn == Player.Player1) {
-			setVal = uint8(CellValueL.X);
+			setVal = uint8(CellValue.X);
 		}
 		else if (games[id].turn == Player.Player2) {
-			setVal = uint8(CellValueL.O);
+			setVal = uint8(CellValue.O);
 		}
 
 		// Execute for move as per rule
@@ -385,7 +384,7 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 
 			for (uint8 c = 0; c < _marker; c++) {
 
-				if (getState(r, c) == uint8(CellValueL.Empty)) {
+				if (getState(r, c) == uint8(CellValue.Empty)) {
 					ret = false;
 					break;
 				}
@@ -422,12 +421,12 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 					if ((getState(r, c) == getState(r, c+1)) &&
 					    (getState(r, c+1) == getState(r, c+2))) {
 
-						if (getState(r, c) == uint8(CellValueL.X)) {
+						if (getState(r, c) == uint8(CellValue.X)) {
 						   	countX = 1;
 						   	winner = Player.Player1;
 						   	col = c;							
 						}
-						else if (getState(r, c) == uint8(CellValueL.O)) {
+						else if (getState(r, c) == uint8(CellValue.O)) {
 						   	countO = 1;
 						   	winner = Player.Player2;
 						   	col = c;							
@@ -439,12 +438,12 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 					   (getState(r, c+1) == getState(r, c+2)) &&
 					   (getState(r, c+2) == getState(r, c+3))) {
 
-					   	if (getState(r, c) == uint8(CellValueL.X)) {
+					   	if (getState(r, c) == uint8(CellValue.X)) {
 						   	countX = 1;
 						   	winner = Player.Player1;
 						   	col = c;
 					   	}
-					   	if (getState(r, c) == uint8(CellValueL.O)) {
+					   	if (getState(r, c) == uint8(CellValue.O)) {
 						   	countO = 1;
 						   	winner = Player.Player2;
 						   	col = c;
@@ -467,7 +466,6 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 	}
 
 	// Check longest X or O sequence in all columns
-	// Check longest X or O sequence in all rows
 	function _winnerInColumns() internal view
 		returns (Player winner, string memory message){
 
@@ -496,12 +494,12 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 					if ((getState(r, c) == getState(r+1, c)) &&
 					    (getState(r+1, c) == getState(r+2, c))) {
 
-						if (getState(r, c) == uint8(CellValueL.X)) {
+						if (getState(r, c) == uint8(CellValue.X)) {
 						   	countX = 1;
 						   	winner = Player.Player1;
 						   	row = r;							
 						}
-						else if (getState(r, c) == uint8(CellValueL.O)) {
+						else if (getState(r, c) == uint8(CellValue.O)) {
 						   	countO = 1;
 						   	winner = Player.Player2;
 						   	row = r;							
@@ -513,12 +511,12 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 					   (getState(r+1, c) == getState(r+2, c)) &&
 					   (getState(r+2, c) == getState(r+3, c))) {
 
-					   	if (getState(r, c) == uint8(CellValueL.X)) {
+					   	if (getState(r, c) == uint8(CellValue.X)) {
 						   	countX = 1;
 						   	winner = Player.Player1;
 						   	row = r;
 					   	}
-					   	if (getState(r, c) == uint8(CellValueL.O)) {
+					   	if (getState(r, c) == uint8(CellValue.O)) {
 						   	countO = 1;
 						   	winner = Player.Player2;
 						   	row = r;
@@ -564,11 +562,11 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 			if ((getState(0, 0) == getState(1, 1)) &&
 			    (getState(1, 1) == getState(2, 2))) {
 
-				if (getState(0, 0) == uint8(CellValueL.X)) {
+				if (getState(0, 0) == uint8(CellValue.X)) {
 				   	countX = 1;
 				   	winner = Player.Player1;
 			   	}
-			   	if (getState(0, 0) == uint8(CellValueL.O)) {
+			   	if (getState(0, 0) == uint8(CellValue.O)) {
 				   	countO = 1;
 				   	winner = Player.Player2;
 			   	}
@@ -577,11 +575,11 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 			else if ((getState(0, 2) == getState(1, 1)) &&
 			    (getState(1, 1) == getState(2, 0))) {
 
-				if (getState(0, 2) == uint8(CellValueL.X)) {
+				if (getState(0, 2) == uint8(CellValue.X)) {
 				   	countX = 1;
 				   	winner = Player.Player1;
 			   	}
-			   	if (getState(0, 2) == uint8(CellValueL.O)) {
+			   	if (getState(0, 2) == uint8(CellValue.O)) {
 				   	countO = 1;
 				   	winner = Player.Player2;
 			   	}
@@ -599,11 +597,11 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 					(getState(d+1, d+1) == getState(d+2, d+2)) &&
 					(getState(d+2, d+2) == getState(d+3, d+3))) {
 
-				   	if (getState(d, d) == uint8(CellValueL.X)) {
+				   	if (getState(d, d) == uint8(CellValue.X)) {
 					   	countX = 1;
 					   	winner = Player.Player1;
 				   	}
-				   	if (getState(d, d) == uint8(CellValueL.O)) {
+				   	if (getState(d, d) == uint8(CellValue.O)) {
 					   	countO = 1;
 					   	winner = Player.Player2;
 				   	}
@@ -620,11 +618,11 @@ contract GameD is BaseLevelD, BaseStateD, BaseSymbolD, BaseData, RuleEngine {
 						(getState(e+1, 7-d) == getState(e+2, 6-d)) &&
 						(getState(e+2, 6-d) == getState(3+e, 5-d))) {
 
-					   	if (getState(e, 8-d) == uint8(CellValueL.X)) {
+					   	if (getState(e, 8-d) == uint8(CellValue.X)) {
 						   	countX = 1;
 						   	winner = Player.Player1;
 					   	}
-					   	if (getState(e, 8-d) == uint8(CellValueL.O)) {
+					   	if (getState(e, 8-d) == uint8(CellValue.O)) {
 						   	countO = 1;
 						   	winner = Player.Player2;
 					   	}

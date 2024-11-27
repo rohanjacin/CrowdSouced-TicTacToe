@@ -37,6 +37,7 @@ abstract contract RuleEngine {
 		assembly {
 			numSymbols := mload(add(symbols, 0x20))
 		}
+
 		assert(numSymbols == numSelectors);
 
 		for (uint8 i = numSymbols; i > 0; i--) {
@@ -51,6 +52,7 @@ abstract contract RuleEngine {
 
 			bytes memory func = abi.encodePacked("setCellu",
 				abi.encodePacked(symbolString), "(uint8,uint8,uint8)");
+
 
 			// Calulate the signature for set call function
 			bytes4 sel = bytes4(keccak256(abi.encodePacked(func)));
