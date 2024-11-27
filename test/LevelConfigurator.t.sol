@@ -6,6 +6,8 @@ import { console } from "forge-std/console.sol";
 import "src/LevelConfigurator.sol";
 import { ECDSA } from "openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import "openzeppelin-contracts/contracts/utils/cryptography/MessageHashUtils.sol";
+import {Level1D} from "../src/Level1.d.sol";
+import {Level2D} from "../src/Level2.d.sol";
 
 contract TestLevelConfigurator is Test {
     using ECDSA for bytes32;
@@ -25,10 +27,10 @@ contract TestLevelConfigurator is Test {
 
         // Level 1 contract init code (w/o constructore arguments)
         if (_num == 1) {
-            _levelCode = hex"600460030160005260206000f3"; 
+            _levelCode = type(Level1D).creationCode; 
         }
         else if (_num == 2) {
-            _levelCode = hex"600460030160005260206000f3"; 
+            _levelCode = type(Level2D).creationCode; 
         }        
     }
 
@@ -76,19 +78,32 @@ contract TestLevelConfigurator is Test {
         }
     }
 
+    // Test get proposal 
+    function test_getProposal() external {
+
+        LevelConfigurator levelConfig1 = new LevelConfigurator(vm.addr(1));
+
+        uint256 privKey = 0xabc123;
+        address signer = vm.addr(privKey);
+
+        vm.prank(signer);
+        LevelConfig memory config = levelConfig1.getProposal(signer);
+        config=config;
+    }
+
     // Test the level proposal submitted by Bidder
     function test_initLevel() external {
 
         // Should clears initial checks for code, level number, 
         // state length and state symbol length for Level 1
-/*        LevelConfigurator levelConfig1 = new LevelConfigurator(vm.addr(1));
+        LevelConfigurator levelConfig1 = new LevelConfigurator(vm.addr(1));
         bytes memory code1 = _generateLevelCode(1);
         bytes memory levelNum1 = _generateLevelNum(1);
         bytes memory levelState1 = _generateState(1);
         bytes memory levelSymbols1 = _generateSymbols(1);
+        bytes32 levelCodeHash = keccak256(abi.encodePacked(code1));
+        levelConfig1.initLevel(levelNum1, levelState1, levelSymbols1, levelCodeHash);
 
-        levelConfig1.initLevel(code1, levelNum1, levelState1, levelSymbols1);
-*/
 
 /*        // Should clears initial checks for code, level number, 
         // state length and state symbol length for Level 2
@@ -138,9 +153,9 @@ contract TestLevelConfigurator is Test {
 
         LevelConfigurator levelConfig1 = new LevelConfigurator(vm.addr(1));
         levelConfig1._checkStateValidity(levelnum1, state1, symbols1);
+*/
 
-
-*/        // Should clear check for level 2 with X and O
+        // Should clear check for level 2 with X and O
 /*        bytes memory state2 = _generateState(2);
         bytes memory symbols2 = _generateSymbols(1);
 
@@ -166,23 +181,22 @@ contract TestLevelConfigurator is Test {
         bytes memory levelNum2 = _generateLevelNum(1);
         bytes memory levelState2 = _generateState(1);
         bytes memory levelSymbols2 = _generateSymbols(1);
+        bytes32 code2Hash = keccak256(abi.encodePacked(code2));
 
         // Should cache the hash of the level config
-        vm.prank(address(0x01));
-        levelConfig2._cacheLevel(code2, levelNum2, levelState2, levelSymbols2);
-        (   uint256 num, // packed
-            uint256 codeLen,
-            uint256 levelNumLen,
-            uint256 stateLen,
-            uint256 symbolLen,
-            bytes32 hash
-        ) = levelConfig2.proposals(address(0x01));
-        assertEq(codeLen, 13);
-        assertEq(levelNumLen, 1);
-        assertEq(stateLen, 9);
-        assertEq(symbolLen, 8);
-        assertEq(hash, keccak256(abi.encodePacked(code2, levelNum2,
-                        levelState2, levelSymbols2)));*/
+        uint256 privKey = 0xabc123;
+        address signer = vm.addr(privKey);
+
+        vm.prank(signer);
+        levelConfig2._cacheLevel(levelNum2, levelState2, levelSymbols2, code2Hash);
+        LevelConfig memory config = levelConfig2.getProposal(signer);
+
+        assertEq(config.codeHash, code2Hash);
+        assertEq(config.levelNumLen, 1);
+        assertEq(config.stateLen, 9);
+        assertEq(config.symbolLen, 8);
+        assertEq(config.hash, keccak256(abi.encodePacked(levelNum2,
+                        levelState2, levelSymbols2, code2Hash)));*/
     }
 
     // Test storage of Level number, state and symbols as datasnapshot (code)
@@ -211,21 +225,22 @@ contract TestLevelConfigurator is Test {
         bytes memory levelNum2 = _generateLevelNum(1);
         bytes memory levelState2 = _generateState(1);
         bytes memory levelSymbols2 = _generateSymbols(1);
+        bytes32 code2Hash = keccak256(abi.encodePacked(code2));
 
         // Should return a non zero address
         uint256 privKey = 0xabc123;
         address signer = vm.addr(privKey);
-        bytes32 msghash = keccak256(abi.encodePacked(code2, levelNum2,
-            levelState2, levelSymbols2));
+        bytes32 msghash = keccak256(abi.encodePacked(levelNum2,
+            levelState2, levelSymbols2, code2Hash));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privKey,
             MessageHashUtils.toEthSignedMessageHash(msghash));
 
-        //vm.prank(signer);
-        //levelConfig2._cacheLevel(code2, levelNum2, levelState2, levelSymbols2);
+        vm.prank(signer);
+        levelConfig2._cacheLevel(levelNum2, levelState2, levelSymbols2, code2Hash);
 
-        //vm.prank(signer);
-        //assertTrue(levelConfig2._deployLevel(code2, levelNum2,
-        //                        levelState2, levelSymbols2, msghash, 
-        //                        0x01, abi.encodePacked(r, s, v)));
-*/    }
+        vm.prank(signer);
+        assertTrue(levelConfig2.deployLevel(code2, levelNum2,
+                                levelState2, levelSymbols2, msghash, 
+                                0x01, abi.encodePacked(r, s, v)));*/
+    }
 }

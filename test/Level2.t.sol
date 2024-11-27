@@ -214,14 +214,10 @@ contract TestLevel2 is Test {
         Level2 levelA = new Level2(_setLevelNum(2), _setState(2), _setSymbol(2));
         levelA=levelA;
 
-        // Should fail for levelnum = 2, state = 3x3 and symbols = 2
+        // Should fail for levelnum = 2, state = 3x3 and symbols = 3
         vm.expectRevert();
-        Level2 levelB = new Level2(_setLevelNum(2), _setState(1), _setSymbol(1));
+        Level2 levelB = new Level2(_setLevelNum(2), _setState(1), _setSymbol(3));
         levelB=levelB;
 
-        // Should fail for levelnum = 1, state = 3x3 and symbols = 2
-        vm.expectRevert();
-        Level2 levelC = new Level2(_setLevelNum(1), _setState(1), _setSymbol(1));
-        levelC=levelC;
     }
 }

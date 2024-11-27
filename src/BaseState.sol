@@ -47,64 +47,24 @@ contract BaseState {
 [0x280:0x2a0]: 0x0000000000000000000000000000000000000000000000000000000000000009
 */		
 
-		assembly {
-			let d
-			// Fetch dimension
-			let ptr := mload(_state)
-			let len := mload(ptr)
-			let off
-
-			// Revert if length is not 9 for Level 1
-			// Revert if length is not 81 for Level 2
-			switch len
-			case 3 { d := 3 }
-			case 9 { d := 9 }
-			default {
-				revert(0, 0)
-			}
-
-			// Find length of next 3 arrays
-			// and compare with dimension,
-			// all should be 3 
-			for { let i := 0 off := add(ptr, 0x20) }
-				lt(i, d) 
-				{ i := add(i, 1) off := add(off, 0x20) } {
-
-				ptr := mload(off)			
-				len := mload(ptr)
-				if iszero(eq(len, d)) {
-					revert (0, 0)
-				}
-
-				ptr := add(ptr, 0x20)
-
-				for { let j := 0 let v := 0 let s := 0 let p := 0 let q := 0 } 
-					lt(j, len) { j := add(j, 1) } {
-
-					 // Calculate the slot and store					
-					 v := mload(add(ptr, mul(j, 0x20)))
-					 p := mload(0x40)
-					 mstore(p, board.slot)
-					 q := mload(0x40)
-					 mstore(q, add(keccak256(p, 0x20), i))
-					 s := add(keccak256(q, 0x20), j)
-					 sstore(s, v)
-				}
-			}
-		}
+		_copyState(_state);
 	}
 
 	// Updates the base state data to the callers
 	// context when delegated
 	function copyState(State memory _state) public virtual returns(bool success) {
-		uint256 len;
-		uint256 v;
-		uint256 s;
+
+		_copyState(_state);
+		success = true;
+	}
+
+
+	function _copyState(State memory _state) internal {
 		assembly {
 			let d
 			// Fetch dimension
 			let ptr := add(_state, 0x20)
-			len := mload(ptr)
+			let len := mload(ptr)
 
 			// Revert if length is not 9 for Level 1
 			// Revert if length is not 81 for Level 2
@@ -133,7 +93,7 @@ contract BaseState {
 
 				// TODO: Check if all state are present in memory
 
-				for { let j := 0 v := 0 s := 0 let p := 0 let q := 0 } 
+				for { let j := 0 let v := 0 let s := 0 let p := 0 let q := 0 } 
 					lt(j, d) { j := add(j, 1) } {
 
 					 // Calculate the slot and store					
@@ -151,9 +111,7 @@ contract BaseState {
 				}
 			}
 		}
-		success = true;
 	}
-
 
     function getState(uint8 row, uint8 col) internal view returns (uint256 val) {
 
@@ -186,6 +144,6 @@ contract BaseState {
         }
     }
 	// To be overriden by level
-    function supportedStates() public view virtual returns (bytes memory) {
+    function supportedStates() public pure virtual returns (bytes memory) {
 	}
 }
